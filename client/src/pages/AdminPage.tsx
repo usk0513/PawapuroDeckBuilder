@@ -191,15 +191,15 @@ export default function AdminPage() {
       }
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/character-level-bonuses", selectedCharacter] });
       toast({
         title: "レベルボーナス追加",
-        description: "レベルボーナスが追加されました",
+        description: `Lv.${data.level}のボーナスが追加されました`,
       });
       levelBonusForm.reset({
         characterId: selectedCharacter || undefined,
-        level: 1,
+        level: data.level, // 同じレベルを保持
         effectType: undefined,
         value: "",
         description: "",
@@ -675,16 +675,26 @@ export default function AdminPage() {
                                 <FormItem>
                                   <FormLabel>レベル</FormLabel>
                                   <FormControl>
-                                    <Input
-                                      type="number"
-                                      {...field}
-                                      min={1}
-                                      max={99}
-                                      onChange={e => field.onChange(parseInt(e.target.value))}
-                                    />
+                                    <Select
+                                      onValueChange={(value) => field.onChange(parseInt(value))}
+                                      value={field.value?.toString() || "1"}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="レベルを選択" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {Array.from({ length: 50 }, (_, i) => i + 1).map((level) => (
+                                          <SelectItem key={level} value={level.toString()}>
+                                            Lv.{level}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </FormControl>
                                   <FormDescription>
-                                    ボーナスが適用されるレベル（1-99）
+                                    ボーナスが適用されるレベル（1-50）
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
