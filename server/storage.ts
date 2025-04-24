@@ -14,9 +14,8 @@ import {
   Position,
   Rarity
 } from "@shared/schema";
-
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -44,226 +43,224 @@ export interface IStorage {
   createCombo(combo: InsertCombo): Promise<Combo>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private characters: Map<number, Character>;
-  private decks: Map<number, Deck>;
-  private combos: Map<number, Combo>;
-  private userId: number;
-  private characterId: number;
-  private deckId: number;
-  private comboId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.characters = new Map();
-    this.decks = new Map();
-    this.combos = new Map();
-    
-    // Starting IDs
-    this.userId = 1;
-    this.characterId = 1;
-    this.deckId = 1;
-    this.comboId = 1;
-    
-    // Initialize with some sample data
-    this.initializeData();
-  }
-
+export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
   
   // Character operations
   async getAllCharacters(): Promise<Character[]> {
-    return Array.from(this.characters.values());
+    return db.select().from(characters);
   }
   
   async getCharacter(id: number): Promise<Character | undefined> {
-    return this.characters.get(id);
+    const [character] = await db.select().from(characters).where(eq(characters.id, id));
+    return character;
   }
   
   async createCharacter(character: InsertCharacter): Promise<Character> {
-    const id = this.characterId++;
-    const newCharacter: Character = { ...character, id };
-    this.characters.set(id, newCharacter);
+    const [newCharacter] = await db.insert(characters).values(character).returning();
     return newCharacter;
   }
   
   async updateCharacter(id: number, character: Partial<InsertCharacter>): Promise<Character | undefined> {
-    const existingCharacter = this.characters.get(id);
-    if (!existingCharacter) {
-      return undefined;
-    }
+    const [updatedCharacter] = await db
+      .update(characters)
+      .set(character)
+      .where(eq(characters.id, id))
+      .returning();
     
-    const updatedCharacter = { ...existingCharacter, ...character };
-    this.characters.set(id, updatedCharacter);
     return updatedCharacter;
   }
   
   async deleteCharacter(id: number): Promise<boolean> {
-    return this.characters.delete(id);
+    const result = await db.delete(characters).where(eq(characters.id, id));
+    return !!result;
   }
   
   // Deck operations
   async getAllDecks(): Promise<Deck[]> {
-    return Array.from(this.decks.values());
+    return db.select().from(decks);
   }
   
   async getDeck(id: number): Promise<Deck | undefined> {
-    return this.decks.get(id);
+    const [deck] = await db.select().from(decks).where(eq(decks.id, id));
+    return deck;
   }
   
   async createDeck(deck: InsertDeck): Promise<Deck> {
-    const id = this.deckId++;
-    const newDeck: Deck = { ...deck, id };
-    this.decks.set(id, newDeck);
+    const [newDeck] = await db.insert(decks).values(deck).returning();
     return newDeck;
   }
   
   async updateDeck(id: number, deck: Partial<InsertDeck>): Promise<Deck | undefined> {
-    const existingDeck = this.decks.get(id);
-    if (!existingDeck) {
-      return undefined;
-    }
+    const [updatedDeck] = await db
+      .update(decks)
+      .set(deck)
+      .where(eq(decks.id, id))
+      .returning();
     
-    const updatedDeck = { ...existingDeck, ...deck };
-    this.decks.set(id, updatedDeck);
     return updatedDeck;
   }
   
   async deleteDeck(id: number): Promise<boolean> {
-    return this.decks.delete(id);
+    const result = await db.delete(decks).where(eq(decks.id, id));
+    return !!result;
   }
   
   // Combo operations
   async getAllCombos(): Promise<Combo[]> {
-    return Array.from(this.combos.values());
+    return db.select().from(combos);
   }
   
   async getCombo(id: number): Promise<Combo | undefined> {
-    return this.combos.get(id);
+    const [combo] = await db.select().from(combos).where(eq(combos.id, id));
+    return combo;
   }
   
   async createCombo(combo: InsertCombo): Promise<Combo> {
-    const id = this.comboId++;
-    const newCombo: Combo = { ...combo, id };
-    this.combos.set(id, newCombo);
+    const [newCombo] = await db.insert(combos).values(combo).returning();
     return newCombo;
   }
-  
-  // Initialize sample data
-  private initializeData() {
-    // Initialize some sample characters
-    const sampleCharacters: InsertCharacter[] = [
-      {
-        name: "猪狩 守",
-        position: Position.PITCHER,
-        rarity: Rarity.SR,
-        level: 5,
-        awakening: 3,
-        rating: 3,
-        stats: {
-          pitching: { velocity: 3, control: 2, stamina: 2, breaking: 0 },
-          batting: { contact: 0, power: 0, speed: 0, arm: 0, fielding: 0 }
-        },
-        owned: true
-      },
-      {
-        name: "友沢 亮",
-        position: Position.OUTFIELD,
-        rarity: Rarity.R,
-        level: 4,
-        awakening: 2,
-        rating: 4,
-        stats: {
-          pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
-          batting: { contact: 3, power: 0, speed: 3, arm: 2, fielding: 0 }
-        },
-        owned: true
-      },
-      {
-        name: "猪狩 進",
-        position: Position.PITCHER,
-        rarity: Rarity.PSR,
-        level: 5,
-        awakening: 4,
-        rating: 5,
-        stats: {
-          pitching: { velocity: 4, control: 4, stamina: 0, breaking: 3 },
-          batting: { contact: 0, power: 0, speed: 0, arm: 0, fielding: 0 }
-        },
-        owned: true
-      },
-      {
-        name: "佐藤 寿也",
-        position: Position.INFIELD,
-        rarity: Rarity.N,
-        level: 3,
-        awakening: 1,
-        rating: 2,
-        stats: {
-          pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
-          batting: { contact: 1, power: 3, speed: 0, arm: 0, fielding: 2 }
-        },
-        owned: true
-      },
-      {
-        name: "六道 聖",
-        position: Position.CATCHER,
-        rarity: Rarity.PR,
-        level: 4,
-        awakening: 2,
-        rating: 3,
-        stats: {
-          pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
-          batting: { contact: 0, power: 0, speed: 0, arm: 2, fielding: 3 }
-        },
-        owned: true
+
+  // Initialize sample data for development purposes
+  async initializeData(): Promise<void> {
+    try {
+      // First check if tables exist
+      try {
+        await db.query.characters.findFirst();
+      } catch (error) {
+        console.log("Tables don't exist yet, skipping initialization");
+        return;
       }
-    ];
-    
-    sampleCharacters.forEach(character => {
-      this.createCharacter(character);
-    });
-    
-    // Initialize sample combos
-    const sampleCombos: InsertCombo[] = [
-      {
-        name: "サクセスコンボ",
-        description: "猪狩守と友沢亮の組み合わせにより発動",
-        requiredCharacters: [1, 2] as number[], // IDs of 猪狩 守 and 友沢 亮
-        effects: {
-          "全ステータス": 1,
-          "疲労回復": 5
+
+      // Check if there's already data in the database
+      const result = await db.$pool.query("SELECT COUNT(*) FROM characters");
+      const count = Number(result.rows[0].count || 0);
+      
+      if (count > 0) {
+        // Data already exists, skip initialization
+        console.log("Database already initialized with sample data");
+        return;
+      }
+      
+      console.log("Initializing database with sample data");
+
+      // Initialize some sample characters
+      const sampleCharacters: InsertCharacter[] = [
+        {
+          name: "猪狩 守",
+          position: Position.PITCHER,
+          rarity: Rarity.SR,
+          level: 5,
+          awakening: 3,
+          rating: 3,
+          stats: {
+            pitching: { velocity: 3, control: 2, stamina: 2, breaking: 0 },
+            batting: { contact: 0, power: 0, speed: 0, arm: 0, fielding: 0 }
+          },
+          owned: true
+        },
+        {
+          name: "友沢 亮",
+          position: Position.OUTFIELD,
+          rarity: Rarity.R,
+          level: 4,
+          awakening: 2,
+          rating: 4,
+          stats: {
+            pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
+            batting: { contact: 3, power: 0, speed: 3, arm: 2, fielding: 0 }
+          },
+          owned: true
+        },
+        {
+          name: "猪狩 進",
+          position: Position.PITCHER,
+          rarity: Rarity.PSR,
+          level: 5,
+          awakening: 4,
+          rating: 5,
+          stats: {
+            pitching: { velocity: 4, control: 4, stamina: 0, breaking: 3 },
+            batting: { contact: 0, power: 0, speed: 0, arm: 0, fielding: 0 }
+          },
+          owned: true
+        },
+        {
+          name: "佐藤 寿也",
+          position: Position.INFIELD,
+          rarity: Rarity.N,
+          level: 3,
+          awakening: 1,
+          rating: 2,
+          stats: {
+            pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
+            batting: { contact: 1, power: 3, speed: 0, arm: 0, fielding: 2 }
+          },
+          owned: true
+        },
+        {
+          name: "六道 聖",
+          position: Position.CATCHER,
+          rarity: Rarity.PR,
+          level: 4,
+          awakening: 2,
+          rating: 3,
+          stats: {
+            pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
+            batting: { contact: 0, power: 0, speed: 0, arm: 2, fielding: 3 }
+          },
+          owned: true
         }
-      }
-    ];
-    
-    sampleCombos.forEach(combo => {
-      this.createCombo(combo);
-    });
-    
-    // Initialize a sample deck
-    this.createDeck({
-      name: "マイデッキ",
-      characters: [1, 2] as number[] // IDs of 猪狩 守 and 友沢 亮
-    });
+      ];
+      
+      // Insert sample characters
+      const createdCharacters = await db.insert(characters).values(sampleCharacters).returning();
+      
+      // Initialize sample combos
+      const sampleCombos: InsertCombo[] = [
+        {
+          name: "サクセスコンボ",
+          description: "猪狩守と友沢亮の組み合わせにより発動",
+          requiredCharacters: [createdCharacters[0].id, createdCharacters[1].id],
+          effects: {
+            "全ステータス": 1,
+            "疲労回復": 5
+          }
+        }
+      ];
+      
+      await db.insert(combos).values(sampleCombos);
+      
+      // Initialize a sample deck
+      await db.insert(decks).values({
+        name: "マイデッキ",
+        characters: [createdCharacters[0].id, createdCharacters[1].id]
+      });
+      
+      console.log("Sample data initialization complete");
+    } catch (error) {
+      console.error("Error initializing sample data:", error);
+    }
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
+
+// Initialize the sample data when the module loads
+storage.initializeData().catch(err => {
+  console.error("Error initializing sample data:", err);
+});
