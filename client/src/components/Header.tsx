@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "wouter";
 import { 
   Dialog, 
   DialogContent, 
@@ -15,7 +16,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Gamepad, Save, FolderOpen } from "lucide-react";
+import { Gamepad, Save, FolderOpen, Settings, UserPlus } from "lucide-react";
 import { useDeck } from "@/contexts/DeckContext";
 import { useQuery } from "@tanstack/react-query";
 import { Deck } from "@/lib/constants";
@@ -47,7 +48,29 @@ const Header: React.FC = () => {
           <Gamepad className="mr-2 h-6 w-6" />
           パワプロデッキメーカー
         </h1>
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 items-center">
+          <Link href="/add-character">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full text-[hsl(var(--gaming-blue))] bg-white hover:bg-gray-100"
+            >
+              <UserPlus className="mr-1 h-4 w-4" />
+              キャラ追加
+            </Button>
+          </Link>
+
+          <Link href="/admin">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full text-[hsl(var(--gaming-blue))] bg-white hover:bg-gray-100"
+            >
+              <Settings className="mr-1 h-4 w-4" />
+              管理
+            </Button>
+          </Link>
+          
           <Button
             variant="secondary"
             size="sm"

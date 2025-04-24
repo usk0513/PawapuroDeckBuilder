@@ -55,17 +55,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Character schema
+// Character schema - イベントキャラクターのマスターデータ
 export const characters = pgTable("characters", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   position: text("position").notNull().$type<Position>(),
-  rarity: text("rarity").notNull().$type<Rarity>().default(Rarity.N),
-  level: integer("level").notNull().default(1),
-  awakening: integer("awakening").notNull().default(0),
   rating: integer("rating").notNull().default(3),
   stats: json("stats").notNull().$type<Stat>(),
-  owned: boolean("owned").notNull().default(true),
 });
 
 export const insertCharacterSchema = createInsertSchema(characters).omit({
@@ -74,6 +70,23 @@ export const insertCharacterSchema = createInsertSchema(characters).omit({
 
 export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
 export type Character = typeof characters.$inferSelect;
+
+// OwnedCharacter schema - ユーザーが所持しているキャラクター
+export const ownedCharacters = pgTable("owned_characters", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  characterId: integer("character_id").references(() => characters.id).notNull(),
+  level: integer("level").notNull().default(1),
+  awakening: integer("awakening").notNull().default(0),
+  rarity: text("rarity").notNull().$type<Rarity>().default(Rarity.N),
+});
+
+export const insertOwnedCharacterSchema = createInsertSchema(ownedCharacters).omit({
+  id: true
+});
+
+export type InsertOwnedCharacter = z.infer<typeof insertOwnedCharacterSchema>;
+export type OwnedCharacter = typeof ownedCharacters.$inferSelect;
 
 // Deck schema
 export const decks = pgTable("decks", {
