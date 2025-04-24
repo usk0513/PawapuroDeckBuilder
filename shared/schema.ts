@@ -10,6 +10,16 @@ export enum Position {
   OUTFIELD = "外野"
 }
 
+// Character rarity enum
+export enum Rarity {
+  N = "N",
+  PN = "PN",
+  R = "R",
+  PR = "PR",
+  SR = "SR",
+  PSR = "PSR"
+}
+
 // Character stats schema
 export const StatSchema = z.object({
   pitching: z.object({
@@ -34,6 +44,7 @@ export const characters = pgTable("characters", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   position: text("position").notNull().$type<Position>(),
+  rarity: text("rarity").notNull().$type<Rarity>().default(Rarity.N),
   level: integer("level").notNull().default(1),
   awakening: integer("awakening").notNull().default(0),
   rating: integer("rating").notNull().default(3),

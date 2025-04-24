@@ -6,6 +6,16 @@ export enum Position {
   OUTFIELD = "外野"
 }
 
+// Rarity types
+export enum Rarity {
+  N = "N",
+  PN = "PN",
+  R = "R",
+  PR = "PR",
+  SR = "SR",
+  PSR = "PSR"
+}
+
 // Stat types
 export interface PitchingStats {
   velocity: number;
@@ -32,6 +42,7 @@ export interface Character {
   id: number;
   name: string;
   position: Position;
+  rarity: Rarity;
   level: number;
   awakening: number;
   rating: number;
@@ -133,6 +144,26 @@ export const positionOptions = [
   { value: Position.INFIELD, label: Position.INFIELD },
   { value: Position.OUTFIELD, label: Position.OUTFIELD }
 ];
+
+// Rarity options
+export const rarityOptions = [
+  { value: Rarity.N, label: Rarity.N },
+  { value: Rarity.PN, label: Rarity.PN },
+  { value: Rarity.R, label: Rarity.R },
+  { value: Rarity.PR, label: Rarity.PR },
+  { value: Rarity.SR, label: Rarity.SR },
+  { value: Rarity.PSR, label: Rarity.PSR }
+];
+
+// Rarity color mapping
+export const rarityColorMap = {
+  [Rarity.N]: { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-300" },
+  [Rarity.PN]: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-300" },
+  [Rarity.R]: { bg: "bg-green-100", text: "text-green-800", border: "border-green-300" },
+  [Rarity.PR]: { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-300" },
+  [Rarity.SR]: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-300" },
+  [Rarity.PSR]: { bg: "bg-red-100", text: "text-red-800", border: "border-red-300" }
+};
 
 // Maximum number of characters in a deck
 export const MAX_DECK_SIZE = 6;

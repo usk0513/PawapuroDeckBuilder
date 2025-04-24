@@ -171,6 +171,7 @@ export class MemStorage implements IStorage {
       {
         name: "猪狩 守",
         position: "投手",
+        rarity: "SR",
         level: 5,
         awakening: 3,
         rating: 3,
@@ -183,6 +184,7 @@ export class MemStorage implements IStorage {
       {
         name: "友沢 亮",
         position: "外野",
+        rarity: "R",
         level: 4,
         awakening: 2,
         rating: 4,
@@ -195,6 +197,7 @@ export class MemStorage implements IStorage {
       {
         name: "猪狩 進",
         position: "投手",
+        rarity: "PSR",
         level: 5,
         awakening: 4,
         rating: 5,
@@ -207,6 +210,7 @@ export class MemStorage implements IStorage {
       {
         name: "佐藤 寿也",
         position: "内野",
+        rarity: "N",
         level: 3,
         awakening: 1,
         rating: 2,
@@ -219,6 +223,7 @@ export class MemStorage implements IStorage {
       {
         name: "六道 聖",
         position: "捕手",
+        rarity: "PR",
         level: 4,
         awakening: 2,
         rating: 3,
