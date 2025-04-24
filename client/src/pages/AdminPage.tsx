@@ -7,7 +7,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Position, EventTiming, BonusEffectType, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -38,7 +38,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<string>("character");
 
   // キャラクターデータの取得
-  const { data: characters, isLoading } = useQuery({
+  const { data: characters = [], isLoading } = useQuery({
     queryKey: ["/api/characters"],
     queryFn: async () => {
       const res = await fetch("/api/characters");
@@ -48,7 +48,7 @@ export default function AdminPage() {
   });
 
   // レベルボーナスデータの取得
-  const { data: levelBonuses, isLoading: isLoadingBonuses } = useQuery({
+  const { data: levelBonuses = [], isLoading: isLoadingBonuses } = useQuery({
     queryKey: ["/api/character-level-bonuses", selectedCharacter],
     queryFn: async () => {
       if (!selectedCharacter) return [];
@@ -302,21 +302,10 @@ export default function AdminPage() {
               <CardDescription>
                 イベントキャラクターの情報を入力してください
               </CardDescription>
-              {selectedCharacter && (
-                <Tabs
-                  value={activeTab}
-                  onValueChange={(value) => setActiveTab(value)}
-                  className="mt-4"
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="character">基本情報</TabsTrigger>
-                    <TabsTrigger value="levelbonus">レベルボーナス</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              )}
             </CardHeader>
             <CardContent>
-              {(!selectedCharacter || activeTab === "character") && (
+              {!selectedCharacter ? (
+                // 新規キャラクター追加フォーム
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
@@ -467,186 +456,369 @@ export default function AdminPage() {
                     </div>
 
                     <div className="flex gap-2 justify-end">
-                      {selectedCharacter && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedCharacter(null);
-                            form.reset();
-                          }}
-                        >
-                          キャンセル
-                        </Button>
-                      )}
                       <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {selectedCharacter ? "更新する" : "追加する"}
+                        追加する
                       </Button>
-                      {selectedCharacter && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          disabled={isDeleting}
-                          onClick={() => {
-                            if (window.confirm("本当に削除しますか？")) {
-                              deleteCharacterMutation.mutate(selectedCharacter);
-                            }
-                          }}
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
                     </div>
                   </form>
                 </Form>
-              )}
-              
-              {selectedCharacter && activeTab === "levelbonus" && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">レベルボーナス追加</h3>
-                    <Form {...levelBonusForm}>
-                      <form onSubmit={levelBonusForm.handleSubmit(onLevelBonusSubmit)} className="space-y-4">
+              ) : (
+                // キャラクター編集フォーム（タブ付き）
+                <Tabs
+                  defaultValue="character"
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="character">基本情報</TabsTrigger>
+                    <TabsTrigger value="levelbonus">レベルボーナス</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="character">
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
-                          control={levelBonusForm.control}
-                          name="level"
+                          control={form.control}
+                          name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>レベル</FormLabel>
+                              <FormLabel>名前</FormLabel>
                               <FormControl>
-                                <Input type="number" {...field} min={1} max={99} onChange={e => field.onChange(parseInt(e.target.value))} />
+                                <Input placeholder="キャラクター名" {...field} />
                               </FormControl>
-                              <FormDescription>
-                                ボーナスが適用されるレベル（1-99）
-                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
-                          control={levelBonusForm.control}
-                          name="effectType"
+                          control={form.control}
+                          name="position"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>効果タイプ</FormLabel>
+                              <FormLabel>ポジション</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
+                                defaultValue={field.value}
                                 value={field.value}
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="効果タイプを選択" />
+                                    <SelectValue placeholder="ポジションを選択" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {bonusEffectTypeOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
+                                  {Object.values(Position).map((position) => (
+                                    <SelectItem key={position} value={position}>
+                                      {position}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <FormDescription>
-                                レベルボーナスの効果タイプ
-                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
+
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">得意練習</h3>
+                          <FormField
+                            control={form.control}
+                            name="specialTrainings"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="mb-4">
+                                  <FormLabel>キャラクターの得意練習を選択してください</FormLabel>
+                                  <FormDescription>
+                                    複数選択可能です
+                                  </FormDescription>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  {specialTrainingOptions.map((option) => (
+                                    <FormItem
+                                      key={option.value}
+                                      className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                                    >
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(option.value)}
+                                          onCheckedChange={(checked) => {
+                                            if (checked) {
+                                              field.onChange([...(field.value || []), option.value]);
+                                            } else {
+                                              field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== option.value
+                                                )
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        {option.label}
+                                      </FormLabel>
+                                    </FormItem>
+                                  ))}
+                                </div>
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {field.value && Array.isArray(field.value) && field.value.map((value) => (
+                                    <Badge 
+                                      key={value as string} 
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {value as React.ReactNode}
+                                      <button
+                                        type="button"
+                                        className="ml-1 hover:text-destructive"
+                                        onClick={() => {
+                                          field.onChange(
+                                            field.value?.filter((v) => v !== value)
+                                          );
+                                        }}
+                                      >
+                                        ×
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                         
-                        <FormField
-                          control={levelBonusForm.control}
-                          name="value"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>効果値</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="例: +5%, 30pt" />
-                              </FormControl>
-                              <FormDescription>
-                                効果の値（例: +5%, 30pt）
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={levelBonusForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>説明</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="効果の説明（任意）" value={field.value || ""} />
-                              </FormControl>
-                              <FormDescription>
-                                効果の詳細説明（任意）
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <Button type="submit" disabled={isLevelBonusSubmitting}>
-                          {isLevelBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          ボーナスを追加
-                        </Button>
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">イベント発生タイミング</h3>
+                          <FormField
+                            control={form.control}
+                            name="eventTiming"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>イベントの発生タイミングを選択してください</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    value={field.value as string | undefined}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    {eventTimingOptions.map((option) => (
+                                      <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
+                                        <FormControl>
+                                          <RadioGroupItem value={option.value} />
+                                        </FormControl>
+                                        <FormLabel className="font-normal cursor-pointer">
+                                          {option.label}
+                                        </FormLabel>
+                                      </FormItem>
+                                    ))}
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormDescription>
+                                  キャラクターイベントが発生するタイミング（前イベント・後イベント）
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedCharacter(null);
+                              form.reset();
+                            }}
+                          >
+                            キャンセル
+                          </Button>
+                          <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            更新する
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={isDeleting}
+                            onClick={() => {
+                              if (window.confirm("本当に削除しますか？")) {
+                                deleteCharacterMutation.mutate(selectedCharacter);
+                              }
+                            }}
+                          >
+                            {isDeleting ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </form>
                     </Form>
-                  </div>
+                  </TabsContent>
                   
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">登録済みレベルボーナス</h3>
-                    {isLoadingBonuses ? (
-                      <div className="flex justify-center my-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div>
-                    ) : levelBonuses && levelBonuses.length > 0 ? (
-                      <div className="space-y-3">
-                        {levelBonuses.map((bonus: any) => (
-                          <div key={bonus.id} className="flex justify-between items-center p-3 border rounded-md">
-                            <div>
-                              <div className="font-medium">
-                                Lv.{bonus.level} - {bonus.effectType}
-                              </div>
-                              <div className="text-sm">
-                                {bonus.value}
-                                {bonus.description && <span className="text-muted-foreground ml-2">{bonus.description}</span>}
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (window.confirm("このボーナスを削除しますか？")) {
-                                  deleteLevelBonusMutation.mutate(bonus.id);
-                                }
-                              }}
-                              disabled={isLevelBonusDeleting}
-                            >
-                              {isLevelBonusDeleting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash className="h-4 w-4 text-destructive" />
+                  <TabsContent value="levelbonus">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">レベルボーナス追加</h3>
+                        <Form {...levelBonusForm}>
+                          <form onSubmit={levelBonusForm.handleSubmit(onLevelBonusSubmit)} className="space-y-4">
+                            <FormField
+                              control={levelBonusForm.control}
+                              name="level"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>レベル</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      min={1}
+                                      max={99}
+                                      onChange={e => field.onChange(parseInt(e.target.value))}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    ボーナスが適用されるレベル（1-99）
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
                               )}
+                            />
+                            
+                            <FormField
+                              control={levelBonusForm.control}
+                              name="effectType"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>効果タイプ</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="効果タイプを選択" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {bonusEffectTypeOptions.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                          {option.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormDescription>
+                                    レベルボーナスの効果タイプ
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={levelBonusForm.control}
+                              name="value"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>効果値</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="例: +5%, 30pt" />
+                                  </FormControl>
+                                  <FormDescription>
+                                    効果の値（例: +5%, 30pt）
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={levelBonusForm.control}
+                              name="description"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>説明</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      placeholder="効果の説明（任意）"
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    効果の詳細説明（任意）
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <Button type="submit" disabled={isLevelBonusSubmitting}>
+                              {isLevelBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              ボーナスを追加
                             </Button>
+                          </form>
+                        </Form>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">登録済みレベルボーナス</h3>
+                        {isLoadingBonuses ? (
+                          <div className="flex justify-center my-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
                           </div>
-                        ))}
+                        ) : levelBonuses && levelBonuses.length > 0 ? (
+                          <div className="space-y-3">
+                            {levelBonuses.map((bonus: any) => (
+                              <div key={bonus.id} className="flex justify-between items-center p-3 border rounded-md">
+                                <div>
+                                  <div className="font-medium">
+                                    Lv.{bonus.level} - {bonus.effectType}
+                                  </div>
+                                  <div className="text-sm">
+                                    {bonus.value}
+                                    {bonus.description && (
+                                      <span className="text-muted-foreground ml-2">
+                                        {bonus.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (window.confirm("このボーナスを削除しますか？")) {
+                                      deleteLevelBonusMutation.mutate(bonus.id);
+                                    }
+                                  }}
+                                  disabled={isLevelBonusDeleting}
+                                >
+                                  {isLevelBonusDeleting ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash className="h-4 w-4 text-destructive" />
+                                  )}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 text-muted-foreground">
+                            レベルボーナスが登録されていません
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="text-center py-6 text-muted-foreground">
-                        レベルボーナスが登録されていません
-                      </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               )}
             </CardContent>
           </Card>
@@ -666,7 +838,7 @@ export default function AdminPage() {
                 <div className="flex justify-center my-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : characters && characters.length > 0 ? (
+              ) : characters.length > 0 ? (
                 <div className="space-y-4">
                   {characters.map((character: any) => (
                     <div
