@@ -14,6 +14,9 @@ import {
   ownedCharacters,
   type OwnedCharacter,
   type InsertOwnedCharacter,
+  characterLevelBonuses,
+  type CharacterLevelBonus,
+  type InsertCharacterLevelBonus,
   Position,
   Rarity
 } from "@shared/schema";
@@ -51,6 +54,12 @@ export interface IStorage {
   getAllCombos(): Promise<Combo[]>;
   getCombo(id: number): Promise<Combo | undefined>;
   createCombo(combo: InsertCombo): Promise<Combo>;
+  
+  // Character Level Bonus operations
+  getCharacterLevelBonuses(characterId: number): Promise<CharacterLevelBonus[]>;
+  createCharacterLevelBonus(bonus: InsertCharacterLevelBonus): Promise<CharacterLevelBonus>;
+  updateCharacterLevelBonus(id: number, bonus: Partial<InsertCharacterLevelBonus>): Promise<CharacterLevelBonus | undefined>;
+  deleteCharacterLevelBonus(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -195,6 +204,33 @@ export class DatabaseStorage implements IStorage {
   
   async deleteOwnedCharacter(id: number): Promise<boolean> {
     const result = await db.delete(ownedCharacters).where(eq(ownedCharacters.id, id));
+    return !!result;
+  }
+  
+  // Character Level Bonus operations
+  async getCharacterLevelBonuses(characterId: number): Promise<CharacterLevelBonus[]> {
+    return db.select()
+      .from(characterLevelBonuses)
+      .where(eq(characterLevelBonuses.characterId, characterId));
+  }
+  
+  async createCharacterLevelBonus(bonus: InsertCharacterLevelBonus): Promise<CharacterLevelBonus> {
+    const [newBonus] = await db.insert(characterLevelBonuses).values(bonus).returning();
+    return newBonus;
+  }
+  
+  async updateCharacterLevelBonus(id: number, bonus: Partial<InsertCharacterLevelBonus>): Promise<CharacterLevelBonus | undefined> {
+    const [updatedBonus] = await db
+      .update(characterLevelBonuses)
+      .set(bonus)
+      .where(eq(characterLevelBonuses.id, id))
+      .returning();
+    
+    return updatedBonus;
+  }
+  
+  async deleteCharacterLevelBonus(id: number): Promise<boolean> {
+    const result = await db.delete(characterLevelBonuses).where(eq(characterLevelBonuses.id, id));
     return !!result;
   }
 

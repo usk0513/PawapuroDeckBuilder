@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCharacterSchema, insertDeckSchema, insertOwnedCharacterSchema } from "@shared/schema";
+import { insertCharacterSchema, insertDeckSchema, insertOwnedCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -304,6 +304,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deleted = await storage.deleteOwnedCharacter(id);
       if (!deleted) {
         return res.status(404).json({ message: "所持キャラクターが見つかりませんでした" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  // API routes for character level bonuses
+  app.get("/api/character-level-bonuses", async (req, res) => {
+    try {
+      const characterId = req.query.characterId ? parseInt(req.query.characterId as string) : undefined;
+      if (!characterId || isNaN(characterId)) {
+        return res.status(400).json({ message: "キャラクターIDを指定してください" });
+      }
+      
+      const bonuses = await storage.getCharacterLevelBonuses(characterId);
+      res.json(bonuses);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.post("/api/character-level-bonuses", async (req, res) => {
+    try {
+      const result = insertCharacterLevelBonusSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newBonus = await storage.createCharacterLevelBonus(result.data);
+      res.status(201).json(newBonus);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/character-level-bonuses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      // Validate partial schema
+      const partialSchema = insertCharacterLevelBonusSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const updatedBonus = await storage.updateCharacterLevelBonus(id, result.data);
+      if (!updatedBonus) {
+        return res.status(404).json({ message: "レベルボーナスが見つかりませんでした" });
+      }
+      
+      res.json(updatedBonus);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/character-level-bonuses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.deleteCharacterLevelBonus(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "レベルボーナスが見つかりませんでした" });
       }
       
       res.status(204).end();
