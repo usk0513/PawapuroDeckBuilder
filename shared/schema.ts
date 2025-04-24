@@ -35,6 +35,12 @@ export enum SpecialTraining {
   BREAKING = "変化球"
 }
 
+// イベント発生タイミング
+export enum EventTiming {
+  PRE = "前イベント",
+  POST = "後イベント"
+}
+
 // Character stats schema
 export const StatSchema = z.object({
   pitching: z.object({
@@ -77,6 +83,7 @@ export const characters = pgTable("characters", {
   rating: integer("rating").notNull().default(3),
   stats: json("stats").notNull().$type<Stat>(),
   specialTrainings: json("specialTrainings").$type<SpecialTraining[]>().default([]),
+  eventTiming: text("event_timing").$type<EventTiming>(),
 });
 
 export const insertCharacterSchema = createInsertSchema(characters).omit({
