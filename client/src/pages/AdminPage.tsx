@@ -584,7 +584,7 @@ export default function AdminPage() {
                             <FormItem>
                               <FormLabel>説明</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="効果の説明（任意）" />
+                                <Input {...field} placeholder="効果の説明（任意）" value={field.value || ""} />
                               </FormControl>
                               <FormDescription>
                                 効果の詳細説明（任意）

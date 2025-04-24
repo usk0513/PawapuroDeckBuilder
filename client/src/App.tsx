@@ -12,7 +12,7 @@ import AddCharacterPage from "@/pages/AddCharacterPage";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={HomeWithDeckProvider} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/add-character" component={AddCharacterPage} />
       <Route component={NotFound} />
@@ -20,14 +20,21 @@ function Router() {
   );
 }
 
+// DeckProviderでラップしたHomeコンポーネント
+function HomeWithDeckProvider() {
+  return (
+    <DeckProvider>
+      <Home />
+    </DeckProvider>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <DeckProvider>
-          <Toaster />
-          <Router />
-        </DeckProvider>
+        <Toaster />
+        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );
