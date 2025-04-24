@@ -62,6 +62,7 @@ export interface Character {
   rating: number;
   stats: Stats;
   owned: boolean;
+  specialTrainings?: SpecialTraining[];
 }
 
 // Deck type

@@ -4,15 +4,17 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
-import { Position, Rarity, insertCharacterSchema } from "@shared/schema";
+import { Position, Rarity, SpecialTraining, insertCharacterSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash } from "lucide-react";
+import { Loader2, Plus, Trash, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { positionOptions, statColorMap } from "@/lib/constants";
+import { positionOptions, specialTrainingOptions, statColorMap } from "@/lib/constants";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 // 管理者向けキャラクター作成スキーマ
 const characterSchema = insertCharacterSchema.extend({
@@ -127,6 +129,7 @@ export default function AdminPage() {
       name: "",
       position: Position.PITCHER,
       rating: 3,
+      specialTrainings: [],
       stats: {
         pitching: {
           velocity: 0,
@@ -152,6 +155,7 @@ export default function AdminPage() {
       position: character.position,
       rating: character.rating,
       stats: character.stats,
+      specialTrainings: character.specialTrainings || [],
     });
   };
 
