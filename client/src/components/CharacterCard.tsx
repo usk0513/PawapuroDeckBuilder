@@ -1,5 +1,5 @@
 import React from "react";
-import { Character, statColorMap, statNames } from "@/lib/constants";
+import { Character, statColorMap, statNames, rarityColorMap } from "@/lib/constants";
 import { useDeck } from "@/contexts/DeckContext";
 import { Star, StarOff } from "lucide-react";
 import { useDrag } from "react-dnd";
@@ -92,7 +92,14 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, inDeck = false
             </div>
           </div>
           <div className="flex justify-between mt-1 text-sm">
-            <span className="text-gray-600">{character.position}</span>
+            <div className="flex items-center space-x-1">
+              <span className="text-gray-600">{character.position}</span>
+              <span 
+                className={`stat-pill ${rarityColorMap[character.rarity]?.bg} ${rarityColorMap[character.rarity]?.text}`}
+              >
+                {character.rarity}
+              </span>
+            </div>
             <div className="flex items-center space-x-1">
               {renderRatingStars()}
             </div>

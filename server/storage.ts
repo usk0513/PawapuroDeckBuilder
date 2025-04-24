@@ -10,7 +10,9 @@ import {
   type InsertDeck,
   combos,
   type Combo,
-  type InsertCombo
+  type InsertCombo,
+  Position,
+  Rarity
 } from "@shared/schema";
 
 // modify the interface with any CRUD methods

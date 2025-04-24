@@ -27,13 +27,16 @@ import {
   levelOptions, 
   awakeningOptions, 
   positionOptions,
-  Position 
+  rarityOptions,
+  Position,
+  Rarity 
 } from "@/lib/constants";
 
 // Form schema for creating a character
 const formSchema = z.object({
   name: z.string().min(1, { message: "キャラクター名を入力してください" }),
   position: z.nativeEnum(Position),
+  rarity: z.nativeEnum(Rarity),
   level: z.coerce.number().min(1).max(5),
   awakening: z.coerce.number().min(0).max(4),
 });
@@ -49,6 +52,7 @@ const CharacterForm: React.FC = () => {
     defaultValues: {
       name: "",
       position: Position.PITCHER,
+      rarity: Rarity.N,
       level: 1,
       awakening: 0,
     },
@@ -185,32 +189,61 @@ const CharacterForm: React.FC = () => {
             />
           </div>
           
-          <FormField
-            control={form.control}
-            name="position"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-gray-700">ポジション</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="ポジションを選択" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {positionOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="position"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">ポジション</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="ポジションを選択" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {positionOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="rarity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">レアリティ</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="レアリティを選択" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {rarityOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          </div>
           
           <Button 
             type="submit" 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Character, statColorMap, statNames } from "@/lib/constants";
+import { Character, statColorMap, statNames, rarityColorMap } from "@/lib/constants";
 import { PlusCircle, X } from "lucide-react";
 import { useDeck } from "@/contexts/DeckContext";
 import { useDrop } from "react-dnd";
@@ -89,6 +89,11 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ character, index }) => {
               {character.awakening > 0 && (
                 <span className="stat-pill bg-[hsl(var(--gaming-purple))] text-white">覚醒{character.awakening}</span>
               )}
+              <span 
+                className={`stat-pill ${rarityColorMap[character.rarity]?.bg} ${rarityColorMap[character.rarity]?.text}`}
+              >
+                {character.rarity}
+              </span>
               <span className="text-gray-600">{character.position}</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-1 text-xs">
