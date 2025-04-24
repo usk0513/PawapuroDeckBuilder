@@ -1,142 +1,126 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
-} from "@/components/ui/card";
-import { 
-  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger 
-} from "@/components/ui/dialog";
-import { 
-  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
-import { Character, Position, positionOptions } from "@/lib/constants";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { apiRequest } from "@/lib/queryClient";
+import { Position, Rarity, insertCharacterSchema } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Plus, Trash } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { positionOptions, statColorMap } from "@/lib/constants";
 
-// フォームバリデーションスキーマ
-const characterSchema = z.object({
-  name: z.string().min(1, "名前は必須です"),
-  position: z.nativeEnum(Position, {
-    errorMap: () => ({ message: "ポジションを選択してください" }),
-  }),
-  rating: z.coerce.number().min(1).max(5),
-  stats: z.object({
-    pitching: z.object({
-      velocity: z.coerce.number().min(0).max(100),
-      control: z.coerce.number().min(0).max(100),
-      stamina: z.coerce.number().min(0).max(100),
-      breaking: z.coerce.number().min(0).max(100),
-    }),
-    batting: z.object({
-      contact: z.coerce.number().min(0).max(100),
-      power: z.coerce.number().min(0).max(100),
-      speed: z.coerce.number().min(0).max(100),
-      arm: z.coerce.number().min(0).max(100),
-      fielding: z.coerce.number().min(0).max(100),
-    }),
-  }),
+// 管理者向けキャラクター作成スキーマ
+const characterSchema = insertCharacterSchema.extend({
+  // ここで追加のバリデーションがあれば追加できます
 });
 
 type CharacterFormValues = z.infer<typeof characterSchema>;
 
-const AdminPage: React.FC = () => {
-  const [, setLocation] = useLocation();
+export default function AdminPage() {
   const { toast } = useToast();
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  
-  // キャラクター一覧を取得
-  const { data: characters = [], isLoading } = useQuery<Character[]>({
-    queryKey: ['/api/characters'],
+  const queryClient = useQueryClient();
+  const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
+
+  // キャラクターデータの取得
+  const { data: characters, isLoading } = useQuery({
+    queryKey: ["/api/characters"],
+    queryFn: async () => {
+      const res = await fetch("/api/characters");
+      if (!res.ok) throw new Error("キャラクターデータの取得に失敗しました");
+      return await res.json();
+    }
   });
-  
-  // キャラクター追加・更新のミューテーション
+
+  // キャラクター作成ミューテーション
   const createCharacterMutation = useMutation({
     mutationFn: async (data: CharacterFormValues) => {
       const res = await apiRequest("POST", "/api/characters", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "キャラクター作成に失敗しました");
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
-      setIsFormDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
       toast({
-        title: "成功",
-        description: "キャラクターが追加されました",
+        title: "キャラクター作成",
+        description: "新しいキャラクターが作成されました",
       });
+      form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "エラー",
-        description: `キャラクターの追加に失敗しました: ${error.message}`,
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
-  
-  // キャラクター更新のミューテーション
+
+  // キャラクター更新ミューテーション
   const updateCharacterMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CharacterFormValues }) => {
       const res = await apiRequest("PATCH", `/api/characters/${id}`, data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "キャラクター更新に失敗しました");
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
-      setIsFormDialogOpen(false);
-      setSelectedCharacter(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
       toast({
-        title: "成功",
+        title: "キャラクター更新",
         description: "キャラクターが更新されました",
       });
+      setSelectedCharacter(null);
+      form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "エラー",
-        description: `キャラクターの更新に失敗しました: ${error.message}`,
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
-  
-  // キャラクター削除のミューテーション
+
+  // キャラクター削除ミューテーション
   const deleteCharacterMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiRequest("DELETE", `/api/characters/${id}`);
-      return await res.json();
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "キャラクター削除に失敗しました");
+      }
+      return true;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
-      setIsDeleteDialogOpen(false);
-      setSelectedCharacter(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
       toast({
-        title: "成功",
+        title: "キャラクター削除",
         description: "キャラクターが削除されました",
       });
+      if (selectedCharacter) {
+        setSelectedCharacter(null);
+        form.reset();
+      }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "エラー",
-        description: `キャラクターの削除に失敗しました: ${error.message}`,
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
-  
-  // フォーム初期化
+
   const form = useForm<CharacterFormValues>({
     resolver: zodResolver(characterSchema),
     defaultValues: {
@@ -156,404 +140,390 @@ const AdminPage: React.FC = () => {
           speed: 0,
           arm: 0,
           fielding: 0,
-        },
-      },
-    },
+        }
+      }
+    }
   });
-  
-  // キャラクター編集用にフォームにデータをセット
-  const handleEditCharacter = (character: Character) => {
-    setSelectedCharacter(character);
+
+  const handleEditCharacter = (character: any) => {
+    setSelectedCharacter(character.id);
     form.reset({
       name: character.name,
-      position: character.position as Position,
+      position: character.position,
       rating: character.rating,
       stats: character.stats,
     });
-    setIsFormDialogOpen(true);
   };
-  
-  // 新規キャラクター追加用にフォームをリセット
-  const handleAddCharacter = () => {
-    setSelectedCharacter(null);
-    form.reset({
-      name: "",
-      position: Position.PITCHER,
-      rating: 3,
-      stats: {
-        pitching: {
-          velocity: 0,
-          control: 0,
-          stamina: 0,
-          breaking: 0,
-        },
-        batting: {
-          contact: 0,
-          power: 0,
-          speed: 0,
-          arm: 0,
-          fielding: 0,
-        },
-      },
-    });
-    setIsFormDialogOpen(true);
-  };
-  
-  // フォーム送信処理
+
   const onSubmit = (values: CharacterFormValues) => {
     if (selectedCharacter) {
-      // 更新
-      updateCharacterMutation.mutate({ id: selectedCharacter.id, data: values });
+      updateCharacterMutation.mutate({
+        id: selectedCharacter,
+        data: values
+      });
     } else {
-      // 新規追加
       createCharacterMutation.mutate(values);
     }
   };
-  
+
+  const isSubmitting = createCharacterMutation.isPending || updateCharacterMutation.isPending;
+  const isDeleting = deleteCharacterMutation.isPending;
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setLocation("/")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            戻る
-          </Button>
-          <h1 className="text-2xl font-bold">イベントキャラクター管理</h1>
-        </div>
-        <Button 
-          onClick={handleAddCharacter}
-          className="bg-[hsl(var(--gaming-blue))]"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          新規キャラクター追加
-        </Button>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>キャラクター一覧</CardTitle>
-          <CardDescription>登録されているイベントキャラクターを管理します</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-4">読み込み中...</div>
-          ) : characters.length === 0 ? (
-            <div className="text-center py-4">登録されているキャラクターがありません</div>
-          ) : (
-            <Table>
-              <TableCaption>登録キャラクター一覧</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>名前</TableHead>
-                  <TableHead>ポジション</TableHead>
-                  <TableHead>評価</TableHead>
-                  <TableHead className="text-right">アクション</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {characters.map((character) => (
-                  <TableRow key={character.id}>
-                    <TableCell>{character.id}</TableCell>
-                    <TableCell className="font-medium">{character.name}</TableCell>
-                    <TableCell>{character.position}</TableCell>
-                    <TableCell>{character.rating}★</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditCharacter(character)}
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">管理者ページ</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* キャラクターフォーム */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>{selectedCharacter ? "キャラクター編集" : "新規キャラクター追加"}</CardTitle>
+              <CardDescription>
+                イベントキャラクターの情報を入力してください
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>名前</FormLabel>
+                        <FormControl>
+                          <Input placeholder="キャラクター名" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ポジション</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          value={field.value}
                         >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => {
-                            setSelectedCharacter(character);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* キャラクター追加・編集ダイアログ */}
-      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCharacter ? "キャラクターを編集" : "新規キャラクターを追加"}
-            </DialogTitle>
-            <DialogDescription>
-              キャラクター情報を入力してください。
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>名前</FormLabel>
-                      <FormControl>
-                        <Input placeholder="キャラクター名" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ポジション</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="ポジションを選択" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.values(Position).map((position) => (
+                              <SelectItem key={position} value={position}>
+                                {position}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="rating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>評価（1-5）</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={5}
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">投手ステータス</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="stats.pitching.velocity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>球速</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.pitching.control"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>コントロール</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.pitching.stamina"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>スタミナ</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.pitching.breaking"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>変化球</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">打者ステータス</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="stats.batting.contact"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ミート</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.batting.power"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>パワー</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.batting.speed"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>走力</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.batting.arm"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>肩力</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stats.batting.fielding"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>守備力</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end">
+                    {selectedCharacter && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedCharacter(null);
+                          form.reset();
+                        }}
                       >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="ポジションを選択" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {positionOptions.map((position) => (
-                            <SelectItem key={position} value={position}>
-                              {position}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="rating"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>評価（星の数）</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold mb-2">投手能力</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="stats.pitching.velocity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>球速</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                        キャンセル
+                      </Button>
                     )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.pitching.control"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>コントロール</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {selectedCharacter ? "更新する" : "追加する"}
+                    </Button>
+                    {selectedCharacter && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={isDeleting}
+                        onClick={() => {
+                          if (window.confirm("本当に削除しますか？")) {
+                            deleteCharacterMutation.mutate(selectedCharacter);
+                          }
+                        }}
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash className="h-4 w-4" />
+                        )}
+                      </Button>
                     )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.pitching.stamina"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>スタミナ</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.pitching.breaking"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>変化球</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* キャラクター一覧 */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>イベントキャラクター一覧</CardTitle>
+              <CardDescription>
+                作成したキャラクターの一覧です。編集するにはキャラクターをクリックしてください。
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center my-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold mb-2">打撃・野手能力</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="stats.batting.contact"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ミート</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.batting.power"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>パワー</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.batting.speed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>走力</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.batting.arm"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>肩力</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="stats.batting.fielding"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>守備力</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" max="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              ) : characters && characters.length > 0 ? (
+                <div className="space-y-4">
+                  {characters.map((character: any) => (
+                    <div
+                      key={character.id}
+                      onClick={() => handleEditCharacter(character)}
+                      className={`p-4 border rounded-lg cursor-pointer hover:bg-accent ${
+                        selectedCharacter === character.id ? "ring-2 ring-primary" : ""
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-lg">{character.name}</h3>
+                          <div className="text-sm text-muted-foreground">
+                            {character.position} | 評価: {character.rating}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsFormDialogOpen(false)}
-                >
-                  キャンセル
-                </Button>
-                <Button 
-                  type="submit"
-                  className="bg-[hsl(var(--gaming-blue))]"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {selectedCharacter ? "更新する" : "追加する"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* 削除確認ダイアログ */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>キャラクターを削除</DialogTitle>
-            <DialogDescription>
-              本当に「{selectedCharacter?.name}」を削除しますか？
-              この操作は元に戻せません。
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              キャンセル
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (selectedCharacter) {
-                  deleteCharacterMutation.mutate(selectedCharacter.id);
-                }
-              }}
-              disabled={deleteCharacterMutation.isPending}
-            >
-              削除する
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  キャラクターがまだ登録されていません
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default AdminPage;
+}

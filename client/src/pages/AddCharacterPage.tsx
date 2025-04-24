@@ -1,352 +1,267 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
-} from "@/components/ui/card";
-import { 
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle 
-} from "@/components/ui/dialog";
-import { 
-  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
-} from "@/components/ui/form";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
-import { Character, Rarity, rarityOptions, levelOptions, awakeningOptions } from "@/lib/constants";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Bookmark, Plus } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { apiRequest } from "@/lib/queryClient";
+import { Position, Rarity, insertOwnedCharacterSchema } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { levelOptions, awakeningOptions, rarityOptions, rarityColorMap } from "@/lib/constants";
 
-// フォームバリデーションスキーマ
-const addOwnedCharacterSchema = z.object({
-  characterId: z.number({
-    required_error: "キャラクターを選択してください",
-    invalid_type_error: "キャラクターを選択してください"
-  }),
-  level: z.coerce.number().min(1).max(5),
-  awakening: z.coerce.number().min(0).max(5),
-  rarity: z.nativeEnum(Rarity, {
-    errorMap: () => ({ message: "レアリティを選択してください" }),
-  }),
+// 所持キャラクター追加スキーマ
+const addOwnedCharacterSchema = insertOwnedCharacterSchema.extend({
+  // ここで追加のバリデーションがあれば追加できます
 });
 
 type AddOwnedCharacterFormValues = z.infer<typeof addOwnedCharacterSchema>;
 
-const AddCharacterPage: React.FC = () => {
-  const [, setLocation] = useLocation();
+export default function AddCharacterPage() {
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  
-  // キャラクター一覧を取得
-  const { data: allCharacters = [], isLoading: isLoadingCharacters } = useQuery<Character[]>({
-    queryKey: ['/api/characters'],
+  const queryClient = useQueryClient();
+  const [selectedCharacter, setSelectedCharacter] = useState<any>(null);
+
+  // すべてのキャラクターデータを取得
+  const { data: characters, isLoading: isLoadingCharacters } = useQuery({
+    queryKey: ["/api/characters"],
+    queryFn: async () => {
+      const res = await fetch("/api/characters");
+      if (!res.ok) throw new Error("キャラクターデータの取得に失敗しました");
+      return await res.json();
+    }
   });
-  
-  // 所持キャラクター一覧を取得
-  const { data: ownedCharacters = [], isLoading: isLoadingOwnedCharacters } = useQuery<Character[]>({
-    queryKey: ['/api/owned-characters'],
-  });
-  
-  // 所持キャラクター追加のミューテーション
+
+  // 所持キャラクター追加ミューテーション
   const addOwnedCharacterMutation = useMutation({
     mutationFn: async (data: AddOwnedCharacterFormValues) => {
       const res = await apiRequest("POST", "/api/owned-characters", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "キャラクター追加に失敗しました");
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/owned-characters'] });
-      setIsDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/owned-characters"] });
       toast({
-        title: "成功",
-        description: "キャラクターが所持リストに追加されました",
+        title: "キャラクター追加",
+        description: "所持キャラクターに追加されました",
+      });
+      setSelectedCharacter(null);
+      form.reset({
+        userId: 1, // デモ用の固定ユーザーID
+        characterId: 0,
+        level: 1,
+        awakening: 0,
+        rarity: Rarity.N,
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "エラー",
-        description: `キャラクターの追加に失敗しました: ${error.message}`,
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
-  
-  // フォーム初期化
+
   const form = useForm<AddOwnedCharacterFormValues>({
     resolver: zodResolver(addOwnedCharacterSchema),
     defaultValues: {
+      userId: 1, // デモ用の固定ユーザーID
+      characterId: 0,
       level: 1,
       awakening: 0,
       rarity: Rarity.N,
-    },
+    }
   });
-  
-  // キャラクター選択時に詳細情報をセット
-  const handleSelectCharacter = (character: Character) => {
+
+  const handleSelectCharacter = (character: any) => {
     setSelectedCharacter(character);
     form.setValue("characterId", character.id);
-    setIsDialogOpen(true);
   };
-  
-  // フォーム送信処理
+
   const onSubmit = (values: AddOwnedCharacterFormValues) => {
     addOwnedCharacterMutation.mutate(values);
   };
-  
-  // すでに所持しているキャラクターのIDリスト
-  const ownedCharacterIds = ownedCharacters.map(c => c.id);
-  
-  // 所持していないキャラクターのリスト（追加候補）
-  const availableCharacters = allCharacters.filter(c => !ownedCharacterIds.includes(c.id));
-  
-  // ポジション別に背景色のクラスを取得
-  const getPositionBgClass = (position: string) => {
-    switch (position) {
-      case "投手": return "bg-blue-100";
-      case "捕手": return "bg-purple-100";
-      case "内野": return "bg-yellow-100";
-      case "外野": return "bg-red-100";
-      default: return "bg-gray-100";
-    }
-  };
-  
+
+  const isSubmitting = addOwnedCharacterMutation.isPending;
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setLocation("/")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            戻る
-          </Button>
-          <h1 className="text-2xl font-bold">イベントキャラクター登録</h1>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">所持キャラクター追加</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* キャラクター選択部分 */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>キャラクター選択</CardTitle>
+              <CardDescription>
+                所持コレクションに追加するキャラクターを選択してください
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingCharacters ? (
+                <div className="flex justify-center my-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : characters && characters.length > 0 ? (
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                  {characters.map((character: any) => (
+                    <div
+                      key={character.id}
+                      onClick={() => handleSelectCharacter(character)}
+                      className={`p-4 border rounded-lg cursor-pointer hover:bg-accent ${
+                        selectedCharacter?.id === character.id ? "ring-2 ring-primary" : ""
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-lg">{character.name}</h3>
+                          <div className="text-sm text-muted-foreground">
+                            {character.position} | 評価: {character.rating}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  キャラクターがまだ登録されていません。管理者に追加を依頼してください。
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 所持キャラクター追加フォーム */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>所持キャラクター設定</CardTitle>
+              <CardDescription>
+                選択したキャラクターのレベル、覚醒、レアリティを設定してください
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!selectedCharacter ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  左側からキャラクターを選択してください
+                </div>
+              ) : (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="mb-6">
+                      <h3 className="font-bold text-xl">{selectedCharacter.name}</h3>
+                      <p className="text-muted-foreground">{selectedCharacter.position}</p>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="level"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>レベル</FormLabel>
+                          <Select
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                            defaultValue={field.value.toString()}
+                            value={field.value.toString()}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="レベルを選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {levelOptions.map((level) => (
+                                <SelectItem key={level.value} value={level.value.toString()}>
+                                  {level.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="awakening"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>覚醒</FormLabel>
+                          <Select
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                            defaultValue={field.value.toString()}
+                            value={field.value.toString()}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="覚醒レベルを選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {awakeningOptions.map((awakening) => (
+                                <SelectItem key={awakening.value} value={awakening.value.toString()}>
+                                  {awakening.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="rarity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>レアリティ</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="レアリティを選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Object.values(Rarity).map((rarity) => (
+                                <SelectItem key={rarity} value={rarity}>
+                                  <span style={{ color: rarityColorMap[rarity as Rarity] }}>
+                                    {rarity}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      所持キャラクターに追加
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 追加候補のキャラクター一覧 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>登録可能なキャラクター</CardTitle>
-            <CardDescription>所持していないキャラクターの一覧です</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingCharacters || isLoadingOwnedCharacters ? (
-              <div className="text-center py-4">読み込み中...</div>
-            ) : availableCharacters.length === 0 ? (
-              <div className="text-center py-4">登録可能なキャラクターがありません</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {availableCharacters.map((character) => (
-                  <div 
-                    key={character.id}
-                    className="border rounded-lg overflow-hidden cursor-pointer hover:border-[hsl(var(--gaming-blue))] transition-colors"
-                    onClick={() => handleSelectCharacter(character)}
-                  >
-                    <div className="flex p-3">
-                      <div className={`w-12 h-12 rounded-lg ${getPositionBgClass(character.position)} flex items-center justify-center overflow-hidden mr-3`}>
-                        <div className="flex items-center justify-center w-full h-full text-xl font-bold text-gray-600">
-                          {character.name.charAt(0)}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800">{character.name}</h3>
-                        <div className="flex justify-between mt-1 text-xs text-gray-600">
-                          <span>{character.position}</span>
-                          <span>{character.rating}★</span>
-                        </div>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="ml-2 self-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectCharacter(character);
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* 既に所持しているキャラクター一覧 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>所持キャラクター</CardTitle>
-            <CardDescription>あなたが所持しているキャラクターの一覧です</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingOwnedCharacters ? (
-              <div className="text-center py-4">読み込み中...</div>
-            ) : ownedCharacters.length === 0 ? (
-              <div className="text-center py-4">所持キャラクターがありません</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {ownedCharacters.map((character) => (
-                  <div 
-                    key={character.id}
-                    className="border rounded-lg overflow-hidden"
-                  >
-                    <div className="flex p-3">
-                      <div className={`w-12 h-12 rounded-lg ${getPositionBgClass(character.position)} flex items-center justify-center overflow-hidden mr-3`}>
-                        <div className="flex items-center justify-center w-full h-full text-xl font-bold text-gray-600">
-                          {character.name.charAt(0)}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800">{character.name}</h3>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">Lv.{character.level}</span>
-                          {character.awakening > 0 && (
-                            <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full">覚醒{character.awakening}</span>
-                          )}
-                          <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">{character.rarity}</span>
-                        </div>
-                      </div>
-                      <div className="ml-2 self-center">
-                        <Bookmark className="h-4 w-4 text-[hsl(var(--gaming-blue))]" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* キャラクター追加ダイアログ */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>キャラクターを所持リストに追加</DialogTitle>
-            <DialogDescription>
-              {selectedCharacter?.name} のレベル、覚醒、レアリティを設定してください。
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>レベル</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="レベルを選択" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {levelOptions.map((level) => (
-                          <SelectItem key={level} value={level.toString()}>
-                            レベル {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="awakening"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>覚醒</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="覚醒レベルを選択" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {awakeningOptions.map((awakening) => (
-                          <SelectItem key={awakening} value={awakening.toString()}>
-                            {awakening === 0 ? "覚醒なし" : `覚醒 ${awakening}`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="rarity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>レアリティ</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="レアリティを選択" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {rarityOptions.map((rarity) => (
-                          <SelectItem key={rarity} value={rarity}>
-                            {rarity}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  キャンセル
-                </Button>
-                <Button 
-                  type="submit"
-                  className="bg-[hsl(var(--gaming-blue))]"
-                  disabled={form.formState.isSubmitting || addOwnedCharacterMutation.isPending}
-                >
-                  追加する
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
-};
-
-export default AddCharacterPage;
+}
