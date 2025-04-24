@@ -21,6 +21,20 @@ export enum Rarity {
   PSR = "PSR"
 }
 
+// 得意練習の種類
+export enum SpecialTraining {
+  BATTING = "打撃",
+  STRENGTH = "筋力",
+  RUNNING = "走塁",
+  ARM = "肩力",
+  FIELDING = "守備",
+  MENTAL = "メンタル",
+  VELOCITY = "球速",
+  CONTROL = "コントロール",
+  STAMINA = "スタミナ",
+  BREAKING = "変化球"
+}
+
 // Character stats schema
 export const StatSchema = z.object({
   pitching: z.object({
@@ -62,6 +76,7 @@ export const characters = pgTable("characters", {
   position: text("position").notNull().$type<Position>(),
   rating: integer("rating").notNull().default(3),
   stats: json("stats").notNull().$type<Stat>(),
+  specialTrainings: json("specialTrainings").$type<SpecialTraining[]>().default([]),
 });
 
 export const insertCharacterSchema = createInsertSchema(characters).omit({

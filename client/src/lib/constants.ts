@@ -16,6 +16,20 @@ export enum Rarity {
   PSR = "PSR"
 }
 
+// 得意練習タイプ
+export enum SpecialTraining {
+  BATTING = "打撃",
+  STRENGTH = "筋力",
+  RUNNING = "走塁",
+  ARM = "肩力",
+  FIELDING = "守備",
+  MENTAL = "メンタル",
+  VELOCITY = "球速",
+  CONTROL = "コントロール",
+  STAMINA = "スタミナ",
+  BREAKING = "変化球"
+}
+
 // Stat types
 export interface PitchingStats {
   velocity: number;
@@ -153,6 +167,20 @@ export const rarityOptions = [
   { value: Rarity.PR, label: Rarity.PR },
   { value: Rarity.SR, label: Rarity.SR },
   { value: Rarity.PSR, label: Rarity.PSR }
+];
+
+// 得意練習オプション
+export const specialTrainingOptions = [
+  { value: SpecialTraining.BATTING, label: SpecialTraining.BATTING },
+  { value: SpecialTraining.STRENGTH, label: SpecialTraining.STRENGTH },
+  { value: SpecialTraining.RUNNING, label: SpecialTraining.RUNNING },
+  { value: SpecialTraining.ARM, label: SpecialTraining.ARM },
+  { value: SpecialTraining.FIELDING, label: SpecialTraining.FIELDING },
+  { value: SpecialTraining.MENTAL, label: SpecialTraining.MENTAL },
+  { value: SpecialTraining.VELOCITY, label: SpecialTraining.VELOCITY },
+  { value: SpecialTraining.CONTROL, label: SpecialTraining.CONTROL },
+  { value: SpecialTraining.STAMINA, label: SpecialTraining.STAMINA },
+  { value: SpecialTraining.BREAKING, label: SpecialTraining.BREAKING }
 ];
 
 // Rarity color mapping
