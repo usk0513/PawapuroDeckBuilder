@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Plus, Trash, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { positionOptions, specialTrainingOptions, eventTimingOptions, statColorMap } from "@/lib/constants";
@@ -519,26 +520,26 @@ export default function AdminPage() {
                       control={form.control}
                       name="eventTiming"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="space-y-3">
                           <FormLabel>イベントの発生タイミングを選択してください</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value as string | undefined}
-                            value={field.value as string | undefined}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="タイミングを選択" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value as string | undefined}
+                              className="flex flex-col space-y-1"
+                            >
                               {eventTimingOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
+                                <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
+                                  <FormControl>
+                                    <RadioGroupItem value={option.value} />
+                                  </FormControl>
+                                  <FormLabel className="font-normal cursor-pointer">
+                                    {option.label}
+                                  </FormLabel>
+                                </FormItem>
                               ))}
-                            </SelectContent>
-                          </Select>
+                            </RadioGroup>
+                          </FormControl>
                           <FormDescription>
                             キャラクターイベントが発生するタイミング（前イベント・後イベント）
                           </FormDescription>
