@@ -685,7 +685,7 @@ export default function AdminPage() {
                                         </SelectTrigger>
                                       </FormControl>
                                       <SelectContent>
-                                        {Array.from({ length: 50 }, (_, i) => i + 1).map((level) => (
+                                        {[1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50].map((level) => (
                                           <SelectItem key={level} value={level.toString()}>
                                             Lv.{level}
                                           </SelectItem>
@@ -694,7 +694,7 @@ export default function AdminPage() {
                                     </Select>
                                   </FormControl>
                                   <FormDescription>
-                                    ボーナスが適用されるレベル（1-50）
+                                    ボーナスが適用されるレベル（1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50）
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
