@@ -172,8 +172,8 @@ export class MemStorage implements IStorage {
     const sampleCharacters: InsertCharacter[] = [
       {
         name: "猪狩 守",
-        position: "投手",
-        rarity: "SR",
+        position: Position.PITCHER,
+        rarity: Rarity.SR,
         level: 5,
         awakening: 3,
         rating: 3,
@@ -185,8 +185,8 @@ export class MemStorage implements IStorage {
       },
       {
         name: "友沢 亮",
-        position: "外野",
-        rarity: "R",
+        position: Position.OUTFIELD,
+        rarity: Rarity.R,
         level: 4,
         awakening: 2,
         rating: 4,
@@ -198,8 +198,8 @@ export class MemStorage implements IStorage {
       },
       {
         name: "猪狩 進",
-        position: "投手",
-        rarity: "PSR",
+        position: Position.PITCHER,
+        rarity: Rarity.PSR,
         level: 5,
         awakening: 4,
         rating: 5,
@@ -211,8 +211,8 @@ export class MemStorage implements IStorage {
       },
       {
         name: "佐藤 寿也",
-        position: "内野",
-        rarity: "N",
+        position: Position.INFIELD,
+        rarity: Rarity.N,
         level: 3,
         awakening: 1,
         rating: 2,
@@ -224,8 +224,8 @@ export class MemStorage implements IStorage {
       },
       {
         name: "六道 聖",
-        position: "捕手",
-        rarity: "PR",
+        position: Position.CATCHER,
+        rarity: Rarity.PR,
         level: 4,
         awakening: 2,
         rating: 3,
@@ -246,7 +246,7 @@ export class MemStorage implements IStorage {
       {
         name: "サクセスコンボ",
         description: "猪狩守と友沢亮の組み合わせにより発動",
-        requiredCharacters: [1, 2], // IDs of 猪狩 守 and 友沢 亮
+        requiredCharacters: [1, 2] as number[], // IDs of 猪狩 守 and 友沢 亮
         effects: {
           "全ステータス": 1,
           "疲労回復": 5
@@ -261,7 +261,7 @@ export class MemStorage implements IStorage {
     // Initialize a sample deck
     this.createDeck({
       name: "マイデッキ",
-      characters: [1, 2] // IDs of 猪狩 守 and 友沢 亮
+      characters: [1, 2] as number[] // IDs of 猪狩 守 and 友沢 亮
     });
   }
 }
