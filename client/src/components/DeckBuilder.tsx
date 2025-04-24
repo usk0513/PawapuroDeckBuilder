@@ -24,8 +24,13 @@ const DeckBuilder: React.FC = () => {
     accept: "character",
     drop: (item: { id: number }) => {
       if (!isDeckFull) {
-        addCharacterToDeck(item.id);
-        return { added: true };
+        // Only add if not already in the deck
+        const isAlreadyInDeck = deckCharacters.some(c => c.id === item.id);
+        if (!isAlreadyInDeck) {
+          addCharacterToDeck(item.id);
+          return { added: true };
+        }
+        return { added: false };
       } else {
         toast({
           title: "デッキがいっぱいです",

@@ -124,6 +124,7 @@ export const DeckProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       // Add to existing deck if character isn't already in it
       if (!currentDeck.characters.includes(characterId)) {
+        // Important: preserve the existing characters and add the new one
         setCurrentDeck({
           ...currentDeck,
           characters: [...currentDeck.characters, characterId]
