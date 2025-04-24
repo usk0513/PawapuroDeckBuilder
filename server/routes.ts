@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCharacterSchema, insertDeckSchema } from "@shared/schema";
+import { insertCharacterSchema, insertDeckSchema, insertOwnedCharacterSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -210,6 +210,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(combo);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  // API routes for owned characters
+  app.get("/api/owned-characters", async (req, res) => {
+    try {
+      // userIdクエリパラメータが必要
+      const userId = parseInt(req.query.userId as string);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "無効なユーザーIDです" });
+      }
+      
+      const ownedCharacters = await storage.getAllOwnedCharacters(userId);
+      res.json(ownedCharacters);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.get("/api/owned-characters/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const ownedCharacter = await storage.getOwnedCharacter(id);
+      if (!ownedCharacter) {
+        return res.status(404).json({ message: "所持キャラクターが見つかりませんでした" });
+      }
+      
+      res.json(ownedCharacter);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.post("/api/owned-characters", async (req, res) => {
+    try {
+      const result = insertOwnedCharacterSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newOwnedCharacter = await storage.createOwnedCharacter(result.data);
+      res.status(201).json(newOwnedCharacter);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/owned-characters/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      // Validate partial schema
+      const partialSchema = insertOwnedCharacterSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const updatedOwnedCharacter = await storage.updateOwnedCharacter(id, result.data);
+      if (!updatedOwnedCharacter) {
+        return res.status(404).json({ message: "所持キャラクターが見つかりませんでした" });
+      }
+      
+      res.json(updatedOwnedCharacter);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/owned-characters/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.deleteOwnedCharacter(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "所持キャラクターが見つかりませんでした" });
+      }
+      
+      res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: "サーバーエラーが発生しました" });
     }

@@ -154,6 +154,18 @@ export const combosRelations = relations(combos, ({ many }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   decks: many(decks),
+  ownedCharacters: many(ownedCharacters),
+}));
+
+export const ownedCharactersRelations = relations(ownedCharacters, ({ one }) => ({
+  user: one(users, {
+    fields: [ownedCharacters.userId],
+    references: [users.id],
+  }),
+  character: one(characters, {
+    fields: [ownedCharacters.characterId],
+    references: [characters.id],
+  }),
 }));
 
 export const deckCharactersRelations = relations(deckCharacters, ({ one }) => ({

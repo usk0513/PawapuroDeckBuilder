@@ -11,6 +11,9 @@ import {
   combos,
   type Combo,
   type InsertCombo,
+  ownedCharacters,
+  type OwnedCharacter,
+  type InsertOwnedCharacter,
   Position,
   Rarity
 } from "@shared/schema";
@@ -23,12 +26,19 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
-  // Character operations
+  // Character operations (master data)
   getAllCharacters(): Promise<Character[]>;
   getCharacter(id: number): Promise<Character | undefined>;
   createCharacter(character: InsertCharacter): Promise<Character>;
   updateCharacter(id: number, character: Partial<InsertCharacter>): Promise<Character | undefined>;
   deleteCharacter(id: number): Promise<boolean>;
+  
+  // Owned Character operations (user's collection)
+  getAllOwnedCharacters(userId: number): Promise<(OwnedCharacter & { character: Character })[]>;
+  getOwnedCharacter(id: number): Promise<(OwnedCharacter & { character: Character }) | undefined>;
+  createOwnedCharacter(ownedCharacter: InsertOwnedCharacter): Promise<OwnedCharacter>;
+  updateOwnedCharacter(id: number, ownedCharacter: Partial<InsertOwnedCharacter>): Promise<OwnedCharacter | undefined>;
+  deleteOwnedCharacter(id: number): Promise<boolean>;
   
   // Deck operations
   getAllDecks(): Promise<Deck[]>;
@@ -134,6 +144,59 @@ export class DatabaseStorage implements IStorage {
     const [newCombo] = await db.insert(combos).values(combo).returning();
     return newCombo;
   }
+  
+  // Owned Character operations
+  async getAllOwnedCharacters(userId: number): Promise<(OwnedCharacter & { character: Character })[]> {
+    return db.select({
+      id: ownedCharacters.id,
+      userId: ownedCharacters.userId,
+      characterId: ownedCharacters.characterId,
+      level: ownedCharacters.level,
+      awakening: ownedCharacters.awakening,
+      rarity: ownedCharacters.rarity,
+      character: characters
+    })
+    .from(ownedCharacters)
+    .innerJoin(characters, eq(ownedCharacters.characterId, characters.id))
+    .where(eq(ownedCharacters.userId, userId));
+  }
+  
+  async getOwnedCharacter(id: number): Promise<(OwnedCharacter & { character: Character }) | undefined> {
+    const [ownedCharacter] = await db.select({
+      id: ownedCharacters.id,
+      userId: ownedCharacters.userId,
+      characterId: ownedCharacters.characterId,
+      level: ownedCharacters.level,
+      awakening: ownedCharacters.awakening,
+      rarity: ownedCharacters.rarity,
+      character: characters
+    })
+    .from(ownedCharacters)
+    .innerJoin(characters, eq(ownedCharacters.characterId, characters.id))
+    .where(eq(ownedCharacters.id, id));
+    
+    return ownedCharacter;
+  }
+  
+  async createOwnedCharacter(ownedChar: InsertOwnedCharacter): Promise<OwnedCharacter> {
+    const [newOwnedCharacter] = await db.insert(ownedCharacters).values(ownedChar).returning();
+    return newOwnedCharacter;
+  }
+  
+  async updateOwnedCharacter(id: number, ownedChar: Partial<InsertOwnedCharacter>): Promise<OwnedCharacter | undefined> {
+    const [updatedOwnedCharacter] = await db
+      .update(ownedCharacters)
+      .set(ownedChar)
+      .where(eq(ownedCharacters.id, id))
+      .returning();
+    
+    return updatedOwnedCharacter;
+  }
+  
+  async deleteOwnedCharacter(id: number): Promise<boolean> {
+    const result = await db.delete(ownedCharacters).where(eq(ownedCharacters.id, id));
+    return !!result;
+  }
 
   // Initialize sample data for development purposes
   async initializeData(): Promise<void> {
@@ -175,67 +238,47 @@ export class DatabaseStorage implements IStorage {
         {
           name: "猪狩 守",
           position: Position.PITCHER,
-          rarity: Rarity.SR,
-          level: 5,
-          awakening: 3,
           rating: 3,
           stats: {
             pitching: { velocity: 3, control: 2, stamina: 2, breaking: 0 },
             batting: { contact: 0, power: 0, speed: 0, arm: 0, fielding: 0 }
-          },
-          owned: true
+          }
         },
         {
           name: "友沢 亮",
           position: Position.OUTFIELD,
-          rarity: Rarity.R,
-          level: 4,
-          awakening: 2,
           rating: 4,
           stats: {
             pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
             batting: { contact: 3, power: 0, speed: 3, arm: 2, fielding: 0 }
-          },
-          owned: true
+          }
         },
         {
           name: "猪狩 進",
           position: Position.PITCHER,
-          rarity: Rarity.PSR,
-          level: 5,
-          awakening: 4,
           rating: 5,
           stats: {
             pitching: { velocity: 4, control: 4, stamina: 0, breaking: 3 },
             batting: { contact: 0, power: 0, speed: 0, arm: 0, fielding: 0 }
-          },
-          owned: true
+          }
         },
         {
           name: "佐藤 寿也",
           position: Position.INFIELD,
-          rarity: Rarity.N,
-          level: 3,
-          awakening: 1,
           rating: 2,
           stats: {
             pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
             batting: { contact: 1, power: 3, speed: 0, arm: 0, fielding: 2 }
-          },
-          owned: true
+          }
         },
         {
           name: "六道 聖",
           position: Position.CATCHER,
-          rarity: Rarity.PR,
-          level: 4,
-          awakening: 2,
           rating: 3,
           stats: {
             pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
             batting: { contact: 0, power: 0, speed: 0, arm: 2, fielding: 3 }
-          },
-          owned: true
+          }
         }
       ];
       
