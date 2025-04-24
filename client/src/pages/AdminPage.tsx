@@ -1,33 +1,41 @@
 import React, { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { apiRequest } from "@/lib/queryClient";
-import { Position, Rarity, SpecialTraining, EventTiming, insertCharacterSchema } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Position, EventTiming, BonusEffectType, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Plus, Trash, Check } from "lucide-react";
+import { Loader2, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { positionOptions, specialTrainingOptions, eventTimingOptions, statColorMap } from "@/lib/constants";
+import { positionOptions, specialTrainingOptions, eventTimingOptions } from "@/lib/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // 管理者向けキャラクター作成スキーマ
-const characterSchema = insertCharacterSchema.extend({
-  // ここで追加のバリデーションがあれば追加できます
-});
-
+const characterSchema = insertCharacterSchema.extend({});
 type CharacterFormValues = z.infer<typeof characterSchema>;
+
+// レベルボーナス登録用スキーマ
+const levelBonusSchema = insertCharacterLevelBonusSchema.extend({});
+type LevelBonusFormValues = z.infer<typeof levelBonusSchema>;
+
+// BonusEffectTypeの選択肢
+const bonusEffectTypeOptions = Object.entries(BonusEffectType).map(([key, value]) => ({
+  value,
+  label: value,
+}));
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("character");
 
   // キャラクターデータの取得
   const { data: characters, isLoading } = useQuery({
@@ -37,6 +45,18 @@ export default function AdminPage() {
       if (!res.ok) throw new Error("キャラクターデータの取得に失敗しました");
       return await res.json();
     }
+  });
+
+  // レベルボーナスデータの取得
+  const { data: levelBonuses, isLoading: isLoadingBonuses } = useQuery({
+    queryKey: ["/api/character-level-bonuses", selectedCharacter],
+    queryFn: async () => {
+      if (!selectedCharacter) return [];
+      const res = await fetch(`/api/character-level-bonuses?characterId=${selectedCharacter}`);
+      if (!res.ok) throw new Error("レベルボーナスデータの取得に失敗しました");
+      return await res.json();
+    },
+    enabled: !!selectedCharacter,
   });
 
   // キャラクター作成ミューテーション
@@ -131,7 +151,7 @@ export default function AdminPage() {
       position: Position.PITCHER,
       specialTrainings: [],
       eventTiming: undefined,
-      stats: { // スキーマで必須なのでデフォルト値を設定
+      stats: {
         pitching: {
           velocity: 0,
           control: 0,
@@ -149,14 +169,108 @@ export default function AdminPage() {
     }
   });
 
+  // レベルボーナス用フォーム
+  const levelBonusForm = useForm<LevelBonusFormValues>({
+    resolver: zodResolver(levelBonusSchema),
+    defaultValues: {
+      characterId: selectedCharacter || undefined,
+      level: 1,
+      effectType: undefined,
+      value: "",
+      description: "",
+    }
+  });
+  
+  // レベルボーナス追加ミューテーション
+  const createLevelBonusMutation = useMutation({
+    mutationFn: async (data: LevelBonusFormValues) => {
+      const res = await apiRequest("POST", "/api/character-level-bonuses", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "レベルボーナス追加に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/character-level-bonuses", selectedCharacter] });
+      toast({
+        title: "レベルボーナス追加",
+        description: "レベルボーナスが追加されました",
+      });
+      levelBonusForm.reset({
+        characterId: selectedCharacter || undefined,
+        level: 1,
+        effectType: undefined,
+        value: "",
+        description: "",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // レベルボーナス削除ミューテーション
+  const deleteLevelBonusMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/character-level-bonuses/${id}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "レベルボーナス削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/character-level-bonuses", selectedCharacter] });
+      toast({
+        title: "レベルボーナス削除",
+        description: "レベルボーナスが削除されました",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const onLevelBonusSubmit = (values: LevelBonusFormValues) => {
+    // characterIdを現在選択中のキャラクターIDに設定
+    if (selectedCharacter) {
+      const data = {
+        ...values,
+        characterId: selectedCharacter
+      };
+      createLevelBonusMutation.mutate(data);
+    }
+  };
+  
   const handleEditCharacter = (character: any) => {
     setSelectedCharacter(character.id);
+    setActiveTab("character");
+    
+    // キャラクター編集フォームの初期化
     form.reset({
       name: character.name,
       position: character.position,
-      stats: character.stats, // スキーマで必須なので残します
+      stats: character.stats,
       specialTrainings: character.specialTrainings || [],
       eventTiming: character.eventTiming,
+    });
+    
+    // レベルボーナスフォームの初期化
+    levelBonusForm.reset({
+      characterId: character.id,
+      level: 1,
+      effectType: undefined,
+      value: "",
+      description: "",
     });
   };
 
@@ -173,12 +287,14 @@ export default function AdminPage() {
 
   const isSubmitting = createCharacterMutation.isPending || updateCharacterMutation.isPending;
   const isDeleting = deleteCharacterMutation.isPending;
+  const isLevelBonusSubmitting = createLevelBonusMutation.isPending;
+  const isLevelBonusDeleting = deleteLevelBonusMutation.isPending;
 
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">管理者ページ</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* キャラクターフォーム */}
+        {/* キャラクター情報と編集フォーム */}
         <div>
           <Card>
             <CardHeader>
@@ -186,197 +302,352 @@ export default function AdminPage() {
               <CardDescription>
                 イベントキャラクターの情報を入力してください
               </CardDescription>
+              {selectedCharacter && (
+                <Tabs
+                  value={activeTab}
+                  onValueChange={(value) => setActiveTab(value)}
+                  className="mt-4"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="character">基本情報</TabsTrigger>
+                    <TabsTrigger value="levelbonus">レベルボーナス</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>名前</FormLabel>
-                        <FormControl>
-                          <Input placeholder="キャラクター名" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="position"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ポジション</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="ポジションを選択" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.values(Position).map((position) => (
-                              <SelectItem key={position} value={position}>
-                                {position}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">得意練習</h3>
+              {(!selectedCharacter || activeTab === "character") && (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="specialTrainings"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="mb-4">
-                            <FormLabel>キャラクターの得意練習を選択してください</FormLabel>
-                            <FormDescription>
-                              複数選択可能です
-                            </FormDescription>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            {specialTrainingOptions.map((option) => (
-                              <FormItem
-                                key={option.value}
-                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(option.value)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        field.onChange([...(field.value || []), option.value]);
-                                      } else {
-                                        field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== option.value
-                                          )
-                                        );
-                                      }
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal cursor-pointer">
-                                  {option.label}
-                                </FormLabel>
-                              </FormItem>
-                            ))}
-                          </div>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {field.value && Array.isArray(field.value) && field.value.map((value) => (
-                              <Badge 
-                                key={value as string} 
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {value as React.ReactNode}
-                                <button
-                                  type="button"
-                                  className="ml-1 hover:text-destructive"
-                                  onClick={() => {
-                                    field.onChange(
-                                      field.value?.filter((v) => v !== value)
-                                    );
-                                  }}
-                                >
-                                  ×
-                                </button>
-                              </Badge>
-                            ))}
-                          </div>
+                          <FormLabel>名前</FormLabel>
+                          <FormControl>
+                            <Input placeholder="キャラクター名" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">イベント発生タイミング</h3>
+
                     <FormField
                       control={form.control}
-                      name="eventTiming"
+                      name="position"
                       render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>イベントの発生タイミングを選択してください</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              value={field.value as string | undefined}
-                              className="flex flex-col space-y-1"
-                            >
-                              {eventTimingOptions.map((option) => (
-                                <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
+                        <FormItem>
+                          <FormLabel>ポジション</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="ポジションを選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Object.values(Position).map((position) => (
+                                <SelectItem key={position} value={position}>
+                                  {position}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">得意練習</h3>
+                      <FormField
+                        control={form.control}
+                        name="specialTrainings"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="mb-4">
+                              <FormLabel>キャラクターの得意練習を選択してください</FormLabel>
+                              <FormDescription>
+                                複数選択可能です
+                              </FormDescription>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              {specialTrainingOptions.map((option) => (
+                                <FormItem
+                                  key={option.value}
+                                  className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                                >
                                   <FormControl>
-                                    <RadioGroupItem value={option.value} />
+                                    <Checkbox
+                                      checked={field.value?.includes(option.value)}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          field.onChange([...(field.value || []), option.value]);
+                                        } else {
+                                          field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== option.value
+                                            )
+                                          );
+                                        }
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormLabel className="font-normal cursor-pointer">
                                     {option.label}
                                   </FormLabel>
                                 </FormItem>
                               ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormDescription>
-                            キャラクターイベントが発生するタイミング（前イベント・後イベント）
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex gap-2 justify-end">
-                    {selectedCharacter && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedCharacter(null);
-                          form.reset();
-                        }}
-                      >
-                        キャンセル
-                      </Button>
-                    )}
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {selectedCharacter ? "更新する" : "追加する"}
-                    </Button>
-                    {selectedCharacter && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isDeleting}
-                        onClick={() => {
-                          if (window.confirm("本当に削除しますか？")) {
-                            deleteCharacterMutation.mutate(selectedCharacter);
-                          }
-                        }}
-                      >
-                        {isDeleting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash className="h-4 w-4" />
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {field.value && Array.isArray(field.value) && field.value.map((value) => (
+                                <Badge 
+                                  key={value as string} 
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {value as React.ReactNode}
+                                  <button
+                                    type="button"
+                                    className="ml-1 hover:text-destructive"
+                                    onClick={() => {
+                                      field.onChange(
+                                        field.value?.filter((v) => v !== value)
+                                      );
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
                         )}
+                      />
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">イベント発生タイミング</h3>
+                      <FormField
+                        control={form.control}
+                        name="eventTiming"
+                        render={({ field }) => (
+                          <FormItem className="space-y-3">
+                            <FormLabel>イベントの発生タイミングを選択してください</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value as string | undefined}
+                                className="flex flex-col space-y-1"
+                              >
+                                {eventTimingOptions.map((option) => (
+                                  <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value={option.value} />
+                                    </FormControl>
+                                    <FormLabel className="font-normal cursor-pointer">
+                                      {option.label}
+                                    </FormLabel>
+                                  </FormItem>
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                            <FormDescription>
+                              キャラクターイベントが発生するタイミング（前イベント・後イベント）
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                      {selectedCharacter && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedCharacter(null);
+                            form.reset();
+                          }}
+                        >
+                          キャンセル
+                        </Button>
+                      )}
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {selectedCharacter ? "更新する" : "追加する"}
                       </Button>
+                      {selectedCharacter && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={isDeleting}
+                          onClick={() => {
+                            if (window.confirm("本当に削除しますか？")) {
+                              deleteCharacterMutation.mutate(selectedCharacter);
+                            }
+                          }}
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </form>
+                </Form>
+              )}
+              
+              {selectedCharacter && activeTab === "levelbonus" && (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">レベルボーナス追加</h3>
+                    <Form {...levelBonusForm}>
+                      <form onSubmit={levelBonusForm.handleSubmit(onLevelBonusSubmit)} className="space-y-4">
+                        <FormField
+                          control={levelBonusForm.control}
+                          name="level"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>レベル</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} min={1} max={99} onChange={e => field.onChange(parseInt(e.target.value))} />
+                              </FormControl>
+                              <FormDescription>
+                                ボーナスが適用されるレベル（1-99）
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={levelBonusForm.control}
+                          name="effectType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>効果タイプ</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="効果タイプを選択" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {bonusEffectTypeOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                レベルボーナスの効果タイプ
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={levelBonusForm.control}
+                          name="value"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>効果値</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="例: +5%, 30pt" />
+                              </FormControl>
+                              <FormDescription>
+                                効果の値（例: +5%, 30pt）
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={levelBonusForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>説明</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="効果の説明（任意）" />
+                              </FormControl>
+                              <FormDescription>
+                                効果の詳細説明（任意）
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" disabled={isLevelBonusSubmitting}>
+                          {isLevelBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          ボーナスを追加
+                        </Button>
+                      </form>
+                    </Form>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">登録済みレベルボーナス</h3>
+                    {isLoadingBonuses ? (
+                      <div className="flex justify-center my-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    ) : levelBonuses && levelBonuses.length > 0 ? (
+                      <div className="space-y-3">
+                        {levelBonuses.map((bonus: any) => (
+                          <div key={bonus.id} className="flex justify-between items-center p-3 border rounded-md">
+                            <div>
+                              <div className="font-medium">
+                                Lv.{bonus.level} - {bonus.effectType}
+                              </div>
+                              <div className="text-sm">
+                                {bonus.value}
+                                {bonus.description && <span className="text-muted-foreground ml-2">{bonus.description}</span>}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (window.confirm("このボーナスを削除しますか？")) {
+                                  deleteLevelBonusMutation.mutate(bonus.id);
+                                }
+                              }}
+                              disabled={isLevelBonusDeleting}
+                            >
+                              {isLevelBonusDeleting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash className="h-4 w-4 text-destructive" />
+                              )}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-muted-foreground">
+                        レベルボーナスが登録されていません
+                      </div>
                     )}
                   </div>
-                </form>
-              </Form>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
