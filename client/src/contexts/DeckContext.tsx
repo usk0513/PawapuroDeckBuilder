@@ -124,10 +124,20 @@ export const DeckProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       // Add to existing deck if character isn't already in it
       if (!currentDeck.characters.includes(characterId)) {
-        // Important: preserve the existing characters and add the new one
-        setCurrentDeck({
-          ...currentDeck,
-          characters: [...currentDeck.characters, characterId]
+        // Make a deep copy to avoid any reference issues
+        const updatedCharacters = [...currentDeck.characters, characterId];
+        
+        setCurrentDeck(prevDeck => {
+          if (!prevDeck) return {
+            id: -1,
+            name: "マイデッキ",
+            characters: [characterId]
+          };
+          
+          return {
+            ...prevDeck,
+            characters: updatedCharacters
+          };
         });
       }
     }
@@ -136,9 +146,13 @@ export const DeckProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Remove character from deck
   const removeCharacterFromDeck = (characterId: number) => {
     if (currentDeck) {
-      setCurrentDeck({
-        ...currentDeck,
-        characters: currentDeck.characters.filter(id => id !== characterId)
+      setCurrentDeck(prevDeck => {
+        if (!prevDeck) return null;
+        
+        return {
+          ...prevDeck,
+          characters: prevDeck.characters.filter(id => id !== characterId)
+        };
       });
     }
   };
@@ -146,9 +160,13 @@ export const DeckProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Clear all characters from deck
   const clearDeck = () => {
     if (currentDeck) {
-      setCurrentDeck({
-        ...currentDeck,
-        characters: []
+      setCurrentDeck(prevDeck => {
+        if (!prevDeck) return null;
+        
+        return {
+          ...prevDeck,
+          characters: []
+        };
       });
     }
   };

@@ -13,13 +13,19 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, inDeck = false
   const { addCharacterToDeck, removeCharacterFromDeck } = useDeck();
   
   // Configure drag and drop
-  const [{ isDragging }, drag] = useDrag(() => ({
+  const [{ isDragging }, drag] = useDrag({
     type: "character",
     item: { id: character.id },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-  }));
+    // Added end monitor to avoid re-renders that cause issues
+    end: (item, monitor) => {
+      const dropResult = monitor.getDropResult();
+      // We only process the drop in the deck builder's drop handler
+      return;
+    },
+  });
   
   // Get top 3 stats for display
   const getTopStats = (character: Character) => {

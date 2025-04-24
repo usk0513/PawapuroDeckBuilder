@@ -20,14 +20,17 @@ const DeckBuilder: React.FC = () => {
   const { toast } = useToast();
   
   // Set up drop target for the deck builder area
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: "character",
     drop: (item: { id: number }) => {
       if (!isDeckFull) {
         // Only add if not already in the deck
         const isAlreadyInDeck = deckCharacters.some(c => c.id === item.id);
         if (!isAlreadyInDeck) {
-          addCharacterToDeck(item.id);
+          // Don't call inside drop handler to prevent weird re-renders
+          setTimeout(() => {
+            addCharacterToDeck(item.id);
+          }, 0);
           return { added: true };
         }
         return { added: false };
@@ -44,7 +47,7 @@ const DeckBuilder: React.FC = () => {
       isOver: !!monitor.isOver(),
       canDrop: !!monitor.canDrop() && !isDeckFull,
     }),
-  }));
+  });
   
   const handleClearDeck = () => {
     if (window.confirm("デッキをクリアしますか？")) {
