@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
-import { Position, Rarity, SpecialTraining, insertOwnedCharacterSchema } from "@shared/schema";
+import { Position, Rarity, SpecialTraining, EventTiming, insertOwnedCharacterSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { levelOptions, awakeningOptions, rarityOptions, rarityColorMap, specialTrainingOptions } from "@/lib/constants";
+import { levelOptions, awakeningOptions, rarityOptions, rarityColorMap, specialTrainingOptions, eventTimingOptions } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 
 // 所持キャラクター追加スキーマ
@@ -126,6 +126,7 @@ export default function AddCharacterPage() {
                           <h3 className="font-bold text-lg">{character.name}</h3>
                           <div className="text-sm text-muted-foreground">
                             {character.position} | 評価: {character.rating}
+                            {character.eventTiming && ` | ${character.eventTiming}`}
                           </div>
                           {character.specialTrainings && character.specialTrainings.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -169,7 +170,10 @@ export default function AddCharacterPage() {
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <div className="mb-6">
                       <h3 className="font-bold text-xl">{selectedCharacter.name}</h3>
-                      <p className="text-muted-foreground">{selectedCharacter.position}</p>
+                      <p className="text-muted-foreground">
+                        {selectedCharacter.position}
+                        {selectedCharacter.eventTiming && ` | ${selectedCharacter.eventTiming}`}
+                      </p>
                       {selectedCharacter.specialTrainings && selectedCharacter.specialTrainings.length > 0 && (
                         <div className="mt-2">
                           <p className="text-sm font-medium mb-1">得意練習:</p>

@@ -1,4 +1,5 @@
-// Position types
+// 新しい定数値を定義する
+// 選手ポジション
 export enum Position {
   PITCHER = "投手",
   CATCHER = "捕手",
@@ -6,7 +7,7 @@ export enum Position {
   OUTFIELD = "外野"
 }
 
-// Rarity types
+// レア度
 export enum Rarity {
   N = "N",
   PN = "PN",
@@ -16,7 +17,7 @@ export enum Rarity {
   PSR = "PSR"
 }
 
-// 得意練習タイプ
+// 得意練習
 export enum SpecialTraining {
   BATTING = "打撃",
   STRENGTH = "筋力",
@@ -28,6 +29,12 @@ export enum SpecialTraining {
   CONTROL = "コントロール",
   STAMINA = "スタミナ",
   BREAKING = "変化球"
+}
+
+// イベントタイミング
+export enum EventTiming {
+  PRE = "前イベント",
+  POST = "後イベント"
 }
 
 // Stat types
@@ -63,6 +70,7 @@ export interface Character {
   stats: Stats;
   owned: boolean;
   specialTrainings?: SpecialTraining[];
+  eventTiming?: EventTiming;
 }
 
 // Deck type
@@ -182,6 +190,12 @@ export const specialTrainingOptions = [
   { value: SpecialTraining.CONTROL, label: SpecialTraining.CONTROL },
   { value: SpecialTraining.STAMINA, label: SpecialTraining.STAMINA },
   { value: SpecialTraining.BREAKING, label: SpecialTraining.BREAKING }
+];
+
+// イベントタイミングオプション
+export const eventTimingOptions = [
+  { value: EventTiming.PRE, label: EventTiming.PRE },
+  { value: EventTiming.POST, label: EventTiming.POST }
 ];
 
 // Rarity color mapping

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
-import { Position, Rarity, SpecialTraining, insertCharacterSchema } from "@shared/schema";
+import { Position, Rarity, SpecialTraining, EventTiming, insertCharacterSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { positionOptions, specialTrainingOptions, statColorMap } from "@/lib/constants";
+import { positionOptions, specialTrainingOptions, eventTimingOptions, statColorMap } from "@/lib/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 
@@ -130,6 +130,7 @@ export default function AdminPage() {
       position: Position.PITCHER,
       rating: 3,
       specialTrainings: [],
+      eventTiming: undefined,
       stats: {
         pitching: {
           velocity: 0,
@@ -156,6 +157,7 @@ export default function AdminPage() {
       rating: character.rating,
       stats: character.stats,
       specialTrainings: character.specialTrainings || [],
+      eventTiming: character.eventTiming,
     });
   };
 
@@ -510,6 +512,41 @@ export default function AdminPage() {
                       )}
                     />
                   </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">イベント発生タイミング</h3>
+                    <FormField
+                      control={form.control}
+                      name="eventTiming"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>イベントの発生タイミングを選択してください</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value as string | undefined}
+                            value={field.value as string | undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="タイミングを選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {eventTimingOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            キャラクターイベントが発生するタイミング（前イベント・後イベント）
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <div className="flex gap-2 justify-end">
                     {selectedCharacter && (
@@ -582,6 +619,7 @@ export default function AdminPage() {
                           <h3 className="font-bold text-lg">{character.name}</h3>
                           <div className="text-sm text-muted-foreground">
                             {character.position} | 評価: {character.rating}
+                            {character.eventTiming && ` | ${character.eventTiming}`}
                           </div>
                           {character.specialTrainings && character.specialTrainings.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">

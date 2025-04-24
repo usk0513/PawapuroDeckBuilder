@@ -1,12 +1,12 @@
 import React from "react";
-import { Character, statColorMap, statNames, rarityColorMap } from "@/lib/constants";
+import { statColorMap, statNames, rarityColorMap, Character as UICharacter } from "@/lib/constants";
 import { PlusCircle, X } from "lucide-react";
 import { useDeck } from "@/contexts/DeckContext";
 import { useDrop } from "react-dnd";
 import { Badge } from "@/components/ui/badge";
 
 interface DeckSlotProps {
-  character?: Character;
+  character?: UICharacter;
   index: number;
 }
 
@@ -31,7 +31,7 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ character, index }) => {
   }));
   
   // Get top 2 stats for display
-  const getTopStats = (character: Character) => {
+  const getTopStats = (character: UICharacter) => {
     const allStats = [
       ...Object.entries(character.stats.pitching).map(([key, value]) => ({ key, value })),
       ...Object.entries(character.stats.batting).map(([key, value]) => ({ key, value }))
@@ -96,6 +96,9 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ character, index }) => {
                 {character.rarity}
               </span>
               <span className="text-gray-600">{character.position}</span>
+              {character.eventTiming && (
+                <span className="text-gray-600 text-xs ml-1">{character.eventTiming}</span>
+              )}
             </div>
             {/* 得意練習の表示 */}
             {character.specialTrainings && character.specialTrainings.length > 0 && (

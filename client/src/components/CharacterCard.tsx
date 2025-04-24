@@ -1,12 +1,12 @@
 import React from "react";
-import { Character, statColorMap, statNames, rarityColorMap } from "@/lib/constants";
+import { statColorMap, statNames, rarityColorMap, Character as UICharacter } from "@/lib/constants";
 import { useDeck } from "@/contexts/DeckContext";
 import { Star, StarOff } from "lucide-react";
 import { useDrag } from "react-dnd";
 import { Badge } from "@/components/ui/badge";
 
 interface CharacterCardProps {
-  character: Character;
+  character: UICharacter;
   inDeck?: boolean;
 }
 
@@ -29,7 +29,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, inDeck = false
   });
   
   // Get top 3 stats for display
-  const getTopStats = (character: Character) => {
+  const getTopStats = (character: UICharacter) => {
     const allStats = [
       ...Object.entries(character.stats.pitching).map(([key, value]) => ({ key, value })),
       ...Object.entries(character.stats.batting).map(([key, value]) => ({ key, value }))
@@ -106,6 +106,9 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, inDeck = false
               >
                 {character.rarity}
               </span>
+              {character.eventTiming && (
+                <span className="text-gray-600 text-xs ml-1">{character.eventTiming}</span>
+              )}
             </div>
             <div className="flex items-center space-x-1">
               {renderRatingStars()}
