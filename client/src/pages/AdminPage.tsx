@@ -26,6 +26,47 @@ type CharacterFormValues = z.infer<typeof characterSchema>;
 const levelBonusSchema = insertCharacterLevelBonusSchema.extend({});
 type LevelBonusFormValues = z.infer<typeof levelBonusSchema>;
 
+// 効果タイプによる単位の定義
+const effectTypeUnits: Record<string, string> = {
+  [BonusEffectType.INITIAL_RATING]: "",  // 数値(0~100)
+  [BonusEffectType.TAG_BONUS]: "%",
+  [BonusEffectType.KOTS_EVENT_BONUS]: "%",
+  [BonusEffectType.MATCH_EXPERIENCE_BONUS]: "%",
+  [BonusEffectType.TRAINING_RATE_UP]: "%",
+  [BonusEffectType.TRAINING_EFFECT_UP]: "%",
+  [BonusEffectType.KOTS_EVENT_RATE_UP]: "%",
+  [BonusEffectType.MOTIVATION_EFFECT_UP]: "%",
+  [BonusEffectType.TRAINING_STAMINA_CONSUMPTION_DOWN]: "%",
+  [BonusEffectType.EVENT_STAMINA_RECOVERY_UP]: "%",
+  [BonusEffectType.EVENT_BONUS]: "%",
+  [BonusEffectType.KOTS_LEVEL_BONUS]: "",  // 数値(1~5)
+  [BonusEffectType.LIMIT_UP_MEET]: "",  // 数値(1~100)
+  [BonusEffectType.LIMIT_UP_POWER]: "",
+  [BonusEffectType.LIMIT_UP_SPEED]: "",
+  [BonusEffectType.LIMIT_UP_ARM]: "",
+  [BonusEffectType.LIMIT_UP_FIELDING]: "",
+  [BonusEffectType.LIMIT_UP_CATCHING]: "",
+  [BonusEffectType.LIMIT_UP_VELOCITY]: "",
+  [BonusEffectType.LIMIT_UP_CONTROL]: "",
+  [BonusEffectType.LIMIT_UP_STAMINA]: "",
+  [BonusEffectType.BASE_BONUS_STRENGTH]: "",  // 数値(1~100)
+  [BonusEffectType.BASE_BONUS_AGILITY]: "",
+  [BonusEffectType.BASE_BONUS_TECHNIQUE]: "",
+  [BonusEffectType.BASE_BONUS_CHANGE]: "",
+  [BonusEffectType.BASE_BONUS_MENTAL]: "",
+  [BonusEffectType.REFORM_STRENGTH_AGILITY]: "",  // 数値(1~100)
+  [BonusEffectType.REFORM_RUNNING_MENTAL]: "",
+  [BonusEffectType.REFORM_CONTROL_CHANGE]: "",
+  [BonusEffectType.REFORM_STAMINA_CHANGE]: "",
+};
+
+// 効果値に単位を自動で付加する関数
+const formatEffectValue = (value: string, effectType?: string): string => {
+  if (!effectType) return value;
+  const unit = effectTypeUnits[effectType] || "";
+  return `${value}${unit}`;
+};
+
 // BonusEffectTypeの選択肢
 const bonusEffectTypeOptions = Object.entries(BonusEffectType).map(([key, value]) => ({
   value,
@@ -702,7 +743,7 @@ export default function AdminPage() {
                                   </td>
                                   <td className="border p-2">
                                     <Input 
-                                      placeholder="例: +5%, 30pt" 
+                                      placeholder="数値のみ入力" 
                                       value={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("value") : ""}
                                       onChange={(e) => {
                                         levelBonusForm.setValue("level", level);
@@ -719,6 +760,7 @@ export default function AdminPage() {
                                         levelBonusForm.setValue("level", level);
                                         levelBonusForm.setValue("description", "");
                                         if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
+                                          // 効果値にフォーマットを適用しない状態でAPI送信
                                           onLevelBonusSubmit(levelBonusForm.getValues());
                                         } else {
                                           toast({
@@ -757,7 +799,7 @@ export default function AdminPage() {
                                     Lv.{bonus.level} - {bonus.effectType}
                                   </div>
                                   <div className="text-sm">
-                                    {bonus.value}
+                                    {formatEffectValue(bonus.value, bonus.effectType)}
                                     {bonus.description && (
                                       <span className="text-muted-foreground ml-2">
                                         {bonus.description}
