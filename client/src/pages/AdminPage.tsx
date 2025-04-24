@@ -665,117 +665,81 @@ export default function AdminPage() {
                   <TabsContent value="levelbonus">
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium mb-4">レベルボーナス追加</h3>
-                        <Form {...levelBonusForm}>
-                          <form onSubmit={levelBonusForm.handleSubmit(onLevelBonusSubmit)} className="space-y-4">
-                            <FormField
-                              control={levelBonusForm.control}
-                              name="level"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>レベル</FormLabel>
-                                  <FormControl>
+                        <h3 className="text-lg font-medium mb-4">レベルボーナス一括登録</h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr>
+                                <th className="border p-2 bg-muted">レベル</th>
+                                <th className="border p-2 bg-muted">効果タイプ</th>
+                                <th className="border p-2 bg-muted">効果値</th>
+                                <th className="border p-2 bg-muted">操作</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50].map((level) => (
+                                <tr key={level}>
+                                  <td className="border p-2 text-center font-medium">Lv.{level}</td>
+                                  <td className="border p-2">
                                     <Select
-                                      onValueChange={(value) => field.onChange(parseInt(value))}
-                                      value={field.value?.toString() || "1"}
+                                      onValueChange={(value) => {
+                                        levelBonusForm.setValue("level", level);
+                                        levelBonusForm.setValue("effectType", value);
+                                      }}
+                                      value={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("effectType") : undefined}
                                     >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="レベルを選択" />
-                                        </SelectTrigger>
-                                      </FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="効果タイプを選択" />
+                                      </SelectTrigger>
                                       <SelectContent>
-                                        {[1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50].map((level) => (
-                                          <SelectItem key={level} value={level.toString()}>
-                                            Lv.{level}
+                                        {bonusEffectTypeOptions.map((option) => (
+                                          <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
                                           </SelectItem>
                                         ))}
                                       </SelectContent>
                                     </Select>
-                                  </FormControl>
-                                  <FormDescription>
-                                    ボーナスが適用されるレベル（1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50）
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={levelBonusForm.control}
-                              name="effectType"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>効果タイプ</FormLabel>
-                                  <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="効果タイプを選択" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {bonusEffectTypeOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                          {option.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormDescription>
-                                    レベルボーナスの効果タイプ
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={levelBonusForm.control}
-                              name="value"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>効果値</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} placeholder="例: +5%, 30pt" />
-                                  </FormControl>
-                                  <FormDescription>
-                                    効果の値（例: +5%, 30pt）
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={levelBonusForm.control}
-                              name="description"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>説明</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      placeholder="効果の説明（任意）"
-                                      value={field.value || ""}
+                                  </td>
+                                  <td className="border p-2">
+                                    <Input 
+                                      placeholder="例: +5%, 30pt" 
+                                      value={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("value") : ""}
+                                      onChange={(e) => {
+                                        levelBonusForm.setValue("level", level);
+                                        levelBonusForm.setValue("value", e.target.value);
+                                      }}
                                     />
-                                  </FormControl>
-                                  <FormDescription>
-                                    効果の詳細説明（任意）
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <Button type="submit" disabled={isLevelBonusSubmitting}>
-                              {isLevelBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                              ボーナスを追加
-                            </Button>
-                          </form>
-                        </Form>
+                                  </td>
+                                  <td className="border p-2">
+                                    <Button 
+                                      type="button" 
+                                      size="sm"
+                                      disabled={isLevelBonusSubmitting}
+                                      onClick={() => {
+                                        levelBonusForm.setValue("level", level);
+                                        levelBonusForm.setValue("description", "");
+                                        if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
+                                          onLevelBonusSubmit(levelBonusForm.getValues());
+                                        } else {
+                                          toast({
+                                            title: "入力エラー",
+                                            description: "効果タイプと効果値を入力してください",
+                                            variant: "destructive",
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      {isLevelBonusSubmitting && levelBonusForm.getValues("level") === level ? (
+                                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                      ) : null}
+                                      追加
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                       
                       <div>
