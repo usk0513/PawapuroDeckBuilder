@@ -14,7 +14,7 @@ import {
   Position,
   Rarity
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -140,14 +140,26 @@ export class DatabaseStorage implements IStorage {
     try {
       // First check if tables exist
       try {
-        await db.query.characters.findFirst();
+        // Use the pool directly to check if the characters table exists
+        const tableExists = await pool.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'characters'
+          );
+        `);
+        
+        if (!tableExists.rows[0].exists) {
+          console.log("Characters table doesn't exist yet, skipping initialization");
+          return;
+        }
       } catch (error) {
-        console.log("Tables don't exist yet, skipping initialization");
+        console.log("Error checking if tables exist, skipping initialization:", error);
         return;
       }
 
       // Check if there's already data in the database
-      const result = await db.$pool.query("SELECT COUNT(*) FROM characters");
+      const result = await pool.query("SELECT COUNT(*) FROM characters");
       const count = Number(result.rows[0].count || 0);
       
       if (count > 0) {
