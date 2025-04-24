@@ -3,6 +3,7 @@ import { Character, statColorMap, statNames, rarityColorMap } from "@/lib/consta
 import { PlusCircle, X } from "lucide-react";
 import { useDeck } from "@/contexts/DeckContext";
 import { useDrop } from "react-dnd";
+import { Badge } from "@/components/ui/badge";
 
 interface DeckSlotProps {
   character?: Character;
@@ -96,6 +97,18 @@ const DeckSlot: React.FC<DeckSlotProps> = ({ character, index }) => {
               </span>
               <span className="text-gray-600">{character.position}</span>
             </div>
+            {/* 得意練習の表示 */}
+            {character.specialTrainings && character.specialTrainings.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1 mb-2">
+                {character.specialTrainings.map((training: any, index: number) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {String(training)}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
+            {/* トップステータスの表示 */}
             <div className="mt-2 flex flex-wrap gap-1 text-xs">
               {topStats.map((stat, index) => (
                 <span 

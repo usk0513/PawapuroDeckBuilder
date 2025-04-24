@@ -170,6 +170,18 @@ export default function AddCharacterPage() {
                     <div className="mb-6">
                       <h3 className="font-bold text-xl">{selectedCharacter.name}</h3>
                       <p className="text-muted-foreground">{selectedCharacter.position}</p>
+                      {selectedCharacter.specialTrainings && selectedCharacter.specialTrainings.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium mb-1">得意練習:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedCharacter.specialTrainings.map((training: any) => (
+                              <Badge key={String(training)} className="text-xs">
+                                {String(training)}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <FormField

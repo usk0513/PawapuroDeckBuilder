@@ -3,6 +3,7 @@ import { Character, statColorMap, statNames, rarityColorMap } from "@/lib/consta
 import { useDeck } from "@/contexts/DeckContext";
 import { Star, StarOff } from "lucide-react";
 import { useDrag } from "react-dnd";
+import { Badge } from "@/components/ui/badge";
 
 interface CharacterCardProps {
   character: Character;
@@ -110,6 +111,18 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, inDeck = false
               {renderRatingStars()}
             </div>
           </div>
+          {/* 得意練習の表示 */}
+          {character.specialTrainings && character.specialTrainings.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1 mb-2">
+              {character.specialTrainings.map((training: any, index: number) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {String(training)}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* トップステータスの表示 */}
           <div className="mt-2 grid grid-cols-3 gap-1 text-xs">
             {topStats.map((stat, index) => (
               <span 
