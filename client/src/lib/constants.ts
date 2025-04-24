@@ -1,0 +1,138 @@
+// Position types
+export enum Position {
+  PITCHER = "投手",
+  CATCHER = "捕手",
+  INFIELD = "内野",
+  OUTFIELD = "外野"
+}
+
+// Stat types
+export interface PitchingStats {
+  velocity: number;
+  control: number;
+  stamina: number;
+  breaking: number;
+}
+
+export interface BattingStats {
+  contact: number;
+  power: number;
+  speed: number;
+  arm: number;
+  fielding: number;
+}
+
+export interface Stats {
+  pitching: PitchingStats;
+  batting: BattingStats;
+}
+
+// Character type
+export interface Character {
+  id: number;
+  name: string;
+  position: Position;
+  level: number;
+  awakening: number;
+  rating: number;
+  stats: Stats;
+  owned: boolean;
+}
+
+// Deck type
+export interface Deck {
+  id: number;
+  name: string;
+  characters: number[];
+}
+
+// Combo effect type
+export interface Combo {
+  id: number;
+  name: string;
+  description: string;
+  requiredCharacters: number[];
+  effects: Record<string, number>;
+}
+
+// Stat color mapping
+export const statColorMap = {
+  velocity: {
+    bg: "bg-red-100",
+    text: "text-red-600"
+  },
+  control: {
+    bg: "bg-blue-100",
+    text: "text-blue-600"
+  },
+  stamina: {
+    bg: "bg-green-100",
+    text: "text-green-600"
+  },
+  breaking: {
+    bg: "bg-purple-100",
+    text: "text-purple-600"
+  },
+  contact: {
+    bg: "bg-yellow-100",
+    text: "text-yellow-600"
+  },
+  power: {
+    bg: "bg-red-100",
+    text: "text-red-600"
+  },
+  speed: {
+    bg: "bg-blue-100",
+    text: "text-blue-600"
+  },
+  arm: {
+    bg: "bg-green-100",
+    text: "text-green-600"
+  },
+  fielding: {
+    bg: "bg-purple-100",
+    text: "text-purple-600"
+  }
+};
+
+// Japanese translations for stat names
+export const statNames = {
+  velocity: "球速",
+  control: "制球",
+  stamina: "スタミナ",
+  breaking: "変化球",
+  contact: "ミート",
+  power: "パワー",
+  speed: "走力",
+  arm: "肩力",
+  fielding: "守備"
+};
+
+// Level options
+export const levelOptions = [
+  { value: 1, label: "Lv.1" },
+  { value: 2, label: "Lv.2" },
+  { value: 3, label: "Lv.3" },
+  { value: 4, label: "Lv.4" },
+  { value: 5, label: "Lv.5" }
+];
+
+// Awakening options
+export const awakeningOptions = [
+  { value: 0, label: "覚醒なし" },
+  { value: 1, label: "覚醒1" },
+  { value: 2, label: "覚醒2" },
+  { value: 3, label: "覚醒3" },
+  { value: 4, label: "覚醒4" }
+];
+
+// Position options
+export const positionOptions = [
+  { value: Position.PITCHER, label: Position.PITCHER },
+  { value: Position.CATCHER, label: Position.CATCHER },
+  { value: Position.INFIELD, label: Position.INFIELD },
+  { value: Position.OUTFIELD, label: Position.OUTFIELD }
+];
+
+// Maximum number of characters in a deck
+export const MAX_DECK_SIZE = 6;
