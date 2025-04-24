@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
-import { Position, Rarity, insertOwnedCharacterSchema } from "@shared/schema";
+import { Position, Rarity, SpecialTraining, insertOwnedCharacterSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { levelOptions, awakeningOptions, rarityOptions, rarityColorMap } from "@/lib/constants";
+import { levelOptions, awakeningOptions, rarityOptions, rarityColorMap, specialTrainingOptions } from "@/lib/constants";
+import { Badge } from "@/components/ui/badge";
 
 // 所持キャラクター追加スキーマ
 const addOwnedCharacterSchema = insertOwnedCharacterSchema.extend({
@@ -126,6 +127,15 @@ export default function AddCharacterPage() {
                           <div className="text-sm text-muted-foreground">
                             {character.position} | 評価: {character.rating}
                           </div>
+                          {character.specialTrainings && character.specialTrainings.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {character.specialTrainings.map((training: any) => (
+                                <Badge key={String(training)} variant="outline" className="text-xs">
+                                  {String(training)}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

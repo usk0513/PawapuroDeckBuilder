@@ -442,6 +442,75 @@ export default function AdminPage() {
                     </div>
                   </div>
 
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">得意練習</h3>
+                    <FormField
+                      control={form.control}
+                      name="specialTrainings"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="mb-4">
+                            <FormLabel>キャラクターの得意練習を選択してください</FormLabel>
+                            <FormDescription>
+                              複数選択可能です
+                            </FormDescription>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {specialTrainingOptions.map((option) => (
+                              <FormItem
+                                key={option.value}
+                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(option.value)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        field.onChange([...(field.value || []), option.value]);
+                                      } else {
+                                        field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== option.value
+                                          )
+                                        );
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer">
+                                  {option.label}
+                                </FormLabel>
+                              </FormItem>
+                            ))}
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {field.value && Array.isArray(field.value) && field.value.map((value) => (
+                              <Badge 
+                                key={value as string} 
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {value as React.ReactNode}
+                                <button
+                                  type="button"
+                                  className="ml-1 hover:text-destructive"
+                                  onClick={() => {
+                                    field.onChange(
+                                      field.value?.filter((v) => v !== value)
+                                    );
+                                  }}
+                                >
+                                  ×
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="flex gap-2 justify-end">
                     {selectedCharacter && (
                       <Button
@@ -514,6 +583,15 @@ export default function AdminPage() {
                           <div className="text-sm text-muted-foreground">
                             {character.position} | 評価: {character.rating}
                           </div>
+                          {character.specialTrainings && character.specialTrainings.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {character.specialTrainings.map((training: any) => (
+                                <Badge key={String(training)} variant="outline" className="text-xs">
+                                  {String(training)}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
