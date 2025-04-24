@@ -129,10 +129,9 @@ export default function AdminPage() {
     defaultValues: {
       name: "",
       position: Position.PITCHER,
-      rating: 3,
       specialTrainings: [],
       eventTiming: undefined,
-      stats: {
+      stats: { // スキーマで必須なのでデフォルト値を設定
         pitching: {
           velocity: 0,
           control: 0,
@@ -155,8 +154,7 @@ export default function AdminPage() {
     form.reset({
       name: character.name,
       position: character.position,
-      rating: character.rating,
-      stats: character.stats,
+      stats: character.stats, // スキーマで必須なので残します
       specialTrainings: character.specialTrainings || [],
       eventTiming: character.eventTiming,
     });
@@ -235,215 +233,7 @@ export default function AdminPage() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="rating"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>評価（1-5）</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={5}
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">投手ステータス</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="stats.pitching.velocity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>球速</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.pitching.control"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>コントロール</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.pitching.stamina"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>スタミナ</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.pitching.breaking"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>変化球</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">打者ステータス</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="stats.batting.contact"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>ミート</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.batting.power"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>パワー</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.batting.speed"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>走力</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.batting.arm"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>肩力</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stats.batting.fielding"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>守備力</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={5}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">得意練習</h3>
@@ -619,7 +409,7 @@ export default function AdminPage() {
                         <div>
                           <h3 className="font-bold text-lg">{character.name}</h3>
                           <div className="text-sm text-muted-foreground">
-                            {character.position} | 評価: {character.rating}
+                            {character.position}
                             {character.eventTiming && ` | ${character.eventTiming}`}
                           </div>
                           {character.specialTrainings && character.specialTrainings.length > 0 && (
