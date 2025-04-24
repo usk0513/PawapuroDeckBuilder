@@ -41,6 +41,50 @@ export enum EventTiming {
   POST = "後イベント"
 }
 
+// ボーナス効果の種類
+export enum BonusEffectType {
+  INITIAL_RATING = "初期評価",
+  TAG_BONUS = "タッグボーナス",
+  KOTS_EVENT_BONUS = "コツイベボーナス",
+  MATCH_EXPERIENCE_BONUS = "試合経験点ボーナス",
+  TRAINING_RATE_UP = "得意練習率Up",
+  TRAINING_EFFECT_UP = "練習効果Up",
+  KOTS_EVENT_RATE_UP = "コツイベ率Up",
+  MOTIVATION_EFFECT_UP = "やる気効果Up",
+  TRAINING_STAMINA_CONSUMPTION_DOWN = "練習体力消費量Down",
+  EVENT_STAMINA_RECOVERY_UP = "イベント体力回復量Up",
+  EVENT_BONUS = "イベントボーナス",
+  KOTS_LEVEL_BONUS = "コツレベボーナス",
+  LIMIT_UP_MEET = "上限Up_ミート",
+  LIMIT_UP_POWER = "上限Up_パワー",
+  LIMIT_UP_SPEED = "上限Up_走力",
+  LIMIT_UP_ARM = "上限Up_肩力",
+  LIMIT_UP_FIELDING = "上限Up_守備",
+  LIMIT_UP_CATCHING = "上限Up_捕球",
+  LIMIT_UP_VELOCITY = "上限Up_球速",
+  LIMIT_UP_CONTROL = "上限Up_コントロール",
+  LIMIT_UP_STAMINA = "上限Up_スタミナ",
+  BASE_BONUS_STRENGTH = "基礎ボーナス_筋力",
+  BASE_BONUS_AGILITY = "基礎ボーナス_敏捷",
+  BASE_BONUS_TECHNIQUE = "基礎ボーナス_技術",
+  BASE_BONUS_CHANGE = "基礎ボーナス_変化",
+  BASE_BONUS_MENTAL = "基礎ボーナス_精神",
+  REFORM_STRENGTH_AGILITY = "筋力練習改革_敏捷",
+  REFORM_RUNNING_MENTAL = "走塁練習改革_精神",
+  REFORM_CONTROL_CHANGE = "コントロール練習改革_変化",
+  REFORM_STAMINA_CHANGE = "スタミナ練習改革_変化"
+}
+
+// キャラクターレベルごとのボーナス効果スキーマ
+export const LevelBonusSchema = z.object({
+  level: z.number().min(1).max(50),
+  effectType: z.nativeEnum(BonusEffectType),
+  value: z.string(), // 効果の値（例: "40%", "2", "55(SR),60(PSR)"）
+  description: z.string().optional(),
+});
+
+export type LevelBonus = z.infer<typeof LevelBonusSchema>;
+
 // Character stats schema
 export const StatSchema = z.object({
   pitching: z.object({
@@ -160,6 +204,7 @@ export const comboCharacters = pgTable('combo_characters', {
 export const charactersRelations = relations(characters, ({ many }) => ({
   deckCharacters: many(deckCharacters),
   comboCharacters: many(comboCharacters),
+  levelBonuses: many(characterLevelBonuses),
 }));
 
 export const decksRelations = relations(decks, ({ one, many }) => ({
@@ -208,6 +253,31 @@ export const comboCharactersRelations = relations(comboCharacters, ({ one }) => 
   }),
   character: one(characters, {
     fields: [comboCharacters.characterId],
+    references: [characters.id],
+  }),
+}));
+
+// キャラクターのレベル別ボーナス効果テーブル
+export const characterLevelBonuses = pgTable("character_level_bonuses", {
+  id: serial("id").primaryKey(),
+  characterId: integer("character_id").references(() => characters.id).notNull(),
+  level: integer("level").notNull(),
+  effectType: text("effect_type").notNull().$type<BonusEffectType>(),
+  value: text("value").notNull(),
+  description: text("description"),
+});
+
+export const insertCharacterLevelBonusSchema = createInsertSchema(characterLevelBonuses).omit({
+  id: true
+});
+
+export type InsertCharacterLevelBonus = z.infer<typeof insertCharacterLevelBonusSchema>;
+export type CharacterLevelBonus = typeof characterLevelBonuses.$inferSelect;
+
+// レベルボーナスのリレーション
+export const characterLevelBonusesRelations = relations(characterLevelBonuses, ({ one }) => ({
+  character: one(characters, {
+    fields: [characterLevelBonuses.characterId],
     references: [characters.id],
   }),
 }));
