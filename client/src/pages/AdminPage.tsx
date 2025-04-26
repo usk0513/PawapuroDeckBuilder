@@ -239,10 +239,18 @@ export default function AdminPage() {
     queryKey: ["/api/character-awakening-bonuses", selectedCharacter],
     queryFn: async () => {
       if (!selectedCharacter) return [];
-      const url = `/api/character-awakening-bonuses?characterId=${selectedCharacter}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("覚醒ボーナスデータの取得に失敗しました");
-      return await res.json();
+      try {
+        const url = `/api/character-awakening-bonuses?characterId=${selectedCharacter}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.error("覚醒ボーナスデータの取得に失敗しました: ", await res.text());
+          return [];
+        }
+        return await res.json();
+      } catch (error) {
+        console.error("覚醒ボーナス取得エラー:", error);
+        return [];
+      }
     },
     enabled: !!selectedCharacter,
   });
