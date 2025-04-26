@@ -52,7 +52,7 @@ const CharacterForm: React.FC = () => {
     defaultValues: {
       name: "",
       position: CharacterType.PITCHER,
-      rarity: Rarity.N,
+      rarity: Rarity.SR,
       level: 1,
       awakening: 0,
     },

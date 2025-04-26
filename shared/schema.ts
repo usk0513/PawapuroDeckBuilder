@@ -15,10 +15,6 @@ export enum CharacterType {
 
 // Character rarity enum
 export enum Rarity {
-  N = "N",
-  PN = "PN",
-  R = "R",
-  PR = "PR",
   SR = "SR",
   PSR = "PSR"
 }
@@ -146,7 +142,7 @@ export const ownedCharacters = pgTable("owned_characters", {
   characterId: integer("character_id").references(() => characters.id).notNull(),
   level: integer("level").notNull().default(1),
   awakening: integer("awakening").notNull().default(0),
-  rarity: text("rarity").notNull().$type<Rarity>().default(Rarity.N),
+  rarity: text("rarity").notNull().$type<Rarity>().default(Rarity.SR),
 });
 
 export const insertOwnedCharacterSchema = createInsertSchema(ownedCharacters).omit({
