@@ -20,17 +20,19 @@ import {
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Trash } from "lucide-react";
+import { Loader2, Trash, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { positionOptions, specialTrainingOptions, eventTimingOptions, uniqueBonusItems } from "@/lib/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 // 管理者向けキャラクター作成スキーマ
 const characterSchema = insertCharacterSchema.extend({});
@@ -514,7 +516,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (awakeningBonuses && awakeningBonuses.length > 0) {
       // 初回覚醒が既に登録されているか確認
-      const hasInitialAwakening = awakeningBonuses.some(bonus => bonus.awakeningType === "initial");
+      const hasInitialAwakening = awakeningBonuses.some((bonus: { awakeningType: string }) => bonus.awakeningType === "initial");
       
       if (hasInitialAwakening) {
         // 初回覚醒が登録済みの場合、二回目覚醒を選択

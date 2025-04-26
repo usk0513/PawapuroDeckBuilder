@@ -692,16 +692,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/special-ability-sets/:setId/abilities/:abilityId", async (req, res) => {
+  app.delete("/api/special-ability-set-items", async (req, res) => {
     try {
-      const setId = parseInt(req.params.setId);
-      const abilityId = parseInt(req.params.abilityId);
+      const setId = parseInt(req.query.setId as string);
+      const specialAbilityId = parseInt(req.query.specialAbilityId as string);
       
-      if (isNaN(setId) || isNaN(abilityId)) {
+      if (isNaN(setId) || isNaN(specialAbilityId)) {
         return res.status(400).json({ message: "無効なIDです" });
       }
       
-      const deleted = await storage.removeSpecialAbilityFromSet(setId, abilityId);
+      const deleted = await storage.removeSpecialAbilityFromSet(setId, specialAbilityId);
       if (!deleted) {
         return res.status(404).json({ message: "特殊能力セット項目が見つかりませんでした" });
       }
