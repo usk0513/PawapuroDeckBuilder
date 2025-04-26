@@ -256,7 +256,7 @@ export default function AdminPage() {
   
   // 金特関連の状態
   const [selectedSpecialAbility, setSelectedSpecialAbility] = useState<number | null>(null);
-  const [selectedPlayerType, setSelectedPlayerType] = useState<PlayerType | "">("");
+  const [selectedPlayerType, setSelectedPlayerType] = useState<PlayerType | string>("_all");
   const [selectedAbilitySetId, setSelectedAbilitySetId] = useState<number | null>(null);
   const [abilitySearchTerm, setAbilitySearchTerm] = useState<string>("");
 
@@ -983,7 +983,8 @@ export default function AdminPage() {
   // 金特のフィルタリング
   const filteredSpecialAbilities = specialAbilities.filter((ability) => {
     // タイプでフィルタリング（タイプが選択されている場合）
-    const matchesType = selectedPlayerType === "" || ability.playerType === selectedPlayerType;
+    const matchesType = selectedPlayerType === "" || selectedPlayerType === "_all" || 
+                        ability.playerType === selectedPlayerType;
     
     // 検索語句でフィルタリング
     const matchesSearch = 
@@ -1027,7 +1028,7 @@ export default function AdminPage() {
     // 状態変数のクリア
     setAwakeningEffect("");
     setAwakeningValue("");
-    setSelectedPlayerType("");
+    setSelectedPlayerType("_all");
     setSelectedAbilitySetId(null);
     
     // キャラクター編集フォームの初期化
@@ -2185,7 +2186,7 @@ export default function AdminPage() {
                                         <SelectValue placeholder="全てのタイプ" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="">全てのタイプ</SelectItem>
+                                        <SelectItem value="_all">全てのタイプ</SelectItem>
                                         <SelectItem value={PlayerType.PITCHER}>{PlayerType.PITCHER}</SelectItem>
                                         <SelectItem value={PlayerType.BATTER}>{PlayerType.BATTER}</SelectItem>
                                       </SelectContent>
@@ -2199,7 +2200,7 @@ export default function AdminPage() {
                                         setAbilitySearchTerm(e.target.value);
                                         // 検索時にタイプフィルターをクリア
                                         if (e.target.value) {
-                                          setSelectedPlayerType("");
+                                          setSelectedPlayerType("_all");
                                         }
                                       }}
                                     />
