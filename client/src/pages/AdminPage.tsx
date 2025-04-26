@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,7 @@ import { positionOptions, specialTrainingOptions, eventTimingOptions, uniqueBonu
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 
 // 管理者向けキャラクター作成スキーマ
 const characterSchema = insertCharacterSchema.extend({});
@@ -1519,114 +1520,94 @@ export default function AdminPage() {
                             SR: 1回覚醒可能、PSR: 2回覚醒可能。
                           </p>
                           
-                          <Form {...awakeningBonusForm}>
-                            <form onSubmit={awakeningBonusForm.handleSubmit(onAwakeningBonusSubmit)} className="space-y-4">
-                              <FormField
-                                control={awakeningBonusForm.control}
-                                name="awakeningType"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>覚醒タイプ</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      value={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="覚醒タイプを選択" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="initial">初回覚醒</SelectItem>
-                                        <SelectItem value="second">二回目覚醒 (PSRのみ)</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormDescription>
-                                      Lv10まで開放したときの効果を入力します
-                                    </FormDescription>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="awakeningType">覚醒タイプ</Label>
+                                <Select
+                                  value={awakeningBonusForm.watch("awakeningType")}
+                                  onValueChange={(value) => awakeningBonusForm.setValue("awakeningType", value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="覚醒タイプを選択" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="initial">初回覚醒</SelectItem>
+                                    <SelectItem value="second">二回目覚醒 (PSRのみ)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Lv10まで開放したときの効果を入力します
+                                </p>
+                              </div>
                               
-                              <FormField
-                                control={awakeningBonusForm.control}
-                                name="effectType"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>効果タイプ</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      value={field.value as string | undefined}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="効果タイプを選択" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        {Object.entries(getBonusEffectTypeOptions().reduce((groups, option) => {
-                                          if (!groups[option.group || '']) {
-                                            groups[option.group || ''] = [];
-                                          }
-                                          groups[option.group || ''].push(option);
-                                          return groups;
-                                        }, {} as Record<string, typeof bonusEffectTypeOptions>)).map(([group, options]) => (
-                                          <div key={group}>
-                                            <div className="px-2 py-1.5 text-xs font-semibold bg-muted">
-                                              {group}
-                                            </div>
-                                            {options.map((option) => (
-                                              <SelectItem key={option.value} value={option.value}>
-                                                {option.label}
-                                              </SelectItem>
-                                            ))}
-                                          </div>
+                              <div>
+                                <Label htmlFor="effectType">効果タイプ</Label>
+                                <Select
+                                  value={awakeningBonusForm.watch("effectType") || ""}
+                                  onValueChange={(value) => awakeningBonusForm.setValue("effectType", value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="効果タイプを選択" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(getBonusEffectTypeOptions().reduce((groups, option) => {
+                                      if (!groups[option.group || '']) {
+                                        groups[option.group || ''] = [];
+                                      }
+                                      groups[option.group || ''].push(option);
+                                      return groups;
+                                    }, {} as Record<string, typeof bonusEffectTypeOptions>)).map(([group, options]) => (
+                                      <div key={group}>
+                                        <div className="px-2 py-1.5 text-xs font-semibold bg-muted">
+                                          {group}
+                                        </div>
+                                        {options.map((option) => (
+                                          <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                          </SelectItem>
                                         ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
+                                      </div>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="value">効果値</Label>
+                              <Input 
+                                placeholder="+なしで数値のみ入力（例: 10）" 
+                                value={awakeningBonusForm.watch("value")}
+                                onChange={(e) => {
+                                  // 入力値からプラス記号を取り除く
+                                  let value = e.target.value.replace(/^\+/, '');
+                                  
+                                  // 数値のみ受け付ける
+                                  if (/^[0-9]*$/.test(value) || value === '') {
+                                    awakeningBonusForm.setValue("value", value);
+                                  }
+                                }}
                               />
-                              
-                              <FormField
-                                control={awakeningBonusForm.control}
-                                name="value"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>効果値</FormLabel>
-                                    <FormControl>
-                                      <Input 
-                                        placeholder="+なしで数値のみ入力（例: 10）" 
-                                        {...field} 
-                                        onChange={(e) => {
-                                          // 入力値からプラス記号を取り除く
-                                          let value = e.target.value.replace(/^\+/, '');
-                                          
-                                          // 数値のみ受け付ける
-                                          if (/^[0-9]*$/.test(value) || value === '') {
-                                            field.onChange(value);
-                                          }
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormDescription>
-                                      入力値は自動的に追加効果（+付き）として表示されます
-                                    </FormDescription>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-
-                              
-                              <Button type="submit" disabled={isAwakeningBonusSubmitting}>
-                                {isAwakeningBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                覚醒ボーナスを追加
-                              </Button>
-                            </form>
-                          </Form>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                入力値は自動的に追加効果（+付き）として表示されます
+                              </p>
+                            </div>
+                            
+                            <Button 
+                              type="button" 
+                              disabled={isAwakeningBonusSubmitting}
+                              onClick={() => {
+                                console.log("ボタンがクリックされました");
+                                const values = awakeningBonusForm.getValues();
+                                console.log("現在のフォーム値:", values);
+                                onAwakeningBonusSubmit(values);
+                              }}
+                            >
+                              {isAwakeningBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              覚醒ボーナスを追加
+                            </Button>
+                          </div>
                         </div>
                       </div>
                       
