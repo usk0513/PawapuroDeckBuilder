@@ -161,7 +161,7 @@ export default function AddCharacterPage() {
                       <div>
                         <h3 className="font-semibold">{character.name}</h3>
                         <div className="text-sm text-gray-600 flex items-center space-x-1">
-                          <span>{character.position}</span>
+                          <span>キャラ種別: {character.position}</span>
                           {character.eventTiming && (
                             <span className="ml-1">{character.eventTiming}</span>
                           )}

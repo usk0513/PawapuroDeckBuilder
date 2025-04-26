@@ -7,6 +7,7 @@ import { relations } from "drizzle-orm";
 export enum CharacterType {
   PITCHER = "投手",
   BATTER = "野手",
+  PITCHER_BATTER = "投手・野手",
   GIRLFRIEND = "彼女",
   GIRLFRIEND_PITCHER = "投手・彼女",
   GIRLFRIEND_BATTER = "野手・彼女",

@@ -3,6 +3,7 @@
 export enum CharacterType {
   PITCHER = "投手",
   BATTER = "野手",
+  PITCHER_BATTER = "投手・野手",
   GIRLFRIEND = "彼女",
   GIRLFRIEND_PITCHER = "投手・彼女",
   GIRLFRIEND_BATTER = "野手・彼女",
@@ -162,6 +163,7 @@ export const awakeningOptions = [
 export const positionOptions = [
   { value: CharacterType.PITCHER, label: CharacterType.PITCHER },
   { value: CharacterType.BATTER, label: CharacterType.BATTER },
+  { value: CharacterType.PITCHER_BATTER, label: CharacterType.PITCHER_BATTER },
   { value: CharacterType.GIRLFRIEND, label: CharacterType.GIRLFRIEND },
   { value: CharacterType.GIRLFRIEND_PITCHER, label: CharacterType.GIRLFRIEND_PITCHER },
   { value: CharacterType.GIRLFRIEND_BATTER, label: CharacterType.GIRLFRIEND_BATTER },
