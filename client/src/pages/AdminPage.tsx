@@ -1530,10 +1530,23 @@ export default function AdminPage() {
                                         </SelectTrigger>
                                       </FormControl>
                                       <SelectContent>
-                                        {bonusEffectTypeOptions.map((option) => (
-                                          <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                          </SelectItem>
+                                        {Object.entries(getBonusEffectTypeOptions().reduce((groups, option) => {
+                                          if (!groups[option.group || '']) {
+                                            groups[option.group || ''] = [];
+                                          }
+                                          groups[option.group || ''].push(option);
+                                          return groups;
+                                        }, {} as Record<string, typeof bonusEffectTypeOptions>)).map(([group, options]) => (
+                                          <div key={group}>
+                                            <div className="px-2 py-1.5 text-xs font-semibold bg-muted">
+                                              {group}
+                                            </div>
+                                            {options.map((option) => (
+                                              <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                              </SelectItem>
+                                            ))}
+                                          </div>
                                         ))}
                                       </SelectContent>
                                     </Select>
