@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
     const bonuses = await db.select()
       .from(characterAwakeningBonuses)
       .where(eq(characterAwakeningBonuses.characterId, characterId))
-      .orderBy(asc(characterAwakeningBonuses.awakeningLevel));
+      .orderBy(asc(characterAwakeningBonuses.awakeningType));
     return bonuses;
   }
   
