@@ -404,7 +404,6 @@ export default function AdminPage() {
       effectType: undefined,
       value: "",
       awakeningType: "initial", // 'initial'(初回覚醒) or 'second'(2回目覚醒)
-      description: "",
     }
   });
   
@@ -523,7 +522,6 @@ export default function AdminPage() {
         effectType: undefined,
         value: "",
         awakeningType: data.awakeningType,
-        description: "",
       });
     },
     onError: (error: Error) => {
@@ -1600,19 +1598,7 @@ export default function AdminPage() {
                                 )}
                               />
                               
-                              <FormField
-                                control={awakeningBonusForm.control}
-                                name="description"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>説明（任意）</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="ボーナスの詳細説明" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+
                               
                               <Button type="submit" disabled={isAwakeningBonusSubmitting}>
                                 {isAwakeningBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1650,11 +1636,7 @@ export default function AdminPage() {
                                       <div className="text-sm">
                                         {bonus.effectType}: {formatEffectValue(bonus.value, bonus.effectType, undefined, true)}
                                       </div>
-                                      {bonus.description && (
-                                        <div className="text-xs text-muted-foreground mt-1">
-                                          {bonus.description}
-                                        </div>
-                                      )}
+
                                     </div>
                                     <Button
                                       variant="ghost"

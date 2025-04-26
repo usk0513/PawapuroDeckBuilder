@@ -308,7 +308,6 @@ export const characterAwakeningBonuses = pgTable("character_awakening_bonuses", 
   awakeningType: text("awakening_type").notNull().$type<"initial" | "second">(),
   effectType: text("effect_type").notNull().$type<BonusEffectType>(),
   value: text("value").notNull(),
-  description: text("description"),
 });
 
 export const insertCharacterAwakeningBonusSchema = createInsertSchema(characterAwakeningBonuses).omit({
