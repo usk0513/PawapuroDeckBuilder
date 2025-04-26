@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,18 @@ export default function AddCharacterPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null);
+
+  // フォーム初期化
+  const form = useForm<AddOwnedCharacterFormValues>({
+    resolver: zodResolver(addOwnedCharacterSchema),
+    defaultValues: {
+      characterId: 0,
+      userId: 1, // 仮のユーザーID
+      level: 1,
+      awakening: 0,
+      rarity: "N",
+    },
+  });
 
   // すべてのキャラクターデータを取得
   const { data: characters, isLoading: isLoadingCharacters } = useQuery({
@@ -65,17 +77,38 @@ export default function AddCharacterPage() {
     }
   });
 
-  // フォーム初期化
-  const form = useForm<AddOwnedCharacterFormValues>({
-    resolver: zodResolver(addOwnedCharacterSchema),
-    defaultValues: {
-      characterId: 0,
-      userId: 1, // 仮のユーザーID
-      level: 1,
-      awakening: 0,
-      rarity: "N",
+  // レベルボーナスデータの取得
+  const { data: levelBonuses, isLoading: isLoadingBonuses } = useQuery({
+    queryKey: ["/api/character-level-bonuses", selectedCharacter?.id, form.watch("rarity")],
+    queryFn: async () => {
+      if (!selectedCharacter) return [];
+      const characterId = selectedCharacter.id;
+      const rarity = form.watch("rarity");
+      const res = await fetch(`/api/character-level-bonuses?characterId=${characterId}&rarity=${rarity}`);
+      if (!res.ok) throw new Error("レベルボーナスの取得に失敗しました");
+      return await res.json();
     },
+    enabled: !!selectedCharacter,
   });
+
+  // 初期評価を取得
+  const getInitialRating = () => {
+    if (!levelBonuses || levelBonuses.length === 0) return null;
+    // レベル1の初期評価ボーナスを探す
+    const initialRatingBonus = levelBonuses.find(
+      (bonus: any) => bonus.level === 1 && bonus.effectType === "初期評価"
+    );
+    return initialRatingBonus?.value || null;
+  };
+
+  // レアリティが変更されたときにレベルボーナスを再取得
+  useEffect(() => {
+    if (selectedCharacter) {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-level-bonuses", selectedCharacter.id, form.watch("rarity")]
+      });
+    }
+  }, [form.watch("rarity"), selectedCharacter, queryClient]);
 
   // フォーム送信ハンドラ
   const onSubmit = (values: AddOwnedCharacterFormValues) => {
@@ -166,12 +199,32 @@ export default function AddCharacterPage() {
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <div className="mb-6">
                       <h3 className="text-xl font-bold mb-2">{selectedCharacter.name}</h3>
-                      <div className="flex items-center space-x-2 text-sm">
+                      <div className="flex items-center space-x-2 text-sm mb-2">
                         <span className="bg-gray-100 px-2 py-1 rounded">{selectedCharacter.position}</span>
                         {selectedCharacter.eventTiming && (
                           <span className="bg-gray-100 px-2 py-1 rounded">{selectedCharacter.eventTiming}</span>
                         )}
                       </div>
+                      
+                      {/* 初期評価の表示 */}
+                      {getInitialRating() && (
+                        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-blue-800">初期評価値:</span>
+                            <span className="text-lg font-bold text-blue-800">{getInitialRating()}</span>
+                          </div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            * {form.watch("rarity")}レアリティの初期評価値です
+                          </div>
+                        </div>
+                      )}
+                      
+                      {isLoadingBonuses && (
+                        <div className="flex items-center justify-center py-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500 mr-2" />
+                          <span className="text-sm text-blue-500">ボーナスデータを読み込み中...</span>
+                        </div>
+                      )}
                     </div>
 
                     <FormField

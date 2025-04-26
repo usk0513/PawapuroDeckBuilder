@@ -22,7 +22,6 @@ import {
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, or, asc, isNull } from "drizzle-orm";
-import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
