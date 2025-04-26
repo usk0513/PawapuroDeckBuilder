@@ -2446,6 +2446,7 @@ export default function AdminPage() {
                           )}
                         </div>
                       </div>
+                    </div>
                   </TabsContent>
                 </Tabs>
               )}
