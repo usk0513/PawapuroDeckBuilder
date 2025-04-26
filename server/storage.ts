@@ -69,6 +69,25 @@ export interface IStorage {
   createCharacterAwakeningBonus(bonus: InsertCharacterAwakeningBonus): Promise<CharacterAwakeningBonus>;
   updateCharacterAwakeningBonus(id: number, bonus: Partial<InsertCharacterAwakeningBonus>): Promise<CharacterAwakeningBonus | undefined>;
   deleteCharacterAwakeningBonus(id: number): Promise<boolean>;
+  
+  // Special Ability operations
+  getAllSpecialAbilities(): Promise<SpecialAbility[]>;
+  getSpecialAbility(id: number): Promise<SpecialAbility | undefined>;
+  createSpecialAbility(ability: InsertSpecialAbility): Promise<SpecialAbility>;
+  updateSpecialAbility(id: number, ability: Partial<InsertSpecialAbility>): Promise<SpecialAbility | undefined>;
+  deleteSpecialAbility(id: number): Promise<boolean>;
+  
+  // Character Special Ability Set operations
+  getCharacterSpecialAbilitySets(characterId: number, playerType?: PlayerType): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] })[]>;
+  getCharacterSpecialAbilitySet(id: number): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] }) | undefined>;
+  createCharacterSpecialAbilitySet(set: InsertCharacterSpecialAbilitySet): Promise<CharacterSpecialAbilitySet>;
+  updateCharacterSpecialAbilitySet(id: number, set: Partial<InsertCharacterSpecialAbilitySet>): Promise<CharacterSpecialAbilitySet | undefined>;
+  deleteCharacterSpecialAbilitySet(id: number): Promise<boolean>;
+  
+  // Special Ability Set Item operations
+  addSpecialAbilityToSet(setItem: InsertSpecialAbilitySetItem): Promise<SpecialAbilitySetItem>;
+  removeSpecialAbilityFromSet(setId: number, specialAbilityId: number): Promise<boolean>;
+  updateSpecialAbilitySetItemOrder(id: number, order: number): Promise<SpecialAbilitySetItem | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {

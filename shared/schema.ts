@@ -89,6 +89,19 @@ export enum BonusEffectType {
   UNIQUE_ITEM = "固有アイテム"
 }
 
+// 選手育成時のタイプ（投手・野手）
+export enum PlayerType {
+  PITCHER = "投手",
+  BATTER = "野手"
+}
+
+// 金特殊能力の選択肢タイプ
+export enum SpecialAbilityChoiceType {
+  TYPE_A = "Aルート",
+  TYPE_B = "Bルート",
+  TYPE_C = "Cルート"
+}
+
 // キャラクターレベルごとのボーナス効果スキーマ
 export const LevelBonusSchema = z.object({
   level: z.number().min(1).max(50),
@@ -226,62 +239,7 @@ export const comboCharacters = pgTable('combo_characters', {
 }));
 
 // Relations
-export const charactersRelations = relations(characters, ({ many }) => ({
-  deckCharacters: many(deckCharacters),
-  comboCharacters: many(comboCharacters),
-  levelBonuses: many(characterLevelBonuses),
-  awakeningBonuses: many(characterAwakeningBonuses),
-}));
-
-export const decksRelations = relations(decks, ({ one, many }) => ({
-  user: one(users, {
-    fields: [decks.userId],
-    references: [users.id],
-  }),
-  deckCharacters: many(deckCharacters),
-}));
-
-export const combosRelations = relations(combos, ({ many }) => ({
-  comboCharacters: many(comboCharacters),
-}));
-
-export const usersRelations = relations(users, ({ many }) => ({
-  decks: many(decks),
-  ownedCharacters: many(ownedCharacters),
-}));
-
-export const ownedCharactersRelations = relations(ownedCharacters, ({ one }) => ({
-  user: one(users, {
-    fields: [ownedCharacters.userId],
-    references: [users.id],
-  }),
-  character: one(characters, {
-    fields: [ownedCharacters.characterId],
-    references: [characters.id],
-  }),
-}));
-
-export const deckCharactersRelations = relations(deckCharacters, ({ one }) => ({
-  deck: one(decks, {
-    fields: [deckCharacters.deckId],
-    references: [decks.id],
-  }),
-  character: one(characters, {
-    fields: [deckCharacters.characterId],
-    references: [characters.id],
-  }),
-}));
-
-export const comboCharactersRelations = relations(comboCharacters, ({ one }) => ({
-  combo: one(combos, {
-    fields: [comboCharacters.comboId],
-    references: [combos.id],
-  }),
-  character: one(characters, {
-    fields: [comboCharacters.characterId],
-    references: [characters.id],
-  }),
-}));
+// 全テーブルのリレーションは最後にまとめて定義することとし、ここでは省略
 
 // キャラクターのレベル別ボーナス効果テーブル
 export const characterLevelBonuses = pgTable("character_level_bonuses", {
@@ -319,7 +277,115 @@ export const insertCharacterAwakeningBonusSchema = createInsertSchema(characterA
 export type InsertCharacterAwakeningBonus = z.infer<typeof insertCharacterAwakeningBonusSchema>;
 export type CharacterAwakeningBonus = typeof characterAwakeningBonuses.$inferSelect;
 
-// レベルボーナスのリレーション
+// リレーションは最後にまとめて定義します
+
+// 特殊能力名のテーブル（金特の名前マスタ）
+export const specialAbilities = pgTable("special_abilities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // 特殊能力の名前（例：「エース」、「広角打法」）
+  description: text("description"), // 特殊能力の説明
+  playerType: text("player_type").notNull().$type<PlayerType>(), // 投手か野手か
+});
+
+export const insertSpecialAbilitySchema = createInsertSchema(specialAbilities).omit({
+  id: true
+});
+
+export type InsertSpecialAbility = z.infer<typeof insertSpecialAbilitySchema>;
+export type SpecialAbility = typeof specialAbilities.$inferSelect;
+
+// キャラクターの特殊能力セットのテーブル（各キャラクターが持つ金特のセット）
+export const characterSpecialAbilitySets = pgTable("character_special_ability_sets", {
+  id: serial("id").primaryKey(),
+  characterId: integer("character_id").references(() => characters.id).notNull(),
+  playerType: text("player_type").notNull().$type<PlayerType>(), // 投手か野手か
+  choiceType: text("choice_type").notNull().$type<SpecialAbilityChoiceType>(), // 選択肢のパターン
+  name: text("name").notNull(), // セットの表示名（例：「Aルート - エース系」）
+  description: text("description"), // セットの説明
+});
+
+export const insertCharacterSpecialAbilitySetSchema = createInsertSchema(characterSpecialAbilitySets).omit({
+  id: true
+});
+
+export type InsertCharacterSpecialAbilitySet = z.infer<typeof insertCharacterSpecialAbilitySetSchema>;
+export type CharacterSpecialAbilitySet = typeof characterSpecialAbilitySets.$inferSelect;
+
+// 特殊能力セットと特殊能力の関連付けテーブル
+export const specialAbilitySetItems = pgTable("special_ability_set_items", {
+  id: serial("id").primaryKey(),
+  setId: integer("set_id").references(() => characterSpecialAbilitySets.id).notNull(),
+  specialAbilityId: integer("special_ability_id").references(() => specialAbilities.id).notNull(),
+  order: integer("order").notNull().default(0), // 表示順序
+});
+
+export const insertSpecialAbilitySetItemSchema = createInsertSchema(specialAbilitySetItems).omit({
+  id: true
+});
+
+export type InsertSpecialAbilitySetItem = z.infer<typeof insertSpecialAbilitySetItemSchema>;
+export type SpecialAbilitySetItem = typeof specialAbilitySetItems.$inferSelect;
+
+// 全テーブルのリレーション定義
+export const usersRelations = relations(users, ({ many }) => ({
+  decks: many(decks),
+  ownedCharacters: many(ownedCharacters),
+}));
+
+export const charactersRelations = relations(characters, ({ many }) => ({
+  deckCharacters: many(deckCharacters),
+  comboCharacters: many(comboCharacters),
+  levelBonuses: many(characterLevelBonuses),
+  awakeningBonuses: many(characterAwakeningBonuses),
+  specialAbilitySets: many(characterSpecialAbilitySets),
+  ownedCharacters: many(ownedCharacters),
+}));
+
+export const decksRelations = relations(decks, ({ one, many }) => ({
+  user: one(users, {
+    fields: [decks.userId],
+    references: [users.id],
+  }),
+  deckCharacters: many(deckCharacters),
+}));
+
+export const combosRelations = relations(combos, ({ many }) => ({
+  comboCharacters: many(comboCharacters),
+}));
+
+export const ownedCharactersRelations = relations(ownedCharacters, ({ one }) => ({
+  user: one(users, {
+    fields: [ownedCharacters.userId],
+    references: [users.id],
+  }),
+  character: one(characters, {
+    fields: [ownedCharacters.characterId],
+    references: [characters.id],
+  }),
+}));
+
+export const deckCharactersRelations = relations(deckCharacters, ({ one }) => ({
+  deck: one(decks, {
+    fields: [deckCharacters.deckId],
+    references: [decks.id],
+  }),
+  character: one(characters, {
+    fields: [deckCharacters.characterId],
+    references: [characters.id],
+  }),
+}));
+
+export const comboCharactersRelations = relations(comboCharacters, ({ one }) => ({
+  combo: one(combos, {
+    fields: [comboCharacters.comboId],
+    references: [combos.id],
+  }),
+  character: one(characters, {
+    fields: [comboCharacters.characterId],
+    references: [characters.id],
+  }),
+}));
+
 export const characterLevelBonusesRelations = relations(characterLevelBonuses, ({ one }) => ({
   character: one(characters, {
     fields: [characterLevelBonuses.characterId],
@@ -327,10 +393,32 @@ export const characterLevelBonusesRelations = relations(characterLevelBonuses, (
   }),
 }));
 
-// 覚醒ボーナスのリレーション
 export const characterAwakeningBonusesRelations = relations(characterAwakeningBonuses, ({ one }) => ({
   character: one(characters, {
     fields: [characterAwakeningBonuses.characterId],
     references: [characters.id],
+  }),
+}));
+
+export const specialAbilitiesRelations = relations(specialAbilities, ({ many }) => ({
+  setItems: many(specialAbilitySetItems),
+}));
+
+export const characterSpecialAbilitySetsRelations = relations(characterSpecialAbilitySets, ({ one, many }) => ({
+  character: one(characters, {
+    fields: [characterSpecialAbilitySets.characterId],
+    references: [characters.id],
+  }),
+  setItems: many(specialAbilitySetItems),
+}));
+
+export const specialAbilitySetItemsRelations = relations(specialAbilitySetItems, ({ one }) => ({
+  set: one(characterSpecialAbilitySets, {
+    fields: [specialAbilitySetItems.setId],
+    references: [characterSpecialAbilitySets.id],
+  }),
+  specialAbility: one(specialAbilities, {
+    fields: [specialAbilitySetItems.specialAbilityId],
+    references: [specialAbilities.id],
   }),
 }));
