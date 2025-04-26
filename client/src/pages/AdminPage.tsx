@@ -84,16 +84,12 @@ const formatEffectValue = (value: string, effectType?: string, level?: number): 
   if (!effectType) return value;
   const unit = effectTypeUnits[effectType] || "";
   
-  // LV35の固有ボーナスの場合は、値の前に+を付ける
-  if (level && isLv35UniqueBonus(level)) {
-    // 既に+が付いている場合はそのまま、なければ追加
-    if (value.startsWith("+")) {
-      return `${value}${unit}`;
-    } else {
-      return `+${value}${unit}`;
-    }
+  // 値が既に+で始まる場合は固有ボーナス（追加ボーナス）として表示
+  if (value.startsWith("+")) {
+    return `${value}${unit}`;
   }
   
+  // それ以外は通常の値として表示
   return `${value}${unit}`;
 };
 
@@ -1088,24 +1084,74 @@ export default function AdminPage() {
                                     </Select>
                                   </td>
                                   <td className="border p-2">
-                                    <Input 
-                                      placeholder={level === 35 ? "+数値を入力 (例: 20)" : "数値のみ入力"}
-                                      value={levelBonusValue[level] || ""}
-                                      onChange={(e) => {
-                                        levelBonusForm.setValue("level", level);
-                                        let value = e.target.value;
-                                        // レベル35の固有ボーナスの場合、自動的に+を追加
-                                        if (level === 35 && value && !value.startsWith("+")) {
-                                          value = value.replace(/^(\d+)/, "+$1");
-                                        }
-                                        levelBonusForm.setValue("value", value);
-                                        setLevelBonusValue((prev) => {
-                                          const updated = { ...prev };
-                                          updated[level] = value;
-                                          return updated;
-                                        });
-                                      }}
-                                    />
+                                    {level === 35 ? (
+                                      <div className="space-y-2">
+                                        <div className="flex items-center space-x-2">
+                                          <Select
+                                            value={levelBonusValue[level]?.startsWith("+") ? "unique" : "normal"}
+                                            onValueChange={(type) => {
+                                              const currentValue = levelBonusValue[level]?.replace(/^\+/, "") || "";
+                                              const newValue = type === "unique" ? `+${currentValue}` : currentValue;
+                                              
+                                              levelBonusForm.setValue("level", level);
+                                              levelBonusForm.setValue("value", newValue);
+                                              
+                                              setLevelBonusValue((prev) => {
+                                                const updated = { ...prev };
+                                                updated[level] = newValue;
+                                                return updated;
+                                              });
+                                            }}
+                                          >
+                                            <SelectTrigger className="w-[140px]">
+                                              <SelectValue placeholder="ボーナスタイプ" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="normal">通常ボーナス</SelectItem>
+                                              <SelectItem value="unique">固有ボーナス (+)</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          
+                                          <Input 
+                                            placeholder="数値を入力"
+                                            value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
+                                            onChange={(e) => {
+                                              const isUnique = levelBonusValue[level]?.startsWith("+") || false;
+                                              const value = isUnique ? `+${e.target.value}` : e.target.value;
+                                              
+                                              levelBonusForm.setValue("level", level);
+                                              levelBonusForm.setValue("value", value);
+                                              
+                                              setLevelBonusValue((prev) => {
+                                                const updated = { ...prev };
+                                                updated[level] = value;
+                                                return updated;
+                                              });
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {levelBonusValue[level]?.startsWith("+") 
+                                            ? "固有ボーナス：他のボーナスに追加で効果を与えます" 
+                                            : "通常ボーナス：値をそのまま設定します"}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <Input 
+                                        placeholder="数値のみ入力"
+                                        value={levelBonusValue[level] || ""}
+                                        onChange={(e) => {
+                                          levelBonusForm.setValue("level", level);
+                                          levelBonusForm.setValue("value", e.target.value);
+                                          
+                                          setLevelBonusValue((prev) => {
+                                            const updated = { ...prev };
+                                            updated[level] = e.target.value;
+                                            return updated;
+                                          });
+                                        }}
+                                      />
+                                    )}
                                   </td>
                                   <td className="border p-2">
                                     {/* 初期評価の場合はレアリティ選択を表示 */}
@@ -1223,7 +1269,8 @@ export default function AdminPage() {
                                           {bonus.description}
                                         </span>
                                       )}
-                                      {bonus.level === 35 && (
+                                      {/* レベル35かつ値が+で始まる場合に固有ボーナスバッジを表示 */}
+                                      {bonus.level === 35 && bonus.value.startsWith("+") && (
                                         <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
                                       )}
                                     </div>
