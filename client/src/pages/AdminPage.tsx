@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CharacterType, EventTiming, BonusEffectType, Rarity, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
+import { CharacterType, EventTiming, BonusEffectType, Rarity, insertCharacterSchema, insertCharacterLevelBonusSchema, insertCharacterAwakeningBonusSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,10 @@ type CharacterFormValues = z.infer<typeof characterSchema>;
 // レベルボーナス登録用スキーマ
 const levelBonusSchema = insertCharacterLevelBonusSchema.extend({});
 type LevelBonusFormValues = z.infer<typeof levelBonusSchema>;
+
+// 覚醒ボーナス登録用スキーマ
+const awakeningBonusSchema = insertCharacterAwakeningBonusSchema.extend({});
+type AwakeningBonusFormValues = z.infer<typeof awakeningBonusSchema>;
 
 // 効果タイプによる単位の定義
 const effectTypeUnits: Record<string, string> = {
@@ -198,6 +202,12 @@ export default function AdminPage() {
   const [levelBonusEffect, setLevelBonusEffect] = useState<Record<number, string>>({});
   const [levelBonusValue, setLevelBonusValue] = useState<Record<number, string>>({});
   const [isBatchSubmitting, setIsBatchSubmitting] = useState(false);
+  
+  // 覚醒ボーナス関連の状態
+  const [awakeningEffect, setAwakeningEffect] = useState<string>("");
+  const [awakeningValue, setAwakeningValue] = useState<string>("");
+  const [awakeningLevel, setAwakeningLevel] = useState<number>(1);
+  const [awakeningType, setAwakeningType] = useState<string>("initial"); // 'initial' or 'second'
 
   // キャラクターデータの取得
   const { data: characters = [], isLoading } = useQuery({
@@ -220,6 +230,19 @@ export default function AdminPage() {
       }
       const res = await fetch(url);
       if (!res.ok) throw new Error("レベルボーナスデータの取得に失敗しました");
+      return await res.json();
+    },
+    enabled: !!selectedCharacter,
+  });
+  
+  // 覚醒ボーナスデータの取得
+  const { data: awakeningBonuses = [], isLoading: isLoadingAwakeningBonuses } = useQuery({
+    queryKey: ["/api/character-awakening-bonuses", selectedCharacter],
+    queryFn: async () => {
+      if (!selectedCharacter) return [];
+      const url = `/api/character-awakening-bonuses?characterId=${selectedCharacter}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("覚醒ボーナスデータの取得に失敗しました");
       return await res.json();
     },
     enabled: !!selectedCharacter,
@@ -344,6 +367,19 @@ export default function AdminPage() {
       effectType: undefined,
       value: "",
       rarity: undefined,
+      description: "",
+    }
+  });
+  
+  // 覚醒ボーナス用フォーム
+  const awakeningBonusForm = useForm<AwakeningBonusFormValues>({
+    resolver: zodResolver(awakeningBonusSchema),
+    defaultValues: {
+      characterId: selectedCharacter || undefined,
+      effectType: undefined,
+      value: "",
+      awakeningLevel: 1,
+      awakeningType: "initial", // 'initial'(初回覚醒) or 'second'(2回目覚醒)
       description: "",
     }
   });
