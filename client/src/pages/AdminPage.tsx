@@ -744,7 +744,7 @@ export default function AdminPage() {
                                   <td className="border p-2">
                                     <Input 
                                       placeholder="数値のみ入力" 
-                                      value={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("value") : ""}
+                                      defaultValue={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("value") : ""}
                                       onChange={(e) => {
                                         levelBonusForm.setValue("level", level);
                                         levelBonusForm.setValue("value", e.target.value);
