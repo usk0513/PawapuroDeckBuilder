@@ -20,11 +20,21 @@ import {
   characterAwakeningBonuses,
   type CharacterAwakeningBonus,
   type InsertCharacterAwakeningBonus,
+  specialAbilities,
+  type SpecialAbility,
+  type InsertSpecialAbility,
+  characterSpecialAbilitySets,
+  type CharacterSpecialAbilitySet,
+  type InsertCharacterSpecialAbilitySet,
+  specialAbilitySetItems,
+  type SpecialAbilitySetItem,
+  type InsertSpecialAbilitySetItem,
   CharacterType,
-  Rarity
+  Rarity,
+  PlayerType
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, or, asc, isNull } from "drizzle-orm";
+import { eq, or, asc, isNull, and } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -302,6 +312,150 @@ export class DatabaseStorage implements IStorage {
   async deleteCharacterAwakeningBonus(id: number): Promise<boolean> {
     const result = await db.delete(characterAwakeningBonuses).where(eq(characterAwakeningBonuses.id, id));
     return !!result;
+  }
+  
+  // Special Ability operations
+  async getAllSpecialAbilities(): Promise<SpecialAbility[]> {
+    return db.select().from(specialAbilities).orderBy(asc(specialAbilities.name));
+  }
+  
+  async getSpecialAbility(id: number): Promise<SpecialAbility | undefined> {
+    const [ability] = await db.select().from(specialAbilities).where(eq(specialAbilities.id, id));
+    return ability;
+  }
+  
+  async createSpecialAbility(ability: InsertSpecialAbility): Promise<SpecialAbility> {
+    const [newAbility] = await db.insert(specialAbilities).values(ability).returning();
+    return newAbility;
+  }
+  
+  async updateSpecialAbility(id: number, ability: Partial<InsertSpecialAbility>): Promise<SpecialAbility | undefined> {
+    const [updatedAbility] = await db
+      .update(specialAbilities)
+      .set(ability)
+      .where(eq(specialAbilities.id, id))
+      .returning();
+    
+    return updatedAbility;
+  }
+  
+  async deleteSpecialAbility(id: number): Promise<boolean> {
+    const result = await db.delete(specialAbilities).where(eq(specialAbilities.id, id));
+    return !!result;
+  }
+  
+  // Character Special Ability Set operations
+  async getCharacterSpecialAbilitySets(characterId: number, playerType?: PlayerType): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] })[]> {
+    // まずセットを取得
+    let query = db.select().from(characterSpecialAbilitySets)
+      .where(eq(characterSpecialAbilitySets.characterId, characterId));
+    
+    // プレイヤータイプが指定されている場合はフィルタリング
+    if (playerType) {
+      query = query.where(eq(characterSpecialAbilitySets.playerType, playerType));
+    }
+    
+    const sets = await query.orderBy(asc(characterSpecialAbilitySets.choiceType));
+    
+    // 各セットに関連する特殊能力を取得して結合
+    const results: (CharacterSpecialAbilitySet & { abilities: SpecialAbility[] })[] = [];
+    
+    for (const set of sets) {
+      const abilities = await db.select({
+        ability: specialAbilities,
+        order: specialAbilitySetItems.order
+      })
+      .from(specialAbilitySetItems)
+      .innerJoin(
+        specialAbilities,
+        eq(specialAbilitySetItems.specialAbilityId, specialAbilities.id)
+      )
+      .where(eq(specialAbilitySetItems.setId, set.id))
+      .orderBy(asc(specialAbilitySetItems.order));
+      
+      results.push({
+        ...set,
+        abilities: abilities.map(item => item.ability)
+      });
+    }
+    
+    return results;
+  }
+  
+  async getCharacterSpecialAbilitySet(id: number): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] }) | undefined> {
+    const [set] = await db.select().from(characterSpecialAbilitySets).where(eq(characterSpecialAbilitySets.id, id));
+    
+    if (!set) {
+      return undefined;
+    }
+    
+    const abilities = await db.select({
+      ability: specialAbilities,
+      order: specialAbilitySetItems.order
+    })
+    .from(specialAbilitySetItems)
+    .innerJoin(
+      specialAbilities,
+      eq(specialAbilitySetItems.specialAbilityId, specialAbilities.id)
+    )
+    .where(eq(specialAbilitySetItems.setId, set.id))
+    .orderBy(asc(specialAbilitySetItems.order));
+    
+    return {
+      ...set,
+      abilities: abilities.map(item => item.ability)
+    };
+  }
+  
+  async createCharacterSpecialAbilitySet(set: InsertCharacterSpecialAbilitySet): Promise<CharacterSpecialAbilitySet> {
+    const [newSet] = await db.insert(characterSpecialAbilitySets).values(set).returning();
+    return newSet;
+  }
+  
+  async updateCharacterSpecialAbilitySet(id: number, set: Partial<InsertCharacterSpecialAbilitySet>): Promise<CharacterSpecialAbilitySet | undefined> {
+    const [updatedSet] = await db
+      .update(characterSpecialAbilitySets)
+      .set(set)
+      .where(eq(characterSpecialAbilitySets.id, id))
+      .returning();
+    
+    return updatedSet;
+  }
+  
+  async deleteCharacterSpecialAbilitySet(id: number): Promise<boolean> {
+    // 最初に関連するセットアイテムを削除
+    await db.delete(specialAbilitySetItems).where(eq(specialAbilitySetItems.setId, id));
+    
+    // 次にセット自体を削除
+    const result = await db.delete(characterSpecialAbilitySets).where(eq(characterSpecialAbilitySets.id, id));
+    return !!result;
+  }
+  
+  // Special Ability Set Item operations
+  async addSpecialAbilityToSet(setItem: InsertSpecialAbilitySetItem): Promise<SpecialAbilitySetItem> {
+    const [newSetItem] = await db.insert(specialAbilitySetItems).values(setItem).returning();
+    return newSetItem;
+  }
+  
+  async removeSpecialAbilityFromSet(setId: number, specialAbilityId: number): Promise<boolean> {
+    const result = await db.delete(specialAbilitySetItems)
+      .where(
+        and(
+          eq(specialAbilitySetItems.setId, setId),
+          eq(specialAbilitySetItems.specialAbilityId, specialAbilityId)
+        )
+      );
+    return !!result;
+  }
+  
+  async updateSpecialAbilitySetItemOrder(id: number, order: number): Promise<SpecialAbilitySetItem | undefined> {
+    const [updatedItem] = await db
+      .update(specialAbilitySetItems)
+      .set({ order })
+      .where(eq(specialAbilitySetItems.id, id))
+      .returning();
+    
+    return updatedItem;
   }
 
   // Initialize sample data for development purposes

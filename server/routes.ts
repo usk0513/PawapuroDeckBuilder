@@ -1,7 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCharacterSchema, insertDeckSchema, insertOwnedCharacterSchema, insertCharacterLevelBonusSchema, insertCharacterAwakeningBonusSchema } from "@shared/schema";
+import { 
+  insertCharacterSchema, 
+  insertDeckSchema, 
+  insertOwnedCharacterSchema, 
+  insertCharacterLevelBonusSchema, 
+  insertCharacterAwakeningBonusSchema,
+  insertSpecialAbilitySchema,
+  insertCharacterSpecialAbilitySetSchema,
+  insertSpecialAbilitySetItemSchema,
+  PlayerType
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -470,6 +480,256 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  // API routes for special abilities
+  app.get("/api/special-abilities", async (_req, res) => {
+    try {
+      const abilities = await storage.getAllSpecialAbilities();
+      res.json(abilities);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.get("/api/special-abilities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const ability = await storage.getSpecialAbility(id);
+      if (!ability) {
+        return res.status(404).json({ message: "特殊能力が見つかりませんでした" });
+      }
+      
+      res.json(ability);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.post("/api/special-abilities", async (req, res) => {
+    try {
+      const result = insertSpecialAbilitySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newAbility = await storage.createSpecialAbility(result.data);
+      res.status(201).json(newAbility);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/special-abilities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      // Validate partial schema
+      const partialSchema = insertSpecialAbilitySchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const updatedAbility = await storage.updateSpecialAbility(id, result.data);
+      if (!updatedAbility) {
+        return res.status(404).json({ message: "特殊能力が見つかりませんでした" });
+      }
+      
+      res.json(updatedAbility);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/special-abilities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.deleteSpecialAbility(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "特殊能力が見つかりませんでした" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  // API routes for character special ability sets
+  app.get("/api/character-special-ability-sets", async (req, res) => {
+    try {
+      const characterId = req.query.characterId ? parseInt(req.query.characterId as string) : undefined;
+      const playerType = req.query.playerType as PlayerType | undefined;
+      
+      if (!characterId || isNaN(characterId)) {
+        return res.status(400).json({ message: "キャラクターIDを指定してください" });
+      }
+      
+      const sets = await storage.getCharacterSpecialAbilitySets(characterId, playerType);
+      res.json(sets);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.get("/api/character-special-ability-sets/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const set = await storage.getCharacterSpecialAbilitySet(id);
+      if (!set) {
+        return res.status(404).json({ message: "特殊能力セットが見つかりませんでした" });
+      }
+      
+      res.json(set);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.post("/api/character-special-ability-sets", async (req, res) => {
+    try {
+      const result = insertCharacterSpecialAbilitySetSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newSet = await storage.createCharacterSpecialAbilitySet(result.data);
+      res.status(201).json(newSet);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/character-special-ability-sets/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      // Validate partial schema
+      const partialSchema = insertCharacterSpecialAbilitySetSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const updatedSet = await storage.updateCharacterSpecialAbilitySet(id, result.data);
+      if (!updatedSet) {
+        return res.status(404).json({ message: "特殊能力セットが見つかりませんでした" });
+      }
+      
+      res.json(updatedSet);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/character-special-ability-sets/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.deleteCharacterSpecialAbilitySet(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "特殊能力セットが見つかりませんでした" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  // API routes for special ability set items
+  app.post("/api/special-ability-set-items", async (req, res) => {
+    try {
+      const result = insertSpecialAbilitySetItemSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newItem = await storage.addSpecialAbilityToSet(result.data);
+      res.status(201).json(newItem);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/special-ability-sets/:setId/abilities/:abilityId", async (req, res) => {
+    try {
+      const setId = parseInt(req.params.setId);
+      const abilityId = parseInt(req.params.abilityId);
+      
+      if (isNaN(setId) || isNaN(abilityId)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.removeSpecialAbilityFromSet(setId, abilityId);
+      if (!deleted) {
+        return res.status(404).json({ message: "特殊能力セット項目が見つかりませんでした" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/special-ability-set-items/:id/order", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const { order } = req.body;
+      if (typeof order !== 'number') {
+        return res.status(400).json({ message: "順序は数値で指定してください" });
+      }
+      
+      const updatedItem = await storage.updateSpecialAbilitySetItemOrder(id, order);
+      if (!updatedItem) {
+        return res.status(404).json({ message: "特殊能力セット項目が見つかりませんでした" });
+      }
+      
+      res.json(updatedItem);
     } catch (error) {
       res.status(500).json({ message: "サーバーエラーが発生しました" });
     }
