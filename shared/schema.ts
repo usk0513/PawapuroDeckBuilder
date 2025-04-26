@@ -3,12 +3,14 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Character position enum
-export enum Position {
+// キャラクターの種別
+export enum CharacterType {
   PITCHER = "投手",
-  CATCHER = "捕手",
-  INFIELD = "内野",
-  OUTFIELD = "外野"
+  BATTER = "野手",
+  GIRLFRIEND = "彼女",
+  GIRLFRIEND_PITCHER = "投手・彼女",
+  GIRLFRIEND_BATTER = "野手・彼女",
+  PARTNER = "相棒"
 }
 
 // Character rarity enum
@@ -123,7 +125,7 @@ export type User = typeof users.$inferSelect;
 export const characters = pgTable("characters", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  position: text("position").notNull().$type<Position>(),
+  position: text("position").notNull().$type<CharacterType>(),
   rating: integer("rating").notNull().default(3),
   stats: json("stats").notNull().$type<Stat>(),
   specialTrainings: json("specialTrainings").$type<SpecialTraining[]>().default([]),

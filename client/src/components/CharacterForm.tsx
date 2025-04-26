@@ -28,14 +28,14 @@ import {
   awakeningOptions, 
   positionOptions,
   rarityOptions,
-  Position,
+  CharacterType,
   Rarity 
 } from "@/lib/constants";
 
 // Form schema for creating a character
 const formSchema = z.object({
   name: z.string().min(1, { message: "キャラクター名を入力してください" }),
-  position: z.nativeEnum(Position),
+  position: z.nativeEnum(CharacterType),
   rarity: z.nativeEnum(Rarity),
   level: z.coerce.number().min(1).max(5),
   awakening: z.coerce.number().min(0).max(4),
@@ -51,7 +51,7 @@ const CharacterForm: React.FC = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      position: Position.PITCHER,
+      position: CharacterType.PITCHER,
       rarity: Rarity.N,
       level: 1,
       awakening: 0,
@@ -68,17 +68,17 @@ const CharacterForm: React.FC = () => {
         owned: true,
         stats: {
           pitching: {
-            velocity: data.position === Position.PITCHER ? 2 : 0,
-            control: data.position === Position.PITCHER ? 2 : 0,
-            stamina: data.position === Position.PITCHER ? 2 : 0,
-            breaking: data.position === Position.PITCHER ? 1 : 0,
+            velocity: data.position === CharacterType.PITCHER ? 2 : 0,
+            control: data.position === CharacterType.PITCHER ? 2 : 0,
+            stamina: data.position === CharacterType.PITCHER ? 2 : 0,
+            breaking: data.position === CharacterType.PITCHER ? 1 : 0,
           },
           batting: {
-            contact: data.position === Position.PITCHER ? 0 : 2,
-            power: data.position === Position.INFIELD || data.position === Position.OUTFIELD ? 2 : 1,
-            speed: data.position === Position.OUTFIELD ? 2 : 1,
-            arm: data.position === Position.CATCHER || data.position === Position.OUTFIELD ? 2 : 1,
-            fielding: data.position === Position.CATCHER || data.position === Position.INFIELD ? 2 : 1,
+            contact: data.position === CharacterType.PITCHER ? 0 : 2,
+            power: data.position === CharacterType.BATTER ? 2 : 1,
+            speed: data.position === CharacterType.BATTER ? 2 : 1,
+            arm: data.position === CharacterType.BATTER ? 2 : 1,
+            fielding: data.position === CharacterType.BATTER ? 2 : 1,
           }
         }
       };

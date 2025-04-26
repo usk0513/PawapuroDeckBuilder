@@ -1,10 +1,12 @@
 // 新しい定数値を定義する
-// 選手ポジション
-export enum Position {
+// キャラクター種別
+export enum CharacterType {
   PITCHER = "投手",
-  CATCHER = "捕手",
-  INFIELD = "内野",
-  OUTFIELD = "外野"
+  BATTER = "野手",
+  GIRLFRIEND = "彼女",
+  GIRLFRIEND_PITCHER = "投手・彼女",
+  GIRLFRIEND_BATTER = "野手・彼女",
+  PARTNER = "相棒"
 }
 
 // レア度
@@ -62,7 +64,7 @@ export interface Stats {
 export interface Character {
   id: number;
   name: string;
-  position: Position;
+  position: CharacterType;
   rarity: Rarity;
   level: number;
   awakening: number;
@@ -160,12 +162,14 @@ export const awakeningOptions = [
   { value: 4, label: "覚醒4" }
 ];
 
-// Position options
+// キャラ種別オプション
 export const positionOptions = [
-  { value: Position.PITCHER, label: Position.PITCHER },
-  { value: Position.CATCHER, label: Position.CATCHER },
-  { value: Position.INFIELD, label: Position.INFIELD },
-  { value: Position.OUTFIELD, label: Position.OUTFIELD }
+  { value: CharacterType.PITCHER, label: CharacterType.PITCHER },
+  { value: CharacterType.BATTER, label: CharacterType.BATTER },
+  { value: CharacterType.GIRLFRIEND, label: CharacterType.GIRLFRIEND },
+  { value: CharacterType.GIRLFRIEND_PITCHER, label: CharacterType.GIRLFRIEND_PITCHER },
+  { value: CharacterType.GIRLFRIEND_BATTER, label: CharacterType.GIRLFRIEND_BATTER },
+  { value: CharacterType.PARTNER, label: CharacterType.PARTNER }
 ];
 
 // Rarity options

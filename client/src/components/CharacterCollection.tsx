@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import CharacterCard from "@/components/CharacterCard";
 import CharacterForm from "@/components/CharacterForm";
 import { useQuery } from "@tanstack/react-query";
-import { Character, Position } from "@/lib/constants";
+import { Character, CharacterType } from "@/lib/constants";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CharacterCollection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState<Position | "ALL">("ALL");
+  const [selectedPosition, setSelectedPosition] = useState<CharacterType | "ALL">("ALL");
   const [showOwned, setShowOwned] = useState(false);
   
   const { data: characters = [] } = useQuery<Character[]>({
@@ -27,7 +27,7 @@ const CharacterCollection: React.FC = () => {
     return matchesSearch && matchesPosition && matchesOwned;
   });
   
-  const handlePositionFilter = (position: Position | "ALL") => {
+  const handlePositionFilter = (position: CharacterType | "ALL") => {
     setSelectedPosition(position);
   };
   
@@ -66,32 +66,32 @@ const CharacterCollection: React.FC = () => {
             全て
           </Badge>
           <Badge 
-            variant={selectedPosition === Position.PITCHER ? "default" : "outline"}
-            className={selectedPosition === Position.PITCHER ? "bg-[hsl(var(--gaming-blue))]" : ""}
-            onClick={() => handlePositionFilter(Position.PITCHER)}
+            variant={selectedPosition === CharacterType.PITCHER ? "default" : "outline"}
+            className={selectedPosition === CharacterType.PITCHER ? "bg-[hsl(var(--gaming-blue))]" : ""}
+            onClick={() => handlePositionFilter(CharacterType.PITCHER)}
           >
             投手
           </Badge>
           <Badge 
-            variant={selectedPosition === Position.CATCHER ? "default" : "outline"}
-            className={selectedPosition === Position.CATCHER ? "bg-[hsl(var(--gaming-blue))]" : ""}
-            onClick={() => handlePositionFilter(Position.CATCHER)}
+            variant={selectedPosition === CharacterType.BATTER ? "default" : "outline"}
+            className={selectedPosition === CharacterType.BATTER ? "bg-[hsl(var(--gaming-blue))]" : ""}
+            onClick={() => handlePositionFilter(CharacterType.BATTER)}
           >
-            捕手
+            野手
           </Badge>
           <Badge 
-            variant={selectedPosition === Position.INFIELD ? "default" : "outline"}
-            className={selectedPosition === Position.INFIELD ? "bg-[hsl(var(--gaming-blue))]" : ""}
-            onClick={() => handlePositionFilter(Position.INFIELD)}
+            variant={selectedPosition === CharacterType.GIRLFRIEND ? "default" : "outline"}
+            className={selectedPosition === CharacterType.GIRLFRIEND ? "bg-[hsl(var(--gaming-blue))]" : ""}
+            onClick={() => handlePositionFilter(CharacterType.GIRLFRIEND)}
           >
-            内野
+            彼女
           </Badge>
           <Badge 
-            variant={selectedPosition === Position.OUTFIELD ? "default" : "outline"}
-            className={selectedPosition === Position.OUTFIELD ? "bg-[hsl(var(--gaming-blue))]" : ""}
-            onClick={() => handlePositionFilter(Position.OUTFIELD)}
+            variant={selectedPosition === CharacterType.PARTNER ? "default" : "outline"}
+            className={selectedPosition === CharacterType.PARTNER ? "bg-[hsl(var(--gaming-blue))]" : ""}
+            onClick={() => handlePositionFilter(CharacterType.PARTNER)}
           >
-            外野
+            相棒
           </Badge>
           <Badge 
             variant={showOwned ? "default" : "outline"}

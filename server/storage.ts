@@ -17,7 +17,7 @@ import {
   characterLevelBonuses,
   type CharacterLevelBonus,
   type InsertCharacterLevelBonus,
-  Position,
+  CharacterType,
   Rarity
 } from "@shared/schema";
 import { db, pool } from "./db";
@@ -273,7 +273,7 @@ export class DatabaseStorage implements IStorage {
       const sampleCharacters: InsertCharacter[] = [
         {
           name: "猪狩 守",
-          position: Position.PITCHER,
+          position: CharacterType.PITCHER,
           rating: 3,
           stats: {
             pitching: { velocity: 3, control: 2, stamina: 2, breaking: 0 },
@@ -282,7 +282,7 @@ export class DatabaseStorage implements IStorage {
         },
         {
           name: "友沢 亮",
-          position: Position.OUTFIELD,
+          position: CharacterType.BATTER,
           rating: 4,
           stats: {
             pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
@@ -291,7 +291,7 @@ export class DatabaseStorage implements IStorage {
         },
         {
           name: "猪狩 進",
-          position: Position.PITCHER,
+          position: CharacterType.PITCHER,
           rating: 5,
           stats: {
             pitching: { velocity: 4, control: 4, stamina: 0, breaking: 3 },
@@ -300,7 +300,7 @@ export class DatabaseStorage implements IStorage {
         },
         {
           name: "佐藤 寿也",
-          position: Position.INFIELD,
+          position: CharacterType.BATTER,
           rating: 2,
           stats: {
             pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },
@@ -309,7 +309,7 @@ export class DatabaseStorage implements IStorage {
         },
         {
           name: "六道 聖",
-          position: Position.CATCHER,
+          position: CharacterType.BATTER,
           rating: 3,
           stats: {
             pitching: { velocity: 0, control: 0, stamina: 0, breaking: 0 },

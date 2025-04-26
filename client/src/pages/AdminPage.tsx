@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Position, EventTiming, BonusEffectType, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
+import { CharacterType, EventTiming, BonusEffectType, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -189,7 +189,7 @@ export default function AdminPage() {
     resolver: zodResolver(characterSchema),
     defaultValues: {
       name: "",
-      position: Position.PITCHER,
+      position: CharacterType.PITCHER,
       specialTrainings: [],
       eventTiming: undefined,
       stats: {
@@ -380,9 +380,9 @@ export default function AdminPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Object.values(Position).map((position) => (
-                                <SelectItem key={position} value={position}>
-                                  {position}
+                              {positionOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -551,9 +551,9 @@ export default function AdminPage() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {Object.values(Position).map((position) => (
-                                    <SelectItem key={position} value={position}>
-                                      {position}
+                                  {positionOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>

@@ -43,13 +43,15 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, inDeck = false
   
   const topStats = getTopStats(character);
   
-  // Get image bg color based on position
+  // Get image bg color based on character type
   const getBgColorClass = () => {
     switch (character.position) {
       case "投手": return "bg-blue-100";
-      case "捕手": return "bg-purple-100";
-      case "内野": return "bg-yellow-100";
-      case "外野": return "bg-red-100";
+      case "野手": return "bg-green-100";
+      case "彼女": return "bg-pink-100";
+      case "投手・彼女": return "bg-blue-100 bg-gradient-to-br from-blue-100 to-pink-100";
+      case "野手・彼女": return "bg-green-100 bg-gradient-to-br from-green-100 to-pink-100";
+      case "相棒": return "bg-yellow-100";
       default: return "bg-gray-100";
     }
   };
