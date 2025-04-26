@@ -354,8 +354,14 @@ export default function AdminPage() {
           description: "",
         };
         
-        // 初期評価の場合またはレアリティが指定されている場合
-        if (levelBonusRarity[level] && levelBonusRarity[level] !== "common") {
+        // 特定レベルでのレアリティを強制設定
+        if (level === 37) {
+          Object.assign(bonus, { rarity: Rarity.SR });
+        } else if (level === 42 || level === 50) {
+          Object.assign(bonus, { rarity: Rarity.PSR });
+        } 
+        // それ以外の場合はユーザが選択したレアリティを使用
+        else if (levelBonusRarity[level] && levelBonusRarity[level] !== "common") {
           Object.assign(bonus, { rarity: levelBonusRarity[level] });
         }
         
@@ -879,31 +885,46 @@ export default function AdminPage() {
                             <tbody>
                               {[1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50].map((level) => (
                                 <tr key={level}>
-                                  <td className="border p-2 text-center font-medium">Lv.{level}</td>
+                                  <td className="border p-2 text-center font-medium">
+                                    Lv.{level}
+                                    {level === 37 && <Badge className="ml-2">SR専用</Badge>}
+                                    {(level === 42 || level === 50) && <Badge className="ml-2">PSR専用</Badge>}
+                                  </td>
                                   <td className="border p-2">
-                                    <Select
-                                      onValueChange={(value) => {
-                                        levelBonusForm.setValue("level", level);
-                                        levelBonusForm.setValue("rarity", value || undefined);
-                                        setLevelBonusRarity({
-                                          ...levelBonusRarity,
-                                          [level]: value
-                                        });
-                                      }}
-                                      value={levelBonusRarity[level] || "common"}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="共通" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="common">共通</SelectItem>
-                                        {Object.values(Rarity).map((rarity) => (
-                                          <SelectItem key={rarity} value={rarity}>
-                                            {rarity}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                    {/* 特定のレベルではレアリティを固定する */}
+                                    {level === 37 ? (
+                                      <div className="text-center text-sm text-muted-foreground">
+                                        SR専用
+                                      </div>
+                                    ) : (level === 42 || level === 50) ? (
+                                      <div className="text-center text-sm text-muted-foreground">
+                                        PSR専用
+                                      </div>
+                                    ) : (
+                                      <Select
+                                        onValueChange={(value) => {
+                                          levelBonusForm.setValue("level", level);
+                                          levelBonusForm.setValue("rarity", value || undefined);
+                                          setLevelBonusRarity({
+                                            ...levelBonusRarity,
+                                            [level]: value
+                                          });
+                                        }}
+                                        value={levelBonusRarity[level] || "common"}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="共通" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="common">共通</SelectItem>
+                                          {Object.values(Rarity).map((rarity) => (
+                                            <SelectItem key={rarity} value={rarity}>
+                                              {rarity}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    )}
                                   </td>
                                   <td className="border p-2">
                                     <Select
@@ -971,6 +992,14 @@ export default function AdminPage() {
                                       onClick={() => {
                                         levelBonusForm.setValue("level", level);
                                         levelBonusForm.setValue("description", "");
+                                        
+                                        // 特定のレベルではレアリティを自動設定
+                                        if (level === 37) {
+                                          levelBonusForm.setValue("rarity", Rarity.SR);
+                                        } else if (level === 42 || level === 50) {
+                                          levelBonusForm.setValue("rarity", Rarity.PSR);
+                                        }
+                                        
                                         // 初期評価の場合はレアリティチェック
                                         if (levelBonusForm.getValues("effectType") === BonusEffectType.INITIAL_RATING && 
                                             !levelBonusForm.getValues("rarity")) {
@@ -981,6 +1010,7 @@ export default function AdminPage() {
                                           });
                                           return;
                                         }
+                                        
                                         if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           onLevelBonusSubmit(levelBonusForm.getValues());
