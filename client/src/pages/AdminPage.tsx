@@ -789,13 +789,13 @@ export default function AdminPage() {
                                           [level]: value
                                         });
                                       }}
-                                      value={levelBonusRarity[level] || ""}
+                                      value={levelBonusRarity[level] || "common"}
                                     >
                                       <SelectTrigger>
                                         <SelectValue placeholder="共通" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="">共通</SelectItem>
+                                        <SelectItem value="common">共通</SelectItem>
                                         {Object.values(Rarity).map((rarity) => (
                                           <SelectItem key={rarity} value={rarity}>
                                             {rarity}
@@ -814,7 +814,7 @@ export default function AdminPage() {
                                           [level]: value
                                         });
                                       }}
-                                      value={levelBonusEffect[level] || ""}
+                                      value={levelBonusEffect[level] || undefined}
                                     >
                                       <SelectTrigger>
                                         <SelectValue placeholder="効果タイプを選択" />
@@ -851,7 +851,7 @@ export default function AdminPage() {
                                           onValueChange={(value) => {
                                             levelBonusForm.setValue("rarity", value as string);
                                           }}
-                                          value={levelBonusForm.getValues("rarity") || ""}
+                                          value={levelBonusForm.getValues("rarity") || undefined}
                                         >
                                           <SelectTrigger>
                                             <SelectValue placeholder="レアリティを選択" />
