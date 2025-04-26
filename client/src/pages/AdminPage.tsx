@@ -1132,19 +1132,19 @@ export default function AdminPage() {
                                 <tr key={level}>
                                   <td className="border p-2 text-center font-medium">
                                     {level === 35.5 ? (
-                                      <>
+                                      <div className="inline-flex items-center">
                                         Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
-                                      </>
+                                      </div>
                                     ) : level === 35 ? (
-                                      <>
+                                      <div className="inline-flex items-center">
                                         Lv.35 <Badge className="ml-2 bg-muted">通常ボーナス</Badge>
-                                      </>
+                                      </div>
                                     ) : (
-                                      <>
+                                      <div className="inline-flex items-center">
                                         Lv.{level}
                                         {level === 37 && <Badge className="ml-2">SR専用</Badge>}
                                         {(level === 42 || level === 50) && <Badge className="ml-2">PSR専用</Badge>}
-                                      </>
+                                      </div>
                                     )}
                                   </td>
                                   <td className="border p-2">
@@ -1203,7 +1203,7 @@ export default function AdminPage() {
                                         {Array.from(new Set(bonusEffectTypeOptions.map(option => option.group))).map(group => {
                                           if (!group) return null;
                                           return (
-                                            <React.Fragment key={group}>
+                                            <div key={group}>
                                               {/* グループ名のヘッダー */}
                                               <div className="px-2 py-1.5 text-sm font-semibold bg-muted/50">
                                                 {group}
@@ -1217,7 +1217,7 @@ export default function AdminPage() {
                                                   </SelectItem>
                                                 ))
                                               }
-                                            </React.Fragment>
+                                            </div>
                                           );
                                         })}
                                       </SelectContent>
