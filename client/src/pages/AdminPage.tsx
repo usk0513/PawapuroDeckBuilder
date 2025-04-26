@@ -504,9 +504,9 @@ export default function AdminPage() {
       }
       
       // すべて送信後にフォームをリセット
-      setLevelBonusRarity({});
-      setLevelBonusEffect({});
-      setLevelBonusValue({});
+      setLevelBonusRarity(prev => ({}));
+      setLevelBonusEffect(prev => ({}));
+      setLevelBonusValue(prev => ({}));
       
       toast({
         title: "レベルボーナス一括追加",
@@ -1047,24 +1047,26 @@ export default function AdminPage() {
                                       </SelectTrigger>
                                       <SelectContent>
                                         {/* グループごとにオプションを表示 */}
-                                        {/* グループ化するために一意なグループ名を収集 */}
-                                        {Array.from(new Set(bonusEffectTypeOptions.map(option => option.group))).map(group => (
-                                          <React.Fragment key={group}>
-                                            {/* グループ名のヘッダー */}
-                                            <div className="px-2 py-1.5 text-sm font-semibold bg-muted/50">
-                                              {group}
-                                            </div>
-                                            {/* グループに属するオプションをフィルタリングして表示 */}
-                                            {bonusEffectTypeOptions
-                                              .filter(option => option.group === group)
-                                              .map(option => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                  {option.label}
-                                                </SelectItem>
-                                              ))
-                                            }
-                                          </React.Fragment>
-                                        ))}
+                                        {Array.from(new Set(bonusEffectTypeOptions.map(option => option.group))).map(group => {
+                                          if (!group) return null;
+                                          return (
+                                            <React.Fragment key={group}>
+                                              {/* グループ名のヘッダー */}
+                                              <div className="px-2 py-1.5 text-sm font-semibold bg-muted/50">
+                                                {group}
+                                              </div>
+                                              {/* グループに属するオプションをフィルタリングして表示 */}
+                                              {bonusEffectTypeOptions
+                                                .filter(option => option.group === group)
+                                                .map(option => (
+                                                  <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                  </SelectItem>
+                                                ))
+                                              }
+                                            </React.Fragment>
+                                          );
+                                        })}
                                       </SelectContent>
                                     </Select>
                                   </td>
@@ -1133,13 +1135,15 @@ export default function AdminPage() {
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           onLevelBonusSubmit(levelBonusForm.getValues());
                                           // 送信後にフォームをリセット
-                                          setLevelBonusEffect({
-                                            ...levelBonusEffect,
-                                            [level]: undefined
+                                          setLevelBonusEffect((prev) => {
+                                            const updated = { ...prev };
+                                            delete updated[level]; // 値を削除
+                                            return updated;
                                           });
-                                          setLevelBonusValue({
-                                            ...levelBonusValue,
-                                            [level]: ""
+                                          setLevelBonusValue((prev) => {
+                                            const updated = { ...prev };
+                                            updated[level] = ""; // 値を空文字列にリセット
+                                            return updated;
                                           });
                                           levelBonusForm.setValue("effectType", "");
                                           levelBonusForm.setValue("value", "");
