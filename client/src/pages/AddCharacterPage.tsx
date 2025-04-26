@@ -200,7 +200,7 @@ export default function AddCharacterPage() {
                     <div className="mb-6">
                       <h3 className="text-xl font-bold mb-2">{selectedCharacter.name}</h3>
                       <div className="flex items-center space-x-2 text-sm mb-2">
-                        <span className="bg-gray-100 px-2 py-1 rounded">{selectedCharacter.position}</span>
+                        <span className="bg-gray-100 px-2 py-1 rounded">キャラ種別: {selectedCharacter.position}</span>
                         {selectedCharacter.eventTiming && (
                           <span className="bg-gray-100 px-2 py-1 rounded">{selectedCharacter.eventTiming}</span>
                         )}

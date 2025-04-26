@@ -730,7 +730,7 @@ export default function AdminPage() {
                       name="position"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ポジション</FormLabel>
+                          <FormLabel>キャラ種別</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -738,7 +738,7 @@ export default function AdminPage() {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="ポジションを選択" />
+                                <SelectValue placeholder="キャラ種別を選択" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -902,7 +902,7 @@ export default function AdminPage() {
                           name="position"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>ポジション</FormLabel>
+                              <FormLabel>キャラ種別</FormLabel>
                               <Select
                                 onValueChange={field.onChange}
                                 defaultValue={field.value}
@@ -910,7 +910,7 @@ export default function AdminPage() {
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="ポジションを選択" />
+                                    <SelectValue placeholder="キャラ種別を選択" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -1636,7 +1636,7 @@ export default function AdminPage() {
                         <div>
                           <h3 className="font-bold text-lg">{character.name}</h3>
                           <div className="text-sm text-muted-foreground">
-                            {character.position}
+                            キャラ種別: {character.position}
                             {character.eventTiming && ` | ${character.eventTiming}`}
                           </div>
                           {character.specialTrainings && character.specialTrainings.length > 0 && (
