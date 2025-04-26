@@ -720,6 +720,7 @@ export default function AdminPage() {
   
   // 覚醒ボーナス送信ハンドラ
   const onAwakeningBonusSubmit = (values: AwakeningBonusFormValues) => {
+    console.log("覚醒ボーナス送信：", values);
     if (selectedCharacter) {
       const data = {
         ...values,
@@ -727,7 +728,25 @@ export default function AdminPage() {
         description: "", // 空の説明を追加して互換性を保つ
         awakeningLevel: 1 // 覚醒レベルを追加（データベース互換性のため）
       };
-      createAwakeningBonusMutation.mutate(data);
+      console.log("覚醒ボーナス送信データ：", data);
+      createAwakeningBonusMutation.mutate(data, {
+        onSuccess: (newBonus) => {
+          console.log("覚醒ボーナス登録成功：", newBonus);
+          awakeningBonusForm.reset({ awakeningType: "initial", effectType: undefined, value: "" });
+          toast({
+            title: "覚醒ボーナスが登録されました",
+            description: `${newBonus.effectType}：+${newBonus.value}${effectTypeUnits[newBonus.effectType] || ""}`,
+          });
+        },
+        onError: (error) => {
+          console.error("覚醒ボーナス登録エラー：", error);
+          toast({
+            title: "登録エラー",
+            description: "覚醒ボーナスの登録に失敗しました",
+            variant: "destructive",
+          });
+        }
+      });
     }
   };
   
