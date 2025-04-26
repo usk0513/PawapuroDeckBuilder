@@ -242,17 +242,34 @@ export default function AdminPage() {
       return await res.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/character-level-bonuses", selectedCharacter] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-level-bonuses", selectedCharacter, selectedRarity] 
+      });
+      
+      const rarityText = data.rarity ? `（${data.rarity}専用）` : "";
       toast({
         title: "レベルボーナス追加",
-        description: `Lv.${data.level}のボーナスが追加されました`,
+        description: `Lv.${data.level}の${data.effectType}${rarityText}ボーナスが追加されました`,
       });
+      
+      // クリア
+      setLevelBonusEffect({
+        ...levelBonusEffect,
+        [data.level]: ""
+      });
+      setLevelBonusValue({
+        ...levelBonusValue,
+        [data.level]: ""
+      });
+      
+      // フォームリセット
       levelBonusForm.reset({
         characterId: selectedCharacter || undefined,
         level: data.level, // 同じレベルを保持
         effectType: undefined,
         value: "",
         description: "",
+        rarity: undefined
       });
     },
     onError: (error: Error) => {
@@ -275,7 +292,9 @@ export default function AdminPage() {
       return true;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/character-level-bonuses", selectedCharacter] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-level-bonuses", selectedCharacter, selectedRarity]
+      });
       toast({
         title: "レベルボーナス削除",
         description: "レベルボーナスが削除されました",
@@ -304,6 +323,10 @@ export default function AdminPage() {
   const handleEditCharacter = (character: any) => {
     setSelectedCharacter(character.id);
     setActiveTab("character");
+    setSelectedRarity(""); // レアリティフィルタをリセット
+    setLevelBonusRarity({}); // レアリティ選択をリセット
+    setLevelBonusEffect({}); // 効果タイプ選択をリセット
+    setLevelBonusValue({}); // 効果値をリセット
     
     // キャラクター編集フォームの初期化
     form.reset({
@@ -321,6 +344,7 @@ export default function AdminPage() {
       effectType: undefined,
       value: "",
       description: "",
+      rarity: undefined,
     });
   };
 
