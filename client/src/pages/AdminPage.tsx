@@ -81,6 +81,7 @@ export default function AdminPage() {
   const [levelBonusRarity, setLevelBonusRarity] = useState<Record<number, string>>({});
   const [levelBonusEffect, setLevelBonusEffect] = useState<Record<number, string>>({});
   const [levelBonusValue, setLevelBonusValue] = useState<Record<number, string>>({});
+  const [isBatchSubmitting, setIsBatchSubmitting] = useState(false);
 
   // キャラクターデータの取得
   const { data: characters = [], isLoading } = useQuery({
@@ -327,6 +328,82 @@ export default function AdminPage() {
         description: "",
         rarity: undefined,
       });
+    }
+  };
+  
+  // すべてのレベルボーナスをまとめて追加する関数
+  const submitAllLevelBonuses = async () => {
+    if (!selectedCharacter) return;
+    
+    setIsBatchSubmitting(true);
+    const levels = [1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50];
+    
+    // 入力されているレベルボーナスを収集
+    const bonusesToSubmit: Array<{level: number, effectType: string, value: string, rarity?: string}> = [];
+    
+    levels.forEach(level => {
+      const effectType = levelBonusEffect[level];
+      const value = levelBonusValue[level];
+      
+      if (effectType && value) {
+        const bonus = {
+          level,
+          effectType,
+          value,
+          characterId: selectedCharacter,
+          description: "",
+        };
+        
+        // 初期評価の場合またはレアリティが指定されている場合
+        if (levelBonusRarity[level] && levelBonusRarity[level] !== "common") {
+          Object.assign(bonus, { rarity: levelBonusRarity[level] });
+        }
+        
+        bonusesToSubmit.push(bonus);
+      }
+    });
+    
+    if (bonusesToSubmit.length === 0) {
+      setIsBatchSubmitting(false);
+      toast({
+        title: "入力エラー",
+        description: "追加するレベルボーナスが入力されていません",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // 順番に処理
+      for (const bonus of bonusesToSubmit) {
+        await new Promise<void>((resolve) => {
+          createLevelBonusMutation.mutate(bonus as LevelBonusFormValues, {
+            onSuccess: () => {
+              resolve();
+            },
+            onError: (error) => {
+              toast({
+                title: `Lv.${bonus.level}のボーナス追加エラー`,
+                description: error.message,
+                variant: "destructive",
+              });
+              resolve();
+            }
+          });
+        });
+      }
+      
+      // すべて送信後にフォームをリセット
+      setLevelBonusRarity({});
+      setLevelBonusEffect({});
+      setLevelBonusValue({});
+      
+      toast({
+        title: "レベルボーナス一括追加",
+        description: `${bonusesToSubmit.length}件のレベルボーナスを追加しました`,
+      });
+    } finally {
+      setIsBatchSubmitting(false);
     }
   };
   
@@ -772,6 +849,20 @@ export default function AdminPage() {
                               </Button>
                             ))}
                           </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <Button
+                            type="button"
+                            onClick={submitAllLevelBonuses}
+                            disabled={isBatchSubmitting}
+                            className="w-full"
+                          >
+                            {isBatchSubmitting ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
+                            全入力項目をまとめて追加
+                          </Button>
                         </div>
                         
                         <div className="overflow-x-auto">
