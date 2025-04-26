@@ -49,15 +49,29 @@ const effectTypeUnits: Record<string, string> = {
   [BonusEffectType.LIMIT_UP_VELOCITY]: "",
   [BonusEffectType.LIMIT_UP_CONTROL]: "",
   [BonusEffectType.LIMIT_UP_STAMINA]: "",
-  [BonusEffectType.BASE_BONUS_STRENGTH]: "",  // 数値(1~100)
+  [BonusEffectType.BASE_BONUS_STRENGTH]: "",
   [BonusEffectType.BASE_BONUS_AGILITY]: "",
   [BonusEffectType.BASE_BONUS_TECHNIQUE]: "",
   [BonusEffectType.BASE_BONUS_CHANGE]: "",
   [BonusEffectType.BASE_BONUS_MENTAL]: "",
-  [BonusEffectType.REFORM_STRENGTH_AGILITY]: "",  // 数値(1~100)
+  [BonusEffectType.REFORM_STRENGTH_AGILITY]: "",
   [BonusEffectType.REFORM_RUNNING_MENTAL]: "",
   [BonusEffectType.REFORM_CONTROL_CHANGE]: "",
   [BonusEffectType.REFORM_STAMINA_CHANGE]: "",
+  // 基礎コツボーナス（単位なし）
+  [BonusEffectType.BASE_KOTS_MEET]: "",
+  [BonusEffectType.BASE_KOTS_POWER]: "",
+  [BonusEffectType.BASE_KOTS_SPEED]: "",
+  [BonusEffectType.BASE_KOTS_ARM]: "",
+  [BonusEffectType.BASE_KOTS_FIELDING]: "",
+  [BonusEffectType.BASE_KOTS_CATCHING]: "",
+  [BonusEffectType.BASE_KOTS_VELOCITY]: "",
+  [BonusEffectType.BASE_KOTS_CONTROL]: "",
+  [BonusEffectType.BASE_KOTS_STAMINA]: "",
+  // サポートデッキ専用効果
+  [BonusEffectType.MAX_AWAKENINGS]: "回",
+  [BonusEffectType.EXPERIENCE_POINT_CAP_UP]: "点",
+
 };
 
 // 効果値に単位を自動で付加する関数
@@ -67,11 +81,101 @@ const formatEffectValue = (value: string, effectType?: string): string => {
   return `${value}${unit}`;
 };
 
+// BonusEffectTypeの選択肢を整理して表示するための関数
+const getBonusEffectTypeOptions = () => {
+  // グループ分けするための定義
+  const groups = {
+    basic: {
+      title: "基本効果",
+      items: [
+        BonusEffectType.INITIAL_RATING,
+        BonusEffectType.TAG_BONUS,
+        BonusEffectType.KOTS_EVENT_BONUS,
+        BonusEffectType.MATCH_EXPERIENCE_BONUS,
+        BonusEffectType.TRAINING_RATE_UP,
+        BonusEffectType.TRAINING_EFFECT_UP,
+        BonusEffectType.KOTS_EVENT_RATE_UP,
+        BonusEffectType.MOTIVATION_EFFECT_UP,
+        BonusEffectType.TRAINING_STAMINA_CONSUMPTION_DOWN,
+        BonusEffectType.EVENT_STAMINA_RECOVERY_UP,
+        BonusEffectType.EVENT_BONUS,
+        BonusEffectType.KOTS_LEVEL_BONUS,
+      ]
+    },
+    limit: {
+      title: "能力上限効果",
+      items: [
+        BonusEffectType.LIMIT_UP_MEET,
+        BonusEffectType.LIMIT_UP_POWER,
+        BonusEffectType.LIMIT_UP_SPEED,
+        BonusEffectType.LIMIT_UP_ARM,
+        BonusEffectType.LIMIT_UP_FIELDING,
+        BonusEffectType.LIMIT_UP_CATCHING,
+        BonusEffectType.LIMIT_UP_VELOCITY,
+        BonusEffectType.LIMIT_UP_CONTROL,
+        BonusEffectType.LIMIT_UP_STAMINA,
+      ]
+    },
+    baseBonus: {
+      title: "基礎ボーナス",
+      items: [
+        BonusEffectType.BASE_BONUS_STRENGTH,
+        BonusEffectType.BASE_BONUS_AGILITY,
+        BonusEffectType.BASE_BONUS_TECHNIQUE,
+        BonusEffectType.BASE_BONUS_CHANGE,
+        BonusEffectType.BASE_BONUS_MENTAL,
+      ]
+    },
+    reform: {
+      title: "練習改革効果",
+      items: [
+        BonusEffectType.REFORM_STRENGTH_AGILITY,
+        BonusEffectType.REFORM_RUNNING_MENTAL,
+        BonusEffectType.REFORM_CONTROL_CHANGE,
+        BonusEffectType.REFORM_STAMINA_CHANGE,
+      ]
+    },
+    baseKots: {
+      title: "基礎コツ効果",
+      items: [
+        BonusEffectType.BASE_KOTS_MEET,
+        BonusEffectType.BASE_KOTS_POWER,
+        BonusEffectType.BASE_KOTS_SPEED,
+        BonusEffectType.BASE_KOTS_ARM,
+        BonusEffectType.BASE_KOTS_FIELDING,
+        BonusEffectType.BASE_KOTS_CATCHING,
+        BonusEffectType.BASE_KOTS_VELOCITY,
+        BonusEffectType.BASE_KOTS_CONTROL,
+        BonusEffectType.BASE_KOTS_STAMINA,
+      ]
+    },
+    support: {
+      title: "サポートデッキ専用効果",
+      items: [
+        BonusEffectType.MAX_AWAKENINGS,
+        BonusEffectType.EXPERIENCE_POINT_CAP_UP,
+      ]
+    }
+  };
+
+  const options: { label: string; value: string; group?: string }[] = [];
+  
+  // グループごとにオプションを追加
+  Object.entries(groups).forEach(([groupKey, group]) => {
+    group.items.forEach(item => {
+      options.push({
+        value: item,
+        label: item,
+        group: group.title
+      });
+    });
+  });
+  
+  return options;
+};
+
 // BonusEffectTypeの選択肢
-const bonusEffectTypeOptions = Object.entries(BonusEffectType).map(([key, value]) => ({
-  value,
-  label: value,
-}));
+const bonusEffectTypeOptions = getBonusEffectTypeOptions();
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -942,10 +1046,24 @@ export default function AdminPage() {
                                         <SelectValue placeholder="効果タイプを選択" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        {bonusEffectTypeOptions.map((option) => (
-                                          <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                          </SelectItem>
+                                        {/* グループごとにオプションを表示 */}
+                                        {/* グループ化するために一意なグループ名を収集 */}
+                                        {Array.from(new Set(bonusEffectTypeOptions.map(option => option.group))).map(group => (
+                                          <React.Fragment key={group}>
+                                            {/* グループ名のヘッダー */}
+                                            <div className="px-2 py-1.5 text-sm font-semibold bg-muted/50">
+                                              {group}
+                                            </div>
+                                            {/* グループに属するオプションをフィルタリングして表示 */}
+                                            {bonusEffectTypeOptions
+                                              .filter(option => option.group === group)
+                                              .map(option => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                  {option.label}
+                                                </SelectItem>
+                                              ))
+                                            }
+                                          </React.Fragment>
                                         ))}
                                       </SelectContent>
                                     </Select>

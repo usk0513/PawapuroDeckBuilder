@@ -70,7 +70,20 @@ export enum BonusEffectType {
   REFORM_STRENGTH_AGILITY = "筋力練習改革_敏捷",
   REFORM_RUNNING_MENTAL = "走塁練習改革_精神",
   REFORM_CONTROL_CHANGE = "コントロール練習改革_変化",
-  REFORM_STAMINA_CHANGE = "スタミナ練習改革_変化"
+  REFORM_STAMINA_CHANGE = "スタミナ練習改革_変化",
+  // 新しい基礎コツボーナス
+  BASE_KOTS_MEET = "基礎コツ_ミート",
+  BASE_KOTS_POWER = "基礎コツ_パワー",
+  BASE_KOTS_SPEED = "基礎コツ_走力",
+  BASE_KOTS_ARM = "基礎コツ_肩力",
+  BASE_KOTS_FIELDING = "基礎コツ_守備",
+  BASE_KOTS_CATCHING = "基礎コツ_捕球",
+  BASE_KOTS_VELOCITY = "基礎コツ_球速",
+  BASE_KOTS_CONTROL = "基礎コツ_コントロール",
+  BASE_KOTS_STAMINA = "基礎コツ_スタミナ",
+  // サポートデッキ専用効果
+  MAX_AWAKENINGS = "開眼最大回数",
+  EXPERIENCE_POINT_CAP_UP = "獲得経験点上限アップ"
 }
 
 // キャラクターレベルごとのボーナス効果スキーマ
