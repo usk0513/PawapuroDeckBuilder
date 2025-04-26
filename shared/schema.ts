@@ -84,7 +84,9 @@ export enum BonusEffectType {
   BASE_KOTS_STAMINA = "基礎コツ_スタミナ",
   // サポートデッキ専用効果
   MAX_AWAKENINGS = "開眼最大回数",
-  EXPERIENCE_POINT_CAP_UP = "獲得経験点上限アップ"
+  EXPERIENCE_POINT_CAP_UP = "獲得経験点上限アップ",
+  // Lv35専用の固有アイテム効果
+  UNIQUE_ITEM = "固有アイテム"
 }
 
 // キャラクターレベルごとのボーナス効果スキーマ

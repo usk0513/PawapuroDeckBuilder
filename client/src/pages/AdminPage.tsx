@@ -75,6 +75,8 @@ const effectTypeUnits: Record<string, string> = {
   // サポートデッキ専用効果
   [BonusEffectType.MAX_AWAKENINGS]: "回",
   [BonusEffectType.EXPERIENCE_POINT_CAP_UP]: "点",
+  // Lv35専用固有アイテム効果
+  [BonusEffectType.UNIQUE_ITEM]: "",
 
 };
 
@@ -170,6 +172,12 @@ const getBonusEffectTypeOptions = () => {
       items: [
         BonusEffectType.MAX_AWAKENINGS,
         BonusEffectType.EXPERIENCE_POINT_CAP_UP,
+      ]
+    },
+    uniqueItem: {
+      title: "固有アイテム効果",
+      items: [
+        BonusEffectType.UNIQUE_ITEM,
       ]
     }
   };
@@ -1246,12 +1254,12 @@ export default function AdminPage() {
                                             
                                             // 画面表示は35.5だが、データベースには35として保存
                                             levelBonusForm.setValue("level", 35);
-                                            levelBonusForm.setValue("effectType", "固有アイテム"); // 固定効果タイプ
+                                            levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM); // 固定効果タイプ
                                             levelBonusForm.setValue("value", formattedValue);
                                             
                                             setLevelBonusEffect((prev) => {
                                               const updated = { ...prev };
-                                              updated[level] = "固有アイテム"; // 効果タイプを固定
+                                              updated[level] = BonusEffectType.UNIQUE_ITEM; // 効果タイプを固定
                                               return updated;
                                             });
                                             
