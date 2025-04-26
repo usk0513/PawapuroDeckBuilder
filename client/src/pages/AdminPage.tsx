@@ -258,6 +258,7 @@ export default function AdminPage() {
   const [selectedSpecialAbility, setSelectedSpecialAbility] = useState<number | null>(null);
   const [selectedPlayerType, setSelectedPlayerType] = useState<PlayerType | "">("");
   const [selectedAbilitySetId, setSelectedAbilitySetId] = useState<number | null>(null);
+  const [abilitySearchTerm, setAbilitySearchTerm] = useState<string>("");
 
   // キャラクターデータの取得
   const { data: characters = [], isLoading } = useQuery({
