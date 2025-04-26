@@ -96,6 +96,17 @@ export const LevelBonusSchema = z.object({
 
 export type LevelBonus = z.infer<typeof LevelBonusSchema>;
 
+// 覚醒レベルごとのボーナス効果スキーマ
+export const AwakeningBonusSchema = z.object({
+  awakeningLevel: z.number().min(1).max(10),
+  awakeningType: z.enum(["first", "second"]), // 1回目と2回目の覚醒
+  effectType: z.nativeEnum(BonusEffectType),
+  value: z.string(), // 効果の値
+  description: z.string().optional(),
+});
+
+export type AwakeningBonus = z.infer<typeof AwakeningBonusSchema>;
+
 // Character stats schema
 export const StatSchema = z.object({
   pitching: z.object({
@@ -139,6 +150,7 @@ export const characters = pgTable("characters", {
   stats: json("stats").notNull().$type<Stat>(),
   specialTrainings: json("specialTrainings").$type<SpecialTraining[]>().default([]),
   eventTiming: text("event_timing").$type<EventTiming>(),
+  canAwaken: boolean("can_awaken").notNull().default(true),
 });
 
 export const insertCharacterSchema = createInsertSchema(characters).omit({
@@ -216,6 +228,7 @@ export const charactersRelations = relations(characters, ({ many }) => ({
   deckCharacters: many(deckCharacters),
   comboCharacters: many(comboCharacters),
   levelBonuses: many(characterLevelBonuses),
+  awakeningBonuses: many(characterAwakeningBonuses),
 }));
 
 export const decksRelations = relations(decks, ({ one, many }) => ({
@@ -286,10 +299,36 @@ export const insertCharacterLevelBonusSchema = createInsertSchema(characterLevel
 export type InsertCharacterLevelBonus = z.infer<typeof insertCharacterLevelBonusSchema>;
 export type CharacterLevelBonus = typeof characterLevelBonuses.$inferSelect;
 
+// 覚醒ボーナスのテーブル
+export const characterAwakeningBonuses = pgTable("character_awakening_bonuses", {
+  id: serial("id").primaryKey(),
+  characterId: integer("character_id").references(() => characters.id).notNull(),
+  awakeningLevel: integer("awakening_level").notNull(),
+  awakeningType: text("awakening_type").notNull().$type<"first" | "second">(),
+  effectType: text("effect_type").notNull().$type<BonusEffectType>(),
+  value: text("value").notNull(),
+  description: text("description"),
+});
+
+export const insertCharacterAwakeningBonusSchema = createInsertSchema(characterAwakeningBonuses).omit({
+  id: true
+});
+
+export type InsertCharacterAwakeningBonus = z.infer<typeof insertCharacterAwakeningBonusSchema>;
+export type CharacterAwakeningBonus = typeof characterAwakeningBonuses.$inferSelect;
+
 // レベルボーナスのリレーション
 export const characterLevelBonusesRelations = relations(characterLevelBonuses, ({ one }) => ({
   character: one(characters, {
     fields: [characterLevelBonuses.characterId],
+    references: [characters.id],
+  }),
+}));
+
+// 覚醒ボーナスのリレーション
+export const characterAwakeningBonusesRelations = relations(characterAwakeningBonuses, ({ one }) => ({
+  character: one(characters, {
+    fields: [characterAwakeningBonuses.characterId],
     references: [characters.id],
   }),
 }));
