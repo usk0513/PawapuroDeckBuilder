@@ -4,7 +4,20 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CharacterType, EventTiming, BonusEffectType, Rarity, insertCharacterSchema, insertCharacterLevelBonusSchema, insertCharacterAwakeningBonusSchema } from "@shared/schema";
+import { 
+  CharacterType, 
+  EventTiming, 
+  BonusEffectType, 
+  Rarity, 
+  PlayerType,
+  SpecialAbilityChoiceType,
+  insertCharacterSchema, 
+  insertCharacterLevelBonusSchema, 
+  insertCharacterAwakeningBonusSchema,
+  insertSpecialAbilitySchema,
+  insertCharacterSpecialAbilitySetSchema,
+  insertSpecialAbilitySetItemSchema
+} from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +43,18 @@ type LevelBonusFormValues = z.infer<typeof levelBonusSchema>;
 // 覚醒ボーナス登録用スキーマ
 const awakeningBonusSchema = insertCharacterAwakeningBonusSchema.extend({});
 type AwakeningBonusFormValues = z.infer<typeof awakeningBonusSchema>;
+
+// 金特登録用スキーマ
+const specialAbilitySchema = insertSpecialAbilitySchema.extend({});
+type SpecialAbilityFormValues = z.infer<typeof specialAbilitySchema>;
+
+// 金特セット登録用スキーマ
+const characterSpecialAbilitySetSchema = insertCharacterSpecialAbilitySetSchema.extend({});
+type CharacterSpecialAbilitySetFormValues = z.infer<typeof characterSpecialAbilitySetSchema>;
+
+// 金特セットアイテム登録用スキーマ
+const specialAbilitySetItemSchema = insertSpecialAbilitySetItemSchema.extend({});
+type SpecialAbilitySetItemFormValues = z.infer<typeof specialAbilitySetItemSchema>;
 
 // 効果タイプによる単位の定義
 const effectTypeUnits: Record<string, string> = {
@@ -226,6 +251,11 @@ export default function AdminPage() {
   const [awakeningEffect, setAwakeningEffect] = useState<string>("");
   const [awakeningValue, setAwakeningValue] = useState<string>("");
   const [awakeningType, setAwakeningType] = useState<string>("initial"); // 'initial' or 'second'
+  
+  // 金特関連の状態
+  const [selectedSpecialAbility, setSelectedSpecialAbility] = useState<number | null>(null);
+  const [selectedPlayerType, setSelectedPlayerType] = useState<PlayerType | "">("");
+  const [selectedAbilitySetId, setSelectedAbilitySetId] = useState<number | null>(null);
 
   // キャラクターデータの取得
   const { data: characters = [], isLoading } = useQuery({
@@ -270,6 +300,32 @@ export default function AdminPage() {
         console.error("覚醒ボーナス取得エラー:", error);
         return [];
       }
+    },
+    enabled: !!selectedCharacter,
+  });
+  
+  // 金特データの取得
+  const { data: specialAbilities = [], isLoading: isLoadingSpecialAbilities } = useQuery({
+    queryKey: ["/api/special-abilities"],
+    queryFn: async () => {
+      const res = await fetch("/api/special-abilities");
+      if (!res.ok) throw new Error("金特データの取得に失敗しました");
+      return await res.json();
+    }
+  });
+  
+  // 金特セットデータの取得
+  const { data: specialAbilitySets = [], isLoading: isLoadingSpecialAbilitySets } = useQuery({
+    queryKey: ["/api/character-special-ability-sets", selectedCharacter, selectedPlayerType],
+    queryFn: async () => {
+      if (!selectedCharacter) return [];
+      let url = `/api/character-special-ability-sets?characterId=${selectedCharacter}`;
+      if (selectedPlayerType) {
+        url += `&playerType=${selectedPlayerType}`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("金特セットデータの取得に失敗しました");
+      return await res.json();
     },
     enabled: !!selectedCharacter,
   });
@@ -405,6 +461,36 @@ export default function AdminPage() {
       effectType: undefined,
       value: "",
       awakeningType: "initial", // 'initial'(初回覚醒) or 'second'(2回目覚醒)
+    }
+  });
+  
+  // 金特用フォーム
+  const specialAbilityForm = useForm<SpecialAbilityFormValues>({
+    resolver: zodResolver(specialAbilitySchema),
+    defaultValues: {
+      name: "",
+      playerType: PlayerType.PITCHER,
+      description: "",
+    }
+  });
+  
+  // 金特セット用フォーム
+  const specialAbilitySetForm = useForm<CharacterSpecialAbilitySetFormValues>({
+    resolver: zodResolver(characterSpecialAbilitySetSchema),
+    defaultValues: {
+      characterId: selectedCharacter || undefined,
+      playerType: PlayerType.PITCHER,
+      choiceType: SpecialAbilityChoiceType.TYPE_A,
+    }
+  });
+  
+  // 金特セットアイテム用フォーム
+  const specialAbilitySetItemForm = useForm<SpecialAbilitySetItemFormValues>({
+    resolver: zodResolver(specialAbilitySetItemSchema),
+    defaultValues: {
+      setId: undefined,
+      specialAbilityId: undefined,
+      order: 1,
     }
   });
   
@@ -591,6 +677,185 @@ export default function AdminPage() {
     }
   });
   
+  // 金特作成ミューテーション
+  const createSpecialAbilityMutation = useMutation({
+    mutationFn: async (data: SpecialAbilityFormValues) => {
+      const res = await apiRequest("POST", "/api/special-abilities", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "金特作成に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/special-abilities"] });
+      toast({
+        title: "金特作成",
+        description: "新しい金特が作成されました",
+      });
+      specialAbilityForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 金特削除ミューテーション
+  const deleteSpecialAbilityMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/special-abilities/${id}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "金特削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/special-abilities"] });
+      toast({
+        title: "金特削除",
+        description: "金特が削除されました",
+      });
+      setSelectedSpecialAbility(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 金特セット作成ミューテーション
+  const createSpecialAbilitySetMutation = useMutation({
+    mutationFn: async (data: CharacterSpecialAbilitySetFormValues) => {
+      const res = await apiRequest("POST", "/api/character-special-ability-sets", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "金特セット作成に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-special-ability-sets", selectedCharacter, selectedPlayerType] 
+      });
+      toast({
+        title: "金特セット作成",
+        description: `${data.choiceType}の金特セットが作成されました`,
+      });
+      setSelectedAbilitySetId(data.id);
+      specialAbilitySetForm.reset({
+        characterId: selectedCharacter || undefined,
+        playerType: data.playerType,
+        choiceType: data.choiceType,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 金特セット削除ミューテーション
+  const deleteSpecialAbilitySetMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/character-special-ability-sets/${id}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "金特セット削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-special-ability-sets", selectedCharacter, selectedPlayerType]
+      });
+      toast({
+        title: "金特セット削除",
+        description: "金特セットが削除されました",
+      });
+      setSelectedAbilitySetId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 金特セットアイテム追加ミューテーション
+  const addSpecialAbilityToSetMutation = useMutation({
+    mutationFn: async (data: SpecialAbilitySetItemFormValues) => {
+      const res = await apiRequest("POST", "/api/special-ability-set-items", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "金特セットへの金特追加に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-special-ability-sets", selectedCharacter, selectedPlayerType] 
+      });
+      toast({
+        title: "金特追加",
+        description: "金特セットに金特が追加されました",
+      });
+      specialAbilitySetItemForm.reset({
+        setId: selectedAbilitySetId || undefined,
+        specialAbilityId: undefined,
+        order: 1,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 金特セットアイテム削除ミューテーション
+  const removeSpecialAbilityFromSetMutation = useMutation({
+    mutationFn: async ({ setId, specialAbilityId }: { setId: number; specialAbilityId: number }) => {
+      const res = await apiRequest("DELETE", 
+        `/api/special-ability-set-items?setId=${setId}&specialAbilityId=${specialAbilityId}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "金特セットからの金特削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-special-ability-sets", selectedCharacter, selectedPlayerType]
+      });
+      toast({
+        title: "金特削除",
+        description: "金特セットから金特が削除されました",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   const onLevelBonusSubmit = (values: LevelBonusFormValues) => {
     // characterIdを現在選択中のキャラクターIDに設定
     if (selectedCharacter) {
@@ -707,6 +972,33 @@ export default function AdminPage() {
     }
   };
   
+  // 金特作成時の送信処理
+  const onSpecialAbilitySubmit = (values: SpecialAbilityFormValues) => {
+    createSpecialAbilityMutation.mutate(values);
+  };
+  
+  // 金特セット作成時の送信処理
+  const onSpecialAbilitySetSubmit = (values: CharacterSpecialAbilitySetFormValues) => {
+    if (selectedCharacter) {
+      const data = {
+        ...values,
+        characterId: selectedCharacter
+      };
+      createSpecialAbilitySetMutation.mutate(data);
+    }
+  };
+  
+  // 金特セットアイテム追加時の送信処理
+  const onSpecialAbilitySetItemSubmit = (values: SpecialAbilitySetItemFormValues) => {
+    if (selectedAbilitySetId) {
+      const data = {
+        ...values,
+        setId: selectedAbilitySetId
+      };
+      addSpecialAbilityToSetMutation.mutate(data);
+    }
+  };
+  
   const handleEditCharacter = (character: any) => {
     setSelectedCharacter(character.id);
     setActiveTab("character");
@@ -718,6 +1010,8 @@ export default function AdminPage() {
     // 状態変数のクリア
     setAwakeningEffect("");
     setAwakeningValue("");
+    setSelectedPlayerType("");
+    setSelectedAbilitySetId(null);
     
     // キャラクター編集フォームの初期化
     form.reset({
@@ -1002,10 +1296,11 @@ export default function AdminPage() {
                   onValueChange={setActiveTab}
                   className="w-full"
                 >
-                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsList className="grid w-full grid-cols-4 mb-4">
                     <TabsTrigger value="character">基本情報</TabsTrigger>
                     <TabsTrigger value="levelbonus">レベルボーナス</TabsTrigger>
                     <TabsTrigger value="awakening">覚醒ボーナス</TabsTrigger>
+                    <TabsTrigger value="specialability">金特</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="character">
@@ -1778,6 +2073,378 @@ export default function AdminPage() {
                             )}
                           </div>
                         )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="specialability">
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* 左側: 金特マスタ登録 */}
+                        <div>
+                          <h3 className="text-lg font-medium mb-4">金特マスタ登録</h3>
+                          <Form {...specialAbilityForm}>
+                            <form className="space-y-4">
+                              <FormField
+                                control={specialAbilityForm.control}
+                                name="name"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>金特名</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="例: ノビ極まる" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={specialAbilityForm.control}
+                                name="playerType"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>対象選手タイプ</FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                      value={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="タイプを選択" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value={PlayerType.PITCHER}>投手</SelectItem>
+                                        <SelectItem value={PlayerType.BATTER}>野手</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={specialAbilityForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>説明</FormLabel>
+                                    <FormControl>
+                                      <Textarea placeholder="金特の効果説明" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <Button 
+                                type="button" 
+                                onClick={() => onSpecialAbilitySubmit(specialAbilityForm.getValues())}
+                                disabled={!specialAbilityForm.formState.isValid}
+                              >
+                                金特を登録
+                              </Button>
+                            </form>
+                          </Form>
+                          
+                          <div className="mt-6">
+                            <h4 className="text-md font-medium mb-2">登録済み金特一覧</h4>
+                            {isLoadingSpecialAbilities ? (
+                              <div className="flex justify-center my-4">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                              </div>
+                            ) : (
+                              <div className="border rounded-md p-2">
+                                {specialAbilities.length === 0 ? (
+                                  <div className="text-center text-muted-foreground py-4">
+                                    登録された金特はありません
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {specialAbilities.map((ability) => (
+                                      <div 
+                                        key={ability.id} 
+                                        className={cn(
+                                          "flex justify-between items-center p-2 rounded-md",
+                                          selectedSpecialAbility === ability.id ? "bg-muted" : "hover:bg-muted/50 cursor-pointer"
+                                        )}
+                                        onClick={() => setSelectedSpecialAbility(ability.id)}
+                                      >
+                                        <div>
+                                          <div className="font-medium">{ability.name}</div>
+                                          <div className="text-xs text-muted-foreground flex items-center">
+                                            <Badge variant="outline" className="mr-2">
+                                              {ability.playerType}
+                                            </Badge>
+                                            {ability.description}
+                                          </div>
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm("この金特を削除しますか？")) {
+                                              deleteSpecialAbilityMutation.mutate(ability.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* 右側: キャラクター金特セット登録 */}
+                        <div>
+                          <h3 className="text-lg font-medium mb-4">キャラクター金特セット設定</h3>
+                          
+                          {!selectedCharacter ? (
+                            <div className="text-center text-muted-foreground py-8 border rounded-md">
+                              左側のキャラクター一覧からキャラクターを選択してください
+                            </div>
+                          ) : (
+                            <div className="space-y-6">
+                              {/* タイプ選択 */}
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">選手タイプ選択</h4>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant={selectedPlayerType === PlayerType.PITCHER ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPlayerType(PlayerType.PITCHER);
+                                      setSelectedAbilitySetId(null);
+                                    }}
+                                  >
+                                    投手
+                                  </Button>
+                                  <Button
+                                    variant={selectedPlayerType === PlayerType.BATTER ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPlayerType(PlayerType.BATTER);
+                                      setSelectedAbilitySetId(null);
+                                    }}
+                                  >
+                                    野手
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              {selectedPlayerType && (
+                                <>
+                                  {/* 金特セット作成フォーム */}
+                                  <div className="border rounded-md p-4">
+                                    <h4 className="text-sm font-medium mb-2">金特セット作成</h4>
+                                    <Form {...specialAbilitySetForm}>
+                                      <form className="space-y-4">
+                                        <FormField
+                                          control={specialAbilitySetForm.control}
+                                          name="choiceType"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>ルートタイプ</FormLabel>
+                                              <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                value={field.value}
+                                              >
+                                                <FormControl>
+                                                  <SelectTrigger>
+                                                    <SelectValue placeholder="ルートを選択" />
+                                                  </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                  <SelectItem value={SpecialAbilityChoiceType.TYPE_A}>Aルート</SelectItem>
+                                                  <SelectItem value={SpecialAbilityChoiceType.TYPE_B}>Bルート</SelectItem>
+                                                  <SelectItem value={SpecialAbilityChoiceType.TYPE_C}>Cルート</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                              <FormDescription>
+                                                成功パターンのルートを選択
+                                              </FormDescription>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+                                        
+                                        <Button 
+                                          type="button" 
+                                          onClick={() => {
+                                            const values = specialAbilitySetForm.getValues();
+                                            values.playerType = selectedPlayerType;
+                                            onSpecialAbilitySetSubmit(values);
+                                          }}
+                                          disabled={!specialAbilitySetForm.formState.isValid || !selectedPlayerType}
+                                        >
+                                          金特セットを作成
+                                        </Button>
+                                      </form>
+                                    </Form>
+                                  </div>
+                                  
+                                  {/* 金特セット一覧 */}
+                                  <div>
+                                    <h4 className="text-sm font-medium mb-2">登録済み金特セット</h4>
+                                    {isLoadingSpecialAbilitySets ? (
+                                      <div className="flex justify-center my-4">
+                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-4">
+                                        {specialAbilitySets.length === 0 ? (
+                                          <div className="text-center text-muted-foreground py-4 border rounded-md">
+                                            登録された金特セットはありません
+                                          </div>
+                                        ) : (
+                                          specialAbilitySets.map((set) => (
+                                            <div 
+                                              key={set.id}
+                                              className={cn(
+                                                "border rounded-md p-3",
+                                                selectedAbilitySetId === set.id ? "border-primary" : ""
+                                              )}
+                                            >
+                                              <div className="flex justify-between items-center mb-2">
+                                                <div className="flex items-center">
+                                                  <Badge className="mr-2">{set.playerType}</Badge>
+                                                  <Badge variant="outline">{set.choiceType}</Badge>
+                                                </div>
+                                                <div className="flex space-x-2">
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setSelectedAbilitySetId(set.id)}
+                                                  >
+                                                    編集
+                                                  </Button>
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                      if (window.confirm("この金特セットを削除しますか？")) {
+                                                        deleteSpecialAbilitySetMutation.mutate(set.id);
+                                                      }
+                                                    }}
+                                                  >
+                                                    <Trash className="h-4 w-4 text-destructive" />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                              
+                                              <div className="space-y-2">
+                                                {/* 金特一覧 */}
+                                                {set.abilities && set.abilities.length > 0 ? (
+                                                  set.abilities.map((ability) => (
+                                                    <div key={ability.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                                                      <div className="text-sm font-medium">{ability.name}</div>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                          if (window.confirm("この金特をセットから削除しますか？")) {
+                                                            removeSpecialAbilityFromSetMutation.mutate({
+                                                              setId: set.id,
+                                                              specialAbilityId: ability.id
+                                                            });
+                                                          }
+                                                        }}
+                                                      >
+                                                        <X className="h-4 w-4 text-destructive" />
+                                                      </Button>
+                                                    </div>
+                                                  ))
+                                                ) : (
+                                                  <div className="text-center text-muted-foreground py-2">
+                                                    金特が設定されていません
+                                                  </div>
+                                                )}
+                                              </div>
+                                              
+                                              {/* 金特追加フォーム (選択中の場合のみ表示) */}
+                                              {selectedAbilitySetId === set.id && (
+                                                <div className="mt-4 pt-4 border-t">
+                                                  <h5 className="text-sm font-medium mb-2">金特追加</h5>
+                                                  <Form {...specialAbilitySetItemForm}>
+                                                    <form className="space-y-4">
+                                                      <FormField
+                                                        control={specialAbilitySetItemForm.control}
+                                                        name="specialAbilityId"
+                                                        render={({ field }) => (
+                                                          <FormItem>
+                                                            <Select
+                                                              onValueChange={(value) => field.onChange(Number(value))}
+                                                              value={field.value?.toString()}
+                                                            >
+                                                              <FormControl>
+                                                                <SelectTrigger>
+                                                                  <SelectValue placeholder="金特を選択" />
+                                                                </SelectTrigger>
+                                                              </FormControl>
+                                                              <SelectContent>
+                                                                {specialAbilities
+                                                                  .filter(ability => ability.playerType === set.playerType)
+                                                                  .map((ability) => (
+                                                                    <SelectItem key={ability.id} value={ability.id.toString()}>
+                                                                      {ability.name}
+                                                                    </SelectItem>
+                                                                  ))}
+                                                              </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                          </FormItem>
+                                                        )}
+                                                      />
+                                                      
+                                                      <FormField
+                                                        control={specialAbilitySetItemForm.control}
+                                                        name="order"
+                                                        render={({ field }) => (
+                                                          <FormItem>
+                                                            <FormLabel>表示順</FormLabel>
+                                                            <FormControl>
+                                                              <Input 
+                                                                type="number" 
+                                                                min="1" 
+                                                                {...field} 
+                                                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                                              />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                          </FormItem>
+                                                        )}
+                                                      />
+                                                      
+                                                      <Button 
+                                                        type="button" 
+                                                        onClick={() => onSpecialAbilitySetItemSubmit(specialAbilitySetItemForm.getValues())}
+                                                        disabled={!specialAbilitySetItemForm.formState.isValid}
+                                                      >
+                                                        金特を追加
+                                                      </Button>
+                                                    </form>
+                                                  </Form>
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
