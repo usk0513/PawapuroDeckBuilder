@@ -21,6 +21,7 @@ import {
   Rarity
 } from "@shared/schema";
 import { db, pool } from "./db";
+import { eq, or, asc, isNull } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -208,10 +209,23 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Character Level Bonus operations
-  async getCharacterLevelBonuses(characterId: number): Promise<CharacterLevelBonus[]> {
-    return db.select()
+  async getCharacterLevelBonuses(characterId: number, rarity?: string): Promise<CharacterLevelBonus[]> {
+    let query = db.select()
       .from(characterLevelBonuses)
       .where(eq(characterLevelBonuses.characterId, characterId));
+    
+    // レアリティが指定されている場合は、そのレアリティに対応するボーナスか、レアリティがnullのボーナスを取得
+    if (rarity) {
+      query = query.where(
+        or(
+          eq(characterLevelBonuses.rarity, rarity),
+          isNull(characterLevelBonuses.rarity)
+        )
+      );
+    }
+    
+    const bonuses = await query.orderBy(asc(characterLevelBonuses.level));
+    return bonuses;
   }
   
   async createCharacterLevelBonus(bonus: InsertCharacterLevelBonus): Promise<CharacterLevelBonus> {

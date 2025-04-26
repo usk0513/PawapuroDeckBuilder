@@ -316,11 +316,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/character-level-bonuses", async (req, res) => {
     try {
       const characterId = req.query.characterId ? parseInt(req.query.characterId as string) : undefined;
+      const rarity = req.query.rarity as string | undefined;
+      
       if (!characterId || isNaN(characterId)) {
         return res.status(400).json({ message: "キャラクターIDを指定してください" });
       }
       
-      const bonuses = await storage.getCharacterLevelBonuses(characterId);
+      const bonuses = await storage.getCharacterLevelBonuses(characterId, rarity);
       res.json(bonuses);
     } catch (error) {
       res.status(500).json({ message: "サーバーエラーが発生しました" });
