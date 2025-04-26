@@ -204,3 +204,12 @@ export const rarityColorMap = {
 
 // Maximum number of characters in a deck
 export const MAX_DECK_SIZE = 6;
+
+// Lv35の固有ボーナスアイテム一覧
+export const uniqueBonusItems = [
+  { value: "万能パワドリンク", label: "万能パワドリンク" },
+  { value: "アロマグッズ", label: "アロマグッズ" },
+  { value: "Maxパワドリンク", label: "Maxパワドリンク" },
+  { value: "ともだちスタンプ", label: "ともだちスタンプ" },
+  { value: "サポーター", label: "サポーター" },
+];
