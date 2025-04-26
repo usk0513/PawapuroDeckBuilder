@@ -1104,7 +1104,8 @@ export default function AdminPage() {
                                             // 固有ボーナスは常に+を付ける
                                             const value = `+${e.target.value}`;
                                             
-                                            levelBonusForm.setValue("level", 35); // データベースには35として保存
+                                            // 画面表示は35.5だが、データベースには35として保存
+                                            levelBonusForm.setValue("level", 35);
                                             levelBonusForm.setValue("value", value);
                                             
                                             setLevelBonusValue((prev) => {
@@ -1184,13 +1185,15 @@ export default function AdminPage() {
                                       size="sm"
                                       disabled={isLevelBonusSubmitting}
                                       onClick={() => {
-                                        levelBonusForm.setValue("level", level);
+                                        // level 35.5は内部的には35として保存する
+                                        const actualLevel = level === 35.5 ? 35 : level;
+                                        levelBonusForm.setValue("level", actualLevel);
                                         levelBonusForm.setValue("description", "");
                                         
                                         // 特定のレベルではレアリティを自動設定
-                                        if (level === 37) {
+                                        if (actualLevel === 37) {
                                           levelBonusForm.setValue("rarity", Rarity.SR);
-                                        } else if (level === 42 || level === 50) {
+                                        } else if (actualLevel === 42 || actualLevel === 50) {
                                           levelBonusForm.setValue("rarity", Rarity.PSR);
                                         }
                                         
