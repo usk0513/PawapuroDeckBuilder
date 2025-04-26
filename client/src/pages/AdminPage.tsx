@@ -751,6 +751,11 @@ export default function AdminPage() {
   const onAwakeningBonusSubmit = (values: AwakeningBonusFormValues) => {
     console.log("覚醒ボーナス送信：", values);
     if (selectedCharacter) {
+      // characterIdがない場合は追加する
+      if (!values.characterId) {
+        values.characterId = selectedCharacter;
+      }
+      
       const data = {
         ...values,
         characterId: selectedCharacter,
@@ -758,13 +763,24 @@ export default function AdminPage() {
         awakeningLevel: 1 // 覚醒レベルを追加（データベース互換性のため）
       };
       console.log("覚醒ボーナス送信データ：", data);
+      
+      // ボタンクリックでフォーム送信を行わずに直接ミューテーションを呼び出す
       createAwakeningBonusMutation.mutate(data, {
         onSuccess: (newBonus) => {
           console.log("覚醒ボーナス登録成功：", newBonus);
-          awakeningBonusForm.reset({ awakeningType: "initial", effectType: undefined, value: "" });
+          // 保存した覚醒タイプを保持
+          const currentAwakeningType = awakeningBonusForm.getValues("awakeningType");
+          // フォームリセット（覚醒タイプは維持）
+          awakeningBonusForm.reset({ 
+            characterId: selectedCharacter,
+            awakeningType: currentAwakeningType, 
+            effectType: undefined, 
+            value: "" 
+          });
+          
           toast({
             title: "覚醒ボーナスが登録されました",
-            description: `${newBonus.effectType}：+${newBonus.value}${effectTypeUnits[newBonus.effectType] || ""}`,
+            description: `${newBonus.effectType}：${newBonus.value}${effectTypeUnits[newBonus.effectType] || ""}`,
           });
         },
         onError: (error) => {
@@ -775,6 +791,12 @@ export default function AdminPage() {
             variant: "destructive",
           });
         }
+      });
+    } else {
+      toast({
+        title: "エラー",
+        description: "キャラクターが選択されていません",
+        variant: "destructive",
       });
     }
   };
@@ -1549,7 +1571,7 @@ export default function AdminPage() {
                           </p>
                           
                           <Form {...awakeningBonusForm}>
-                            <form onSubmit={awakeningBonusForm.handleSubmit(onAwakeningBonusSubmit)} className="space-y-4">
+                            <form className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                   control={awakeningBonusForm.control}
@@ -1652,7 +1674,15 @@ export default function AdminPage() {
                                 )}
                               />
                               
-                              <Button type="submit" disabled={isAwakeningBonusSubmitting}>
+                              <Button 
+                                type="button" 
+                                disabled={isAwakeningBonusSubmitting}
+                                onClick={() => {
+                                  const values = awakeningBonusForm.getValues();
+                                  console.log("直接ボタンクリックによる送信:", values);
+                                  onAwakeningBonusSubmit(values);
+                                }}
+                              >
                                 {isAwakeningBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 覚醒ボーナスを追加
                               </Button>
