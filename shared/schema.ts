@@ -266,6 +266,7 @@ export const characterLevelBonuses = pgTable("character_level_bonuses", {
   level: integer("level").notNull(),
   effectType: text("effect_type").notNull().$type<BonusEffectType>(),
   value: text("value").notNull(),
+  rarity: text("rarity").$type<Rarity>(),
   description: text("description"),
 });
 

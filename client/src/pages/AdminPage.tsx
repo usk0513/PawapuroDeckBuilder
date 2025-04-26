@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CharacterType, EventTiming, BonusEffectType, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
+import { CharacterType, EventTiming, BonusEffectType, Rarity, insertCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -218,6 +218,7 @@ export default function AdminPage() {
       level: 1,
       effectType: undefined,
       value: "",
+      rarity: undefined,
       description: "",
     }
   });
@@ -752,6 +753,26 @@ export default function AdminPage() {
                                     />
                                   </td>
                                   <td className="border p-2">
+                                    {/* 初期評価の場合はレアリティ選択を表示 */}
+                                    {levelBonusForm.getValues("level") === level && 
+                                     levelBonusForm.getValues("effectType") === BonusEffectType.INITIAL_RATING && (
+                                      <div className="mb-2">
+                                        <Select
+                                          onValueChange={(value) => {
+                                            levelBonusForm.setValue("rarity", value as string);
+                                          }}
+                                          value={levelBonusForm.getValues("rarity") || ""}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="レアリティを選択" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value={Rarity.SR}>SR</SelectItem>
+                                            <SelectItem value={Rarity.PSR}>PSR</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
                                     <Button 
                                       type="button" 
                                       size="sm"
@@ -759,6 +780,16 @@ export default function AdminPage() {
                                       onClick={() => {
                                         levelBonusForm.setValue("level", level);
                                         levelBonusForm.setValue("description", "");
+                                        // 初期評価の場合はレアリティチェック
+                                        if (levelBonusForm.getValues("effectType") === BonusEffectType.INITIAL_RATING && 
+                                            !levelBonusForm.getValues("rarity")) {
+                                          toast({
+                                            title: "入力エラー",
+                                            description: "初期評価の場合はレアリティを選択してください",
+                                            variant: "destructive",
+                                          });
+                                          return;
+                                        }
                                         if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           onLevelBonusSubmit(levelBonusForm.getValues());
