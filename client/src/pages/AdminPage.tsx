@@ -74,10 +74,26 @@ const effectTypeUnits: Record<string, string> = {
 
 };
 
+// LV35の固有ボーナスかどうかを判定する関数
+const isLv35UniqueBonus = (level: number): boolean => {
+  return level === 35;
+};
+
 // 効果値に単位を自動で付加する関数
-const formatEffectValue = (value: string, effectType?: string): string => {
+const formatEffectValue = (value: string, effectType?: string, level?: number): string => {
   if (!effectType) return value;
   const unit = effectTypeUnits[effectType] || "";
+  
+  // LV35の固有ボーナスの場合は、値の前に+を付ける
+  if (level && isLv35UniqueBonus(level)) {
+    // 既に+が付いている場合はそのまま、なければ追加
+    if (value.startsWith("+")) {
+      return `${value}${unit}`;
+    } else {
+      return `+${value}${unit}`;
+    }
+  }
+  
   return `${value}${unit}`;
 };
 
@@ -991,6 +1007,7 @@ export default function AdminPage() {
                                 <tr key={level}>
                                   <td className="border p-2 text-center font-medium">
                                     Lv.{level}
+                                    {level === 35 && <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>}
                                     {level === 37 && <Badge className="ml-2">SR専用</Badge>}
                                     {(level === 42 || level === 50) && <Badge className="ml-2">PSR専用</Badge>}
                                   </td>
@@ -1072,14 +1089,20 @@ export default function AdminPage() {
                                   </td>
                                   <td className="border p-2">
                                     <Input 
-                                      placeholder="数値のみ入力" 
+                                      placeholder={level === 35 ? "+数値を入力 (例: 20)" : "数値のみ入力"}
                                       value={levelBonusValue[level] || ""}
                                       onChange={(e) => {
                                         levelBonusForm.setValue("level", level);
-                                        levelBonusForm.setValue("value", e.target.value);
-                                        setLevelBonusValue({
-                                          ...levelBonusValue,
-                                          [level]: e.target.value
+                                        let value = e.target.value;
+                                        // レベル35の固有ボーナスの場合、自動的に+を追加
+                                        if (level === 35 && value && !value.startsWith("+")) {
+                                          value = value.replace(/^(\d+)/, "+$1");
+                                        }
+                                        levelBonusForm.setValue("value", value);
+                                        setLevelBonusValue((prev) => {
+                                          const updated = { ...prev };
+                                          updated[level] = value;
+                                          return updated;
                                         });
                                       }}
                                     />
@@ -1194,11 +1217,14 @@ export default function AdminPage() {
                                       )}
                                     </div>
                                     <div className="text-sm">
-                                      {formatEffectValue(bonus.value, bonus.effectType)}
+                                      {formatEffectValue(bonus.value, bonus.effectType, bonus.level)}
                                       {bonus.description && (
                                         <span className="text-muted-foreground ml-2">
                                           {bonus.description}
                                         </span>
+                                      )}
+                                      {bonus.level === 35 && (
+                                        <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
                                       )}
                                     </div>
                                   </div>
