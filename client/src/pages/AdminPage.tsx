@@ -999,13 +999,24 @@ export default function AdminPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {[1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50].map((level) => (
+                              {[1, 5, 10, 15, 20, 25, 30, 35, 35.5, 37, 40, 42, 45, 50].map((level) => (
                                 <tr key={level}>
                                   <td className="border p-2 text-center font-medium">
-                                    Lv.{level}
-                                    {level === 35 && <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>}
-                                    {level === 37 && <Badge className="ml-2">SR専用</Badge>}
-                                    {(level === 42 || level === 50) && <Badge className="ml-2">PSR専用</Badge>}
+                                    {level === 35.5 ? (
+                                      <>
+                                        Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
+                                      </>
+                                    ) : level === 35 ? (
+                                      <>
+                                        Lv.35 <Badge className="ml-2 bg-muted">通常ボーナス</Badge>
+                                      </>
+                                    ) : (
+                                      <>
+                                        Lv.{level}
+                                        {level === 37 && <Badge className="ml-2">SR専用</Badge>}
+                                        {(level === 42 || level === 50) && <Badge className="ml-2">PSR専用</Badge>}
+                                      </>
+                                    )}
                                   </td>
                                   <td className="border p-2">
                                     {/* 特定のレベルではレアリティを固定する */}
@@ -1084,56 +1095,50 @@ export default function AdminPage() {
                                     </Select>
                                   </td>
                                   <td className="border p-2">
-                                    {level === 35 ? (
+                                    {level === 35.5 ? (
                                       <div className="space-y-2">
-                                        <div className="flex items-center space-x-2">
-                                          <Select
-                                            value={levelBonusValue[level]?.startsWith("+") ? "unique" : "normal"}
-                                            onValueChange={(type) => {
-                                              const currentValue = levelBonusValue[level]?.replace(/^\+/, "") || "";
-                                              const newValue = type === "unique" ? `+${currentValue}` : currentValue;
-                                              
-                                              levelBonusForm.setValue("level", level);
-                                              levelBonusForm.setValue("value", newValue);
-                                              
-                                              setLevelBonusValue((prev) => {
-                                                const updated = { ...prev };
-                                                updated[level] = newValue;
-                                                return updated;
-                                              });
-                                            }}
-                                          >
-                                            <SelectTrigger className="w-[140px]">
-                                              <SelectValue placeholder="ボーナスタイプ" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="normal">通常ボーナス</SelectItem>
-                                              <SelectItem value="unique">固有ボーナス (+)</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                          
-                                          <Input 
-                                            placeholder="数値を入力"
-                                            value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
-                                            onChange={(e) => {
-                                              const isUnique = levelBonusValue[level]?.startsWith("+") || false;
-                                              const value = isUnique ? `+${e.target.value}` : e.target.value;
-                                              
-                                              levelBonusForm.setValue("level", level);
-                                              levelBonusForm.setValue("value", value);
-                                              
-                                              setLevelBonusValue((prev) => {
-                                                const updated = { ...prev };
-                                                updated[level] = value;
-                                                return updated;
-                                              });
-                                            }}
-                                          />
-                                        </div>
+                                        <Input 
+                                          placeholder="固有ボーナス値を入力"
+                                          value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
+                                          onChange={(e) => {
+                                            // 固有ボーナスは常に+を付ける
+                                            const value = `+${e.target.value}`;
+                                            
+                                            levelBonusForm.setValue("level", 35); // データベースには35として保存
+                                            levelBonusForm.setValue("value", value);
+                                            
+                                            setLevelBonusValue((prev) => {
+                                              const updated = { ...prev };
+                                              updated[level] = value;
+                                              return updated;
+                                            });
+                                          }}
+                                        />
                                         <div className="text-xs text-muted-foreground">
-                                          {levelBonusValue[level]?.startsWith("+") 
-                                            ? "固有ボーナス：他のボーナスに追加で効果を与えます" 
-                                            : "通常ボーナス：値をそのまま設定します"}
+                                          固有ボーナス：他のボーナスに追加で効果を与えます
+                                        </div>
+                                      </div>
+                                    ) : level === 35 ? (
+                                      <div className="space-y-2">
+                                        <Input 
+                                          placeholder="通常ボーナス値を入力"
+                                          value={levelBonusValue[level] || ""}
+                                          onChange={(e) => {
+                                            // 通常ボーナスは+をつけない
+                                            const value = e.target.value;
+                                            
+                                            levelBonusForm.setValue("level", level);
+                                            levelBonusForm.setValue("value", value);
+                                            
+                                            setLevelBonusValue((prev) => {
+                                              const updated = { ...prev };
+                                              updated[level] = value;
+                                              return updated;
+                                            });
+                                          }}
+                                        />
+                                        <div className="text-xs text-muted-foreground">
+                                          通常ボーナス：値をそのまま設定します
                                         </div>
                                       </div>
                                     ) : (
@@ -1272,6 +1277,10 @@ export default function AdminPage() {
                                       {/* レベル35かつ値が+で始まる場合に固有ボーナスバッジを表示 */}
                                       {bonus.level === 35 && bonus.value.startsWith("+") && (
                                         <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
+                                      )}
+                                      {/* レベル35かつ値が+で始まらない場合に通常ボーナスバッジを表示 */}
+                                      {bonus.level === 35 && !bonus.value.startsWith("+") && (
+                                        <Badge className="ml-2 bg-muted">通常ボーナス</Badge>
                                       )}
                                     </div>
                                   </div>
