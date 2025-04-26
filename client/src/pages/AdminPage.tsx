@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { positionOptions, specialTrainingOptions, eventTimingOptions } from "@/lib/constants";
+import { positionOptions, specialTrainingOptions, eventTimingOptions, uniqueBonusItems } from "@/lib/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1239,26 +1239,43 @@ export default function AdminPage() {
                                   <td className="border p-2">
                                     {level === 35.5 ? (
                                       <div className="space-y-2">
-                                        <Input 
-                                          placeholder="固有ボーナス値を入力"
-                                          value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
-                                          onChange={(e) => {
-                                            // 固有ボーナスは常に+を付ける
-                                            const value = `+${e.target.value}`;
+                                        <Select
+                                          onValueChange={(value) => {
+                                            // 選択した固有アイテム名の先頭に+を付ける
+                                            const formattedValue = `+${value}`;
                                             
                                             // 画面表示は35.5だが、データベースには35として保存
                                             levelBonusForm.setValue("level", 35);
-                                            levelBonusForm.setValue("value", value);
+                                            levelBonusForm.setValue("effectType", "固有アイテム"); // 固定効果タイプ
+                                            levelBonusForm.setValue("value", formattedValue);
+                                            
+                                            setLevelBonusEffect((prev) => {
+                                              const updated = { ...prev };
+                                              updated[level] = "固有アイテム"; // 効果タイプを固定
+                                              return updated;
+                                            });
                                             
                                             setLevelBonusValue((prev) => {
                                               const updated = { ...prev };
-                                              updated[level] = value;
+                                              updated[level] = formattedValue;
                                               return updated;
                                             });
                                           }}
-                                        />
+                                          value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="固有アイテムを選択" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {uniqueBonusItems.map(item => (
+                                              <SelectItem key={item.value} value={item.value}>
+                                                {item.label}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
                                         <div className="text-xs text-muted-foreground">
-                                          固有ボーナス：他のボーナスに追加で効果を与えます
+                                          固有ボーナス：特殊アイテムでチームに追加効果を与えます
                                         </div>
                                       </div>
                                     ) : level === 35 ? (
