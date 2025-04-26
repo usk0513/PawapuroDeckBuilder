@@ -557,6 +557,19 @@ export default function AdminPage() {
         description: "",
         rarity: undefined,
       });
+      
+      // 関連する状態変数もリセット
+      const level = values.level;
+      setLevelBonusEffect((prev) => {
+        const updated = { ...prev };
+        delete updated[level]; // 値を削除
+        return updated;
+      });
+      setLevelBonusValue((prev) => {
+        const updated = { ...prev };
+        updated[level] = ""; // 値を空文字列にリセット
+        return updated;
+      });
     }
   };
   
@@ -1339,21 +1352,10 @@ export default function AdminPage() {
                                         
                                         if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
                                           // 効果値にフォーマットを適用しない状態でAPI送信
-                                          onLevelBonusSubmit(levelBonusForm.getValues());
-                                          // 送信後にフォームをリセット
-                                          setLevelBonusEffect((prev) => {
-                                            const updated = { ...prev };
-                                            delete updated[level]; // 値を削除
-                                            return updated;
-                                          });
-                                          setLevelBonusValue((prev) => {
-                                            const updated = { ...prev };
-                                            updated[level] = ""; // 値を空文字列にリセット
-                                            return updated;
-                                          });
-                                          levelBonusForm.setValue("effectType", "");
-                                          levelBonusForm.setValue("value", "");
-                                          levelBonusForm.setValue("rarity", undefined);
+                                          const formValues = levelBonusForm.getValues();
+                                          onLevelBonusSubmit(formValues);
+                                          
+                                          // フォームリセットは onLevelBonusSubmit 内で行われるため不要
                                         } else {
                                           toast({
                                             title: "入力エラー",
