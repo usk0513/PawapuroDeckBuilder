@@ -604,10 +604,95 @@ export default function AdminPage() {
     }
   };
 
+  // 覚醒ボーナス追加ミューテーション
+  const createAwakeningBonusMutation = useMutation({
+    mutationFn: async (data: AwakeningBonusFormValues) => {
+      const res = await apiRequest("POST", "/api/character-awakening-bonuses", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "覚醒ボーナス追加に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-awakening-bonuses", selectedCharacter] 
+      });
+      
+      const awakeningTypeText = data.awakeningType === "initial" ? "初回覚醒" : "二回目覚醒";
+      toast({
+        title: "覚醒ボーナス追加",
+        description: `${awakeningTypeText} Lv.${data.awakeningLevel}の${data.effectType}ボーナスが追加されました`,
+      });
+      
+      // フォームリセット
+      awakeningBonusForm.reset({
+        characterId: selectedCharacter || undefined,
+        effectType: undefined,
+        value: "",
+        awakeningLevel: data.awakeningLevel, // レベルは保持
+        awakeningType: data.awakeningType, // タイプも保持
+        description: "",
+      });
+      
+      // 状態リセット
+      setAwakeningEffect("");
+      setAwakeningValue("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 覚醒ボーナス削除ミューテーション
+  const deleteAwakeningBonusMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/character-awakening-bonuses/${id}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "覚醒ボーナス削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-awakening-bonuses", selectedCharacter]
+      });
+      toast({
+        title: "覚醒ボーナス削除",
+        description: "覚醒ボーナスが削除されました",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 覚醒ボーナス送信ハンドラ
+  const onAwakeningBonusSubmit = (values: AwakeningBonusFormValues) => {
+    if (selectedCharacter) {
+      const data = {
+        ...values,
+        characterId: selectedCharacter
+      };
+      createAwakeningBonusMutation.mutate(data);
+    }
+  };
+  
   const isSubmitting = createCharacterMutation.isPending || updateCharacterMutation.isPending;
   const isDeleting = deleteCharacterMutation.isPending;
   const isLevelBonusSubmitting = createLevelBonusMutation.isPending;
   const isLevelBonusDeleting = deleteLevelBonusMutation.isPending;
+  const isAwakeningBonusSubmitting = createAwakeningBonusMutation.isPending;
+  const isAwakeningBonusDeleting = deleteAwakeningBonusMutation.isPending;
 
   return (
     <div className="container mx-auto py-8">
@@ -790,9 +875,10 @@ export default function AdminPage() {
                   onValueChange={setActiveTab}
                   className="w-full"
                 >
-                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
                     <TabsTrigger value="character">基本情報</TabsTrigger>
                     <TabsTrigger value="levelbonus">レベルボーナス</TabsTrigger>
+                    <TabsTrigger value="awakening">覚醒ボーナス</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="character">
