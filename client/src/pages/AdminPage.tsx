@@ -980,6 +980,20 @@ export default function AdminPage() {
     createSpecialAbilityMutation.mutate(values);
   };
   
+  // 金特のフィルタリング
+  const filteredSpecialAbilities = specialAbilities.filter((ability) => {
+    // タイプでフィルタリング（タイプが選択されている場合）
+    const matchesType = selectedPlayerType === "" || ability.playerType === selectedPlayerType;
+    
+    // 検索語句でフィルタリング
+    const matchesSearch = 
+      abilitySearchTerm === "" || 
+      ability.name.toLowerCase().includes(abilitySearchTerm.toLowerCase()) ||
+      (ability.description && ability.description.toLowerCase().includes(abilitySearchTerm.toLowerCase()));
+    
+    return matchesType && matchesSearch;
+  });
+  
   // 金特セット作成時の送信処理
   const onSpecialAbilitySetSubmit = (values: CharacterSpecialAbilitySetFormValues) => {
     if (selectedCharacter) {
@@ -2160,13 +2174,45 @@ export default function AdminPage() {
                               </div>
                             ) : (
                               <div className="border rounded-md p-2">
-                                {specialAbilities.length === 0 ? (
+                                <div className="mb-4 space-y-2">
+                                  <Label htmlFor="ability-filter">金特タイプでフィルター</Label>
+                                  <div className="flex items-center space-x-2">
+                                    <Select
+                                      value={selectedPlayerType}
+                                      onValueChange={(value) => setSelectedPlayerType(value as PlayerType | "")}
+                                    >
+                                      <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="全てのタイプ" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="">全てのタイプ</SelectItem>
+                                        <SelectItem value={PlayerType.PITCHER}>{PlayerType.PITCHER}</SelectItem>
+                                        <SelectItem value={PlayerType.BATTER}>{PlayerType.BATTER}</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Input 
+                                      id="ability-search"
+                                      placeholder="金特を検索..." 
+                                      className="flex-1"
+                                      value={abilitySearchTerm}
+                                      onChange={(e) => {
+                                        setAbilitySearchTerm(e.target.value);
+                                        // 検索時にタイプフィルターをクリア
+                                        if (e.target.value) {
+                                          setSelectedPlayerType("");
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {filteredSpecialAbilities.length === 0 ? (
                                   <div className="text-center text-muted-foreground py-4">
-                                    登録された金特はありません
+                                    条件に一致する金特はありません
                                   </div>
                                 ) : (
-                                  <div className="space-y-2">
-                                    {specialAbilities.map((ability) => (
+                                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                                    {filteredSpecialAbilities.map((ability) => (
                                       <div 
                                         key={ability.id} 
                                         className={cn(
