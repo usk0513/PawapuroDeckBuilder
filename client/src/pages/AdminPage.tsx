@@ -77,6 +77,10 @@ export default function AdminPage() {
   const { toast } = useToast();
   const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<string>("character");
+  const [selectedRarity, setSelectedRarity] = useState<string>("");
+  const [levelBonusRarity, setLevelBonusRarity] = useState<Record<number, string>>({});
+  const [levelBonusEffect, setLevelBonusEffect] = useState<Record<number, string>>({});
+  const [levelBonusValue, setLevelBonusValue] = useState<Record<number, string>>({});
 
   // キャラクターデータの取得
   const { data: characters = [], isLoading } = useQuery({
@@ -90,10 +94,14 @@ export default function AdminPage() {
 
   // レベルボーナスデータの取得
   const { data: levelBonuses = [], isLoading: isLoadingBonuses } = useQuery({
-    queryKey: ["/api/character-level-bonuses", selectedCharacter],
+    queryKey: ["/api/character-level-bonuses", selectedCharacter, selectedRarity],
     queryFn: async () => {
       if (!selectedCharacter) return [];
-      const res = await fetch(`/api/character-level-bonuses?characterId=${selectedCharacter}`);
+      let url = `/api/character-level-bonuses?characterId=${selectedCharacter}`;
+      if (selectedRarity) {
+        url += `&rarity=${selectedRarity}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) throw new Error("レベルボーナスデータの取得に失敗しました");
       return await res.json();
     },
@@ -708,11 +716,36 @@ export default function AdminPage() {
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-medium mb-4">レベルボーナス一括登録</h3>
+                        
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium mb-2">レアリティフィルタ</h4>
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant={selectedRarity === "" ? "default" : "outline"} 
+                              size="sm"
+                              onClick={() => setSelectedRarity("")}
+                            >
+                              すべて
+                            </Button>
+                            {Object.values(Rarity).map((rarity) => (
+                              <Button
+                                key={rarity}
+                                variant={selectedRarity === rarity ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSelectedRarity(rarity)}
+                              >
+                                {rarity}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                        
                         <div className="overflow-x-auto">
                           <table className="w-full border-collapse">
                             <thead>
                               <tr>
                                 <th className="border p-2 bg-muted">レベル</th>
+                                <th className="border p-2 bg-muted">レア度</th>
                                 <th className="border p-2 bg-muted">効果タイプ</th>
                                 <th className="border p-2 bg-muted">効果値</th>
                                 <th className="border p-2 bg-muted">操作</th>
@@ -726,9 +759,38 @@ export default function AdminPage() {
                                     <Select
                                       onValueChange={(value) => {
                                         levelBonusForm.setValue("level", level);
-                                        levelBonusForm.setValue("effectType", value);
+                                        levelBonusForm.setValue("rarity", value || undefined);
+                                        setLevelBonusRarity({
+                                          ...levelBonusRarity,
+                                          [level]: value
+                                        });
                                       }}
-                                      value={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("effectType") : undefined}
+                                      value={levelBonusRarity[level] || ""}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="共通" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="">共通</SelectItem>
+                                        {Object.values(Rarity).map((rarity) => (
+                                          <SelectItem key={rarity} value={rarity}>
+                                            {rarity}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </td>
+                                  <td className="border p-2">
+                                    <Select
+                                      onValueChange={(value) => {
+                                        levelBonusForm.setValue("level", level);
+                                        levelBonusForm.setValue("effectType", value);
+                                        setLevelBonusEffect({
+                                          ...levelBonusEffect,
+                                          [level]: value
+                                        });
+                                      }}
+                                      value={levelBonusEffect[level] || ""}
                                     >
                                       <SelectTrigger>
                                         <SelectValue placeholder="効果タイプを選択" />
@@ -745,10 +807,14 @@ export default function AdminPage() {
                                   <td className="border p-2">
                                     <Input 
                                       placeholder="数値のみ入力" 
-                                      defaultValue={levelBonusForm.getValues("level") === level ? levelBonusForm.getValues("value") : ""}
+                                      value={levelBonusValue[level] || ""}
                                       onChange={(e) => {
                                         levelBonusForm.setValue("level", level);
                                         levelBonusForm.setValue("value", e.target.value);
+                                        setLevelBonusValue({
+                                          ...levelBonusValue,
+                                          [level]: e.target.value
+                                        });
                                       }}
                                     />
                                   </td>
@@ -822,40 +888,50 @@ export default function AdminPage() {
                             <Loader2 className="h-6 w-6 animate-spin text-primary" />
                           </div>
                         ) : levelBonuses && levelBonuses.length > 0 ? (
-                          <div className="space-y-3">
-                            {levelBonuses.map((bonus: any) => (
-                              <div key={bonus.id} className="flex justify-between items-center p-3 border rounded-md">
-                                <div>
-                                  <div className="font-medium">
-                                    Lv.{bonus.level} - {bonus.effectType}
+                          <div>
+                            <div className="mb-4">
+                              <h4 className="text-sm font-medium mb-2">表示中のレア度: {selectedRarity || "すべて"}</h4>
+                            </div>
+                            <div className="space-y-3">
+                              {levelBonuses.map((bonus: any) => (
+                                <div key={bonus.id} className="flex justify-between items-center p-3 border rounded-md">
+                                  <div>
+                                    <div className="font-medium flex items-center">
+                                      <span>Lv.{bonus.level} - {bonus.effectType}</span>
+                                      {bonus.rarity && (
+                                        <Badge className="ml-2" variant="outline">
+                                          {bonus.rarity}専用
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="text-sm">
+                                      {formatEffectValue(bonus.value, bonus.effectType)}
+                                      {bonus.description && (
+                                        <span className="text-muted-foreground ml-2">
+                                          {bonus.description}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="text-sm">
-                                    {formatEffectValue(bonus.value, bonus.effectType)}
-                                    {bonus.description && (
-                                      <span className="text-muted-foreground ml-2">
-                                        {bonus.description}
-                                      </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (window.confirm("このボーナスを削除しますか？")) {
+                                        deleteLevelBonusMutation.mutate(bonus.id);
+                                      }
+                                    }}
+                                    disabled={isLevelBonusDeleting}
+                                  >
+                                    {isLevelBonusDeleting ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Trash className="h-4 w-4 text-destructive" />
                                     )}
-                                  </div>
+                                  </Button>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (window.confirm("このボーナスを削除しますか？")) {
-                                      deleteLevelBonusMutation.mutate(bonus.id);
-                                    }
-                                  }}
-                                  disabled={isLevelBonusDeleting}
-                                >
-                                  {isLevelBonusDeleting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Trash className="h-4 w-4 text-destructive" />
-                                  )}
-                                </Button>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
                         ) : (
                           <div className="text-center py-6 text-muted-foreground">
