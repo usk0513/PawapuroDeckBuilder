@@ -317,6 +317,16 @@ export default function AdminPage() {
         characterId: selectedCharacter
       };
       createLevelBonusMutation.mutate(data);
+      
+      // 送信後にフォームを完全にリセット
+      levelBonusForm.reset({
+        characterId: selectedCharacter,
+        level: values.level, // levelだけは保持
+        effectType: undefined,
+        value: "",
+        description: "",
+        rarity: undefined,
+      });
     }
   };
   
@@ -883,6 +893,18 @@ export default function AdminPage() {
                                         if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           onLevelBonusSubmit(levelBonusForm.getValues());
+                                          // 送信後にフォームをリセット
+                                          setLevelBonusEffect({
+                                            ...levelBonusEffect,
+                                            [level]: undefined
+                                          });
+                                          setLevelBonusValue({
+                                            ...levelBonusValue,
+                                            [level]: ""
+                                          });
+                                          levelBonusForm.setValue("effectType", "");
+                                          levelBonusForm.setValue("value", "");
+                                          levelBonusForm.setValue("rarity", undefined);
                                         } else {
                                           toast({
                                             title: "入力エラー",
