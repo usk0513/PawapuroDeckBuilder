@@ -96,10 +96,9 @@ export const LevelBonusSchema = z.object({
 
 export type LevelBonus = z.infer<typeof LevelBonusSchema>;
 
-// 覚醒レベルごとのボーナス効果スキーマ
+// 覚醒ボーナス効果スキーマ (Lv10まで開放時の効果)
 export const AwakeningBonusSchema = z.object({
-  awakeningLevel: z.number().min(1).max(10),
-  awakeningType: z.enum(["first", "second"]), // 1回目と2回目の覚醒
+  awakeningType: z.enum(["initial", "second"]), // initial=初回覚醒, second=2回目覚醒(PSRのみ)
   effectType: z.nativeEnum(BonusEffectType),
   value: z.string(), // 効果の値
   description: z.string().optional(),
@@ -299,12 +298,11 @@ export const insertCharacterLevelBonusSchema = createInsertSchema(characterLevel
 export type InsertCharacterLevelBonus = z.infer<typeof insertCharacterLevelBonusSchema>;
 export type CharacterLevelBonus = typeof characterLevelBonuses.$inferSelect;
 
-// 覚醒ボーナスのテーブル
+// 覚醒ボーナスのテーブル (Lv10まで開放時の効果のみ)
 export const characterAwakeningBonuses = pgTable("character_awakening_bonuses", {
   id: serial("id").primaryKey(),
   characterId: integer("character_id").references(() => characters.id).notNull(),
-  awakeningLevel: integer("awakening_level").notNull(),
-  awakeningType: text("awakening_type").notNull().$type<"first" | "second">(),
+  awakeningType: text("awakening_type").notNull().$type<"initial" | "second">(),
   effectType: text("effect_type").notNull().$type<BonusEffectType>(),
   value: text("value").notNull(),
   description: text("description"),

@@ -206,7 +206,6 @@ export default function AdminPage() {
   // 覚醒ボーナス関連の状態
   const [awakeningEffect, setAwakeningEffect] = useState<string>("");
   const [awakeningValue, setAwakeningValue] = useState<string>("");
-  const [awakeningLevel, setAwakeningLevel] = useState<number>(1);
   const [awakeningType, setAwakeningType] = useState<string>("initial"); // 'initial' or 'second'
 
   // キャラクターデータの取得
@@ -378,7 +377,6 @@ export default function AdminPage() {
       characterId: selectedCharacter || undefined,
       effectType: undefined,
       value: "",
-      awakeningLevel: 1,
       awakeningType: "initial", // 'initial'(初回覚醒) or 'second'(2回目覚醒)
       description: "",
     }
@@ -451,6 +449,77 @@ export default function AdminPage() {
       toast({
         title: "レベルボーナス削除",
         description: "レベルボーナスが削除されました",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 覚醒ボーナス追加ミューテーション
+  const createAwakeningBonusMutation = useMutation({
+    mutationFn: async (data: AwakeningBonusFormValues) => {
+      const res = await apiRequest("POST", "/api/character-awakening-bonuses", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "覚醒ボーナス追加に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-awakening-bonuses", selectedCharacter] 
+      });
+      
+      const awakeningTypeText = data.awakeningType === "initial" ? "初回覚醒" : "二回目覚醒";
+      toast({
+        title: "覚醒ボーナス追加",
+        description: `${awakeningTypeText}の${data.effectType}ボーナスが追加されました`,
+      });
+      
+      // クリア
+      setAwakeningEffect("");
+      setAwakeningValue("");
+      
+      // フォームリセット
+      awakeningBonusForm.reset({
+        characterId: selectedCharacter || undefined,
+        effectType: undefined,
+        value: "",
+        awakeningType: data.awakeningType,
+        description: "",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 覚醒ボーナス削除ミューテーション
+  const deleteAwakeningBonusMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/character-awakening-bonuses/${id}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "覚醒ボーナス削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-awakening-bonuses", selectedCharacter]
+      });
+      toast({
+        title: "覚醒ボーナス削除",
+        description: "覚醒ボーナスが削除されました",
       });
     },
     onError: (error: Error) => {
@@ -604,77 +673,7 @@ export default function AdminPage() {
     }
   };
 
-  // 覚醒ボーナス追加ミューテーション
-  const createAwakeningBonusMutation = useMutation({
-    mutationFn: async (data: AwakeningBonusFormValues) => {
-      const res = await apiRequest("POST", "/api/character-awakening-bonuses", data);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "覚醒ボーナス追加に失敗しました");
-      }
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/character-awakening-bonuses", selectedCharacter] 
-      });
-      
-      const awakeningTypeText = data.awakeningType === "initial" ? "初回覚醒" : "二回目覚醒";
-      toast({
-        title: "覚醒ボーナス追加",
-        description: `${awakeningTypeText} Lv.${data.awakeningLevel}の${data.effectType}ボーナスが追加されました`,
-      });
-      
-      // フォームリセット
-      awakeningBonusForm.reset({
-        characterId: selectedCharacter || undefined,
-        effectType: undefined,
-        value: "",
-        awakeningLevel: data.awakeningLevel, // レベルは保持
-        awakeningType: data.awakeningType, // タイプも保持
-        description: "",
-      });
-      
-      // 状態リセット
-      setAwakeningEffect("");
-      setAwakeningValue("");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "エラー",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  // 覚醒ボーナス削除ミューテーション
-  const deleteAwakeningBonusMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/character-awakening-bonuses/${id}`);
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || "覚醒ボーナス削除に失敗しました");
-      }
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/character-awakening-bonuses", selectedCharacter]
-      });
-      toast({
-        title: "覚醒ボーナス削除",
-        description: "覚醒ボーナスが削除されました",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "エラー",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+
   
   // 覚醒ボーナス送信ハンドラ
   const onAwakeningBonusSubmit = (values: AwakeningBonusFormValues) => {
@@ -1432,6 +1431,172 @@ export default function AdminPage() {
                         ) : (
                           <div className="text-center py-6 text-muted-foreground">
                             レベルボーナスが登録されていません
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="awakening">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">覚醒ボーナス登録</h3>
+                        
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium mb-2">覚醒ボーナス設定</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            SR（PSR）キャラの覚醒時に適用されるボーナスを設定します。
+                            SR: 1回覚醒可能、PSR: 2回覚醒可能。
+                          </p>
+                          
+                          <Form {...awakeningBonusForm}>
+                            <form onSubmit={awakeningBonusForm.handleSubmit(onAwakeningBonusSubmit)} className="space-y-4">
+                              <FormField
+                                control={awakeningBonusForm.control}
+                                name="awakeningType"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>覚醒タイプ</FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="覚醒タイプを選択" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="initial">初回覚醒</SelectItem>
+                                        <SelectItem value="second">二回目覚醒 (PSRのみ)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                      Lv10まで開放したときの効果を入力します
+                                    </FormDescription>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={awakeningBonusForm.control}
+                                name="effectType"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>効果タイプ</FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value as string | undefined}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="効果タイプを選択" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {bonusEffectTypeOptions.map((option) => (
+                                          <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={awakeningBonusForm.control}
+                                name="value"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>効果値</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="効果の数値（例: 10）" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={awakeningBonusForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>説明（任意）</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="ボーナスの詳細説明" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <Button type="submit" disabled={isAwakeningBonusSubmitting}>
+                                {isAwakeningBonusSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                覚醒ボーナスを追加
+                              </Button>
+                            </form>
+                          </Form>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">登録済み覚醒ボーナス</h3>
+                        
+                        {isLoadingAwakeningBonuses ? (
+                          <div className="flex justify-center my-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {awakeningBonuses.length === 0 ? (
+                              <div className="text-center text-muted-foreground py-4">
+                                登録された覚醒ボーナスはありません
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-2">
+                                {awakeningBonuses.map((bonus) => (
+                                  <div key={bonus.id} className="border p-2 rounded-lg flex justify-between items-center">
+                                    <div>
+                                      <div className="flex items-center space-x-2">
+                                        <Badge variant="outline" className="text-xs">
+                                          {bonus.awakeningType === "initial" ? "初回覚醒" : "二回目覚醒"}
+                                        </Badge>
+                                        <span className="font-medium">Lv.10まで開放時</span>
+                                      </div>
+                                      <div className="text-sm">
+                                        {bonus.effectType}: {formatEffectValue(bonus.value, bonus.effectType)}
+                                      </div>
+                                      {bonus.description && (
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          {bonus.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        if (window.confirm("このボーナスを削除しますか？")) {
+                                          deleteAwakeningBonusMutation.mutate(bonus.id);
+                                        }
+                                      }}
+                                      disabled={isAwakeningBonusDeleting}
+                                    >
+                                      {isAwakeningBonusDeleting ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Trash className="h-4 w-4 text-destructive" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
