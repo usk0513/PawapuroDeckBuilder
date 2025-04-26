@@ -724,7 +724,8 @@ export default function AdminPage() {
       const data = {
         ...values,
         characterId: selectedCharacter,
-        description: "" // 空の説明を追加して互換性を保つ
+        description: "", // 空の説明を追加して互換性を保つ
+        awakeningLevel: 1 // 覚醒レベルを追加（データベース互換性のため）
       };
       createAwakeningBonusMutation.mutate(data);
     }

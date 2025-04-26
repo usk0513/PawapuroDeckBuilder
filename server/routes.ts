@@ -410,18 +410,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/character-awakening-bonuses", async (req, res) => {
     try {
+      console.log("Received character awakening bonus:", req.body);
       const result = insertCharacterAwakeningBonusSchema.safeParse(req.body);
       if (!result.success) {
+        console.error("Validation error:", result.error.issues);
         return res.status(400).json({ 
           message: "入力エラー", 
           errors: result.error.issues 
         });
       }
       
+      console.log("Validated data:", result.data);
       const newBonus = await storage.createCharacterAwakeningBonus(result.data);
       res.status(201).json(newBonus);
     } catch (error) {
-      res.status(500).json({ message: "サーバーエラーが発生しました" });
+      console.error("Server error:", error);
+      res.status(500).json({ message: "サーバーエラーが発生しました", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

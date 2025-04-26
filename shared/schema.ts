@@ -306,8 +306,10 @@ export const characterAwakeningBonuses = pgTable("character_awakening_bonuses", 
   id: serial("id").primaryKey(),
   characterId: integer("character_id").references(() => characters.id).notNull(),
   awakeningType: text("awakening_type").notNull().$type<"initial" | "second">(),
+  awakeningLevel: integer("awakening_level").notNull().default(1), // データベース互換性のために追加
   effectType: text("effect_type").notNull().$type<BonusEffectType>(),
   value: text("value").notNull(),
+  description: text("description"),  // データベース互換性のために追加
 });
 
 export const insertCharacterAwakeningBonusSchema = createInsertSchema(characterAwakeningBonuses).omit({
