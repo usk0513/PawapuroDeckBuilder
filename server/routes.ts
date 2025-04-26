@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCharacterSchema, insertDeckSchema, insertOwnedCharacterSchema, insertCharacterLevelBonusSchema } from "@shared/schema";
+import { insertCharacterSchema, insertDeckSchema, insertOwnedCharacterSchema, insertCharacterLevelBonusSchema, insertCharacterAwakeningBonusSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -384,6 +384,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deleted = await storage.deleteCharacterLevelBonus(id);
       if (!deleted) {
         return res.status(404).json({ message: "レベルボーナスが見つかりませんでした" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  // API routes for character awakening bonuses
+  app.get("/api/character-awakening-bonuses", async (req, res) => {
+    try {
+      const characterId = req.query.characterId ? parseInt(req.query.characterId as string) : undefined;
+      
+      if (!characterId || isNaN(characterId)) {
+        return res.status(400).json({ message: "キャラクターIDを指定してください" });
+      }
+      
+      const bonuses = await storage.getCharacterAwakeningBonuses(characterId);
+      res.json(bonuses);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.post("/api/character-awakening-bonuses", async (req, res) => {
+    try {
+      const result = insertCharacterAwakeningBonusSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newBonus = await storage.createCharacterAwakeningBonus(result.data);
+      res.status(201).json(newBonus);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/character-awakening-bonuses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      // Validate partial schema
+      const partialSchema = insertCharacterAwakeningBonusSchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const updatedBonus = await storage.updateCharacterAwakeningBonus(id, result.data);
+      if (!updatedBonus) {
+        return res.status(404).json({ message: "覚醒ボーナスが見つかりませんでした" });
+      }
+      
+      res.json(updatedBonus);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/character-awakening-bonuses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.deleteCharacterAwakeningBonus(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "覚醒ボーナスが見つかりませんでした" });
       }
       
       res.status(204).end();

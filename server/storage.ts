@@ -17,6 +17,9 @@ import {
   characterLevelBonuses,
   type CharacterLevelBonus,
   type InsertCharacterLevelBonus,
+  characterAwakeningBonuses,
+  type CharacterAwakeningBonus,
+  type InsertCharacterAwakeningBonus,
   CharacterType,
   Rarity
 } from "@shared/schema";
@@ -60,6 +63,12 @@ export interface IStorage {
   createCharacterLevelBonus(bonus: InsertCharacterLevelBonus): Promise<CharacterLevelBonus>;
   updateCharacterLevelBonus(id: number, bonus: Partial<InsertCharacterLevelBonus>): Promise<CharacterLevelBonus | undefined>;
   deleteCharacterLevelBonus(id: number): Promise<boolean>;
+  
+  // Character Awakening Bonus operations
+  getCharacterAwakeningBonuses(characterId: number): Promise<CharacterAwakeningBonus[]>;
+  createCharacterAwakeningBonus(bonus: InsertCharacterAwakeningBonus): Promise<CharacterAwakeningBonus>;
+  updateCharacterAwakeningBonus(id: number, bonus: Partial<InsertCharacterAwakeningBonus>): Promise<CharacterAwakeningBonus | undefined>;
+  deleteCharacterAwakeningBonus(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -244,6 +253,35 @@ export class DatabaseStorage implements IStorage {
   
   async deleteCharacterLevelBonus(id: number): Promise<boolean> {
     const result = await db.delete(characterLevelBonuses).where(eq(characterLevelBonuses.id, id));
+    return !!result;
+  }
+  
+  // Character Awakening Bonus operations
+  async getCharacterAwakeningBonuses(characterId: number): Promise<CharacterAwakeningBonus[]> {
+    const bonuses = await db.select()
+      .from(characterAwakeningBonuses)
+      .where(eq(characterAwakeningBonuses.characterId, characterId))
+      .orderBy(asc(characterAwakeningBonuses.awakeningLevel));
+    return bonuses;
+  }
+  
+  async createCharacterAwakeningBonus(bonus: InsertCharacterAwakeningBonus): Promise<CharacterAwakeningBonus> {
+    const [newBonus] = await db.insert(characterAwakeningBonuses).values(bonus).returning();
+    return newBonus;
+  }
+  
+  async updateCharacterAwakeningBonus(id: number, bonus: Partial<InsertCharacterAwakeningBonus>): Promise<CharacterAwakeningBonus | undefined> {
+    const [updatedBonus] = await db
+      .update(characterAwakeningBonuses)
+      .set(bonus)
+      .where(eq(characterAwakeningBonuses.id, id))
+      .returning();
+    
+    return updatedBonus;
+  }
+  
+  async deleteCharacterAwakeningBonus(id: number): Promise<boolean> {
+    const result = await db.delete(characterAwakeningBonuses).where(eq(characterAwakeningBonuses.id, id));
     return !!result;
   }
 
