@@ -488,10 +488,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for special abilities
   app.get("/api/special-abilities", async (_req, res) => {
     try {
+      console.log("Fetching all special abilities");
       const abilities = await storage.getAllSpecialAbilities();
+      console.log("Successfully fetched special abilities");
       res.json(abilities);
     } catch (error) {
-      res.status(500).json({ message: "サーバーエラーが発生しました" });
+      console.error("Error fetching special abilities:", error);
+      res.status(500).json({ message: "サーバーエラーが発生しました", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
