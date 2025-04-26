@@ -424,6 +424,19 @@ export default function AdminPage() {
     }
   }, [selectedCharacter, awakeningBonusForm]);
   
+  // 覚醒タイプを自動設定 (初回覚醒が登録済みの場合は二回目覚醒を強制的に選択)
+  useEffect(() => {
+    if (awakeningBonuses && awakeningBonuses.length > 0) {
+      // 初回覚醒が既に登録されているか確認
+      const hasInitialAwakening = awakeningBonuses.some(bonus => bonus.awakeningType === "initial");
+      
+      if (hasInitialAwakening) {
+        // 初回覚醒が登録済みの場合、二回目覚醒を選択
+        awakeningBonusForm.setValue("awakeningType", "second");
+      }
+    }
+  }, [awakeningBonuses, awakeningBonusForm]);
+  
   // レベルボーナス追加ミューテーション
   const createLevelBonusMutation = useMutation({
     mutationFn: async (data: LevelBonusFormValues) => {
@@ -1576,30 +1589,53 @@ export default function AdminPage() {
                                 <FormField
                                   control={awakeningBonusForm.control}
                                   name="awakeningType"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>覚醒タイプ</FormLabel>
-                                      <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        value={field.value}
-                                      >
-                                        <FormControl>
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="覚醒タイプを選択" />
-                                          </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                          <SelectItem value="initial">初回覚醒</SelectItem>
-                                          <SelectItem value="second">二回目覚醒 (PSRのみ)</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <FormDescription>
-                                        Lv10まで開放したときの効果を入力します
-                                      </FormDescription>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
+                                  render={({ field }) => {
+                                    // 初回覚醒ボーナスが既に登録されているか確認
+                                    const hasInitialAwakening = awakeningBonuses && awakeningBonuses.some(bonus => bonus.awakeningType === "initial");
+                                    
+                                    return (
+                                      <FormItem>
+                                        <FormLabel>覚醒タイプ</FormLabel>
+                                        {hasInitialAwakening ? (
+                                          // 初回覚醒が登録済みの場合は変更不可の固定表示にする
+                                          <div>
+                                            <Input 
+                                              value="二回目覚醒 (PSRのみ)" 
+                                              readOnly 
+                                              disabled
+                                              className="bg-muted"
+                                            />
+                                            <FormDescription className="text-amber-500 font-medium">
+                                              初回覚醒は既に登録済みです。二回目覚醒のみ追加可能です。
+                                            </FormDescription>
+                                          </div>
+                                        ) : (
+                                          // 通常のセレクト表示
+                                          <>
+                                            <Select
+                                              onValueChange={field.onChange}
+                                              defaultValue={field.value}
+                                              value={field.value}
+                                            >
+                                              <FormControl>
+                                                <SelectTrigger>
+                                                  <SelectValue placeholder="覚醒タイプを選択" />
+                                                </SelectTrigger>
+                                              </FormControl>
+                                              <SelectContent>
+                                                <SelectItem value="initial">初回覚醒</SelectItem>
+                                                <SelectItem value="second">二回目覚醒 (PSRのみ)</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                            <FormDescription>
+                                              Lv10まで開放したときの効果を入力します
+                                            </FormDescription>
+                                          </>
+                                        )}
+                                        <FormMessage />
+                                      </FormItem>
+                                    );
+                                  }}
                                 />
                                 
                                 <FormField
