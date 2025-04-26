@@ -12,10 +12,18 @@ import AddCharacterPage from "@/pages/AddCharacterPage";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={HomeWithDeckProvider} />
-      <Route path="/admin" component={AdminPage} />
-      <Route path="/add-character" component={AddCharacterPage} />
-      <Route component={NotFound} />
+      <Route path="/">
+        <HomeWithDeckProvider />
+      </Route>
+      <Route path="/admin">
+        <AdminPage />
+      </Route>
+      <Route path="/add-character">
+        <AddCharacterPage />
+      </Route>
+      <Route>
+        <NotFound />
+      </Route>
     </Switch>
   );
 }
