@@ -723,7 +723,8 @@ export default function AdminPage() {
     if (selectedCharacter) {
       const data = {
         ...values,
-        characterId: selectedCharacter
+        characterId: selectedCharacter,
+        description: "" // 空の説明を追加して互換性を保つ
       };
       createAwakeningBonusMutation.mutate(data);
     }
