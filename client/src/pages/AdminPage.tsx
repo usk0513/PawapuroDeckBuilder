@@ -86,16 +86,26 @@ const isLv35UniqueBonus = (level: number): boolean => {
 };
 
 // 効果値に単位を自動で付加する関数
-const formatEffectValue = (value: string, effectType?: string, level?: number): string => {
+const formatEffectValue = (value: string, effectType?: string, level?: number, isAwakening?: boolean): string => {
   if (!effectType) return value;
   const unit = effectTypeUnits[effectType] || "";
   
-  // 値が既に+で始まる場合は固有ボーナス（追加ボーナス）として表示
+  // 1. 値が既に+で始まる場合は追加効果として表示
   if (value.startsWith("+")) {
     return `${value}${unit}`;
   }
   
-  // それ以外は通常の値として表示
+  // 2. 覚醒ボーナスの場合は+を付けて表示
+  if (isAwakening) {
+    return `+${value}${unit}`;
+  }
+  
+  // 3. LV35固有ボーナスの場合は+を付けて表示
+  if (level === 35 && effectType === BonusEffectType.UNIQUE_ITEM) {
+    return `+${value}${unit}`;
+  }
+  
+  // 4. それ以外は通常の値として表示
   return `${value}${unit}`;
 };
 
@@ -479,7 +489,13 @@ export default function AdminPage() {
   // 覚醒ボーナス追加ミューテーション
   const createAwakeningBonusMutation = useMutation({
     mutationFn: async (data: AwakeningBonusFormValues) => {
-      const res = await apiRequest("POST", "/api/character-awakening-bonuses", data);
+      // 値に+を付ける。すでに付いていない場合のみ。
+      const modifiedData = {
+        ...data,
+        value: data.value && !data.value.startsWith('+') ? `+${data.value}` : data.value
+      };
+      
+      const res = await apiRequest("POST", "/api/character-awakening-bonuses", modifiedData);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "覚醒ボーナス追加に失敗しました");
@@ -1562,8 +1578,23 @@ export default function AdminPage() {
                                   <FormItem>
                                     <FormLabel>効果値</FormLabel>
                                     <FormControl>
-                                      <Input placeholder="効果の数値（例: 10）" {...field} />
+                                      <Input 
+                                        placeholder="+なしで数値のみ入力（例: 10）" 
+                                        {...field} 
+                                        onChange={(e) => {
+                                          // 入力値からプラス記号を取り除く
+                                          let value = e.target.value.replace(/^\+/, '');
+                                          
+                                          // 数値のみ受け付ける
+                                          if (/^[0-9]*$/.test(value) || value === '') {
+                                            field.onChange(value);
+                                          }
+                                        }}
+                                      />
                                     </FormControl>
+                                    <FormDescription>
+                                      入力値は自動的に追加効果（+付き）として表示されます
+                                    </FormDescription>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -1617,7 +1648,7 @@ export default function AdminPage() {
                                         <span className="font-medium">Lv.10まで開放時</span>
                                       </div>
                                       <div className="text-sm">
-                                        {bonus.effectType}: {formatEffectValue(bonus.value, bonus.effectType)}
+                                        {bonus.effectType}: {formatEffectValue(bonus.value, bonus.effectType, undefined, true)}
                                       </div>
                                       {bonus.description && (
                                         <div className="text-xs text-muted-foreground mt-1">
