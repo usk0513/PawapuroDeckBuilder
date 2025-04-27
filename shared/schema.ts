@@ -102,6 +102,13 @@ export enum SpecialAbilityChoiceType {
   TYPE_C = "Cルート"
 }
 
+// 友情特殊能力スキーマ
+export const FriendshipAbilitySchema = z.object({
+  playerType: z.nativeEnum(PlayerType), // 投手か野手か
+  name: z.string().min(1), // 友情特殊能力名
+  description: z.string().optional(), // 任意の説明
+});
+
 // キャラクターレベルごとのボーナス効果スキーマ
 export const LevelBonusSchema = z.object({
   level: z.number().min(1).max(50),
@@ -121,6 +128,9 @@ export const AwakeningBonusSchema = z.object({
 });
 
 export type AwakeningBonus = z.infer<typeof AwakeningBonusSchema>;
+
+// 友情特殊能力の型定義
+export type FriendshipAbility = z.infer<typeof FriendshipAbilitySchema>;
 
 // Character stats schema
 export const StatSchema = z.object({
@@ -277,6 +287,22 @@ export const insertCharacterAwakeningBonusSchema = createInsertSchema(characterA
 export type InsertCharacterAwakeningBonus = z.infer<typeof insertCharacterAwakeningBonusSchema>;
 export type CharacterAwakeningBonus = typeof characterAwakeningBonuses.$inferSelect;
 
+// 友情特殊能力テーブル
+export const characterFriendshipAbilities = pgTable("character_friendship_abilities", {
+  id: serial("id").primaryKey(),
+  characterId: integer("character_id").references(() => characters.id).notNull(),
+  playerType: text("player_type").notNull().$type<PlayerType>(), // 投手か野手か
+  name: text("name").notNull(),
+  description: text("description"),
+});
+
+export const insertCharacterFriendshipAbilitySchema = createInsertSchema(characterFriendshipAbilities).omit({
+  id: true
+});
+
+export type InsertCharacterFriendshipAbility = z.infer<typeof insertCharacterFriendshipAbilitySchema>;
+export type CharacterFriendshipAbility = typeof characterFriendshipAbilities.$inferSelect;
+
 // リレーションは最後にまとめて定義します
 
 // 特殊能力名のテーブル（金特の名前マスタ）
@@ -339,6 +365,7 @@ export const charactersRelations = relations(characters, ({ many }) => ({
   levelBonuses: many(characterLevelBonuses),
   awakeningBonuses: many(characterAwakeningBonuses),
   specialAbilitySets: many(characterSpecialAbilitySets),
+  friendshipAbilities: many(characterFriendshipAbilities),
   ownedCharacters: many(ownedCharacters),
 }));
 
@@ -421,5 +448,13 @@ export const specialAbilitySetItemsRelations = relations(specialAbilitySetItems,
   specialAbility: one(specialAbilities, {
     fields: [specialAbilitySetItems.specialAbilityId],
     references: [specialAbilities.id],
+  }),
+}));
+
+// 友情特殊能力のリレーション
+export const characterFriendshipAbilitiesRelations = relations(characterFriendshipAbilities, ({ one }) => ({
+  character: one(characters, {
+    fields: [characterFriendshipAbilities.characterId],
+    references: [characters.id],
   }),
 }));

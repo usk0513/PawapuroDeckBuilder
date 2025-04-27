@@ -80,6 +80,13 @@ export interface IStorage {
   updateCharacterAwakeningBonus(id: number, bonus: Partial<InsertCharacterAwakeningBonus>): Promise<CharacterAwakeningBonus | undefined>;
   deleteCharacterAwakeningBonus(id: number): Promise<boolean>;
   
+  // Character Friendship Ability operations
+  getCharacterFriendshipAbilities(characterId: number): Promise<CharacterFriendshipAbility[]>;
+  getCharacterFriendshipAbility(id: number): Promise<CharacterFriendshipAbility | undefined>;
+  createCharacterFriendshipAbility(ability: InsertCharacterFriendshipAbility): Promise<CharacterFriendshipAbility>;
+  updateCharacterFriendshipAbility(id: number, ability: Partial<InsertCharacterFriendshipAbility>): Promise<CharacterFriendshipAbility | undefined>;
+  deleteCharacterFriendshipAbility(id: number): Promise<boolean>;
+  
   // Special Ability operations
   getAllSpecialAbilities(): Promise<SpecialAbility[]>;
   getSpecialAbility(id: number): Promise<SpecialAbility | undefined>;
@@ -88,7 +95,7 @@ export interface IStorage {
   deleteSpecialAbility(id: number): Promise<boolean>;
   
   // Character Special Ability Set operations
-  getCharacterSpecialAbilitySets(characterId: number, playerType?: PlayerType): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] })[]>;
+  getCharacterSpecialAbilitySets(characterId: number, playerType?: PlayerType): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[], setItems?: any[] })[]>;
   getCharacterSpecialAbilitySet(id: number): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] }) | undefined>;
   createCharacterSpecialAbilitySet(set: InsertCharacterSpecialAbilitySet): Promise<CharacterSpecialAbilitySet>;
   updateCharacterSpecialAbilitySet(id: number, set: Partial<InsertCharacterSpecialAbilitySet>): Promise<CharacterSpecialAbilitySet | undefined>;
