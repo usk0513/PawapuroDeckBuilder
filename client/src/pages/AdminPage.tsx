@@ -484,6 +484,8 @@ export default function AdminPage() {
       characterId: selectedCharacter || undefined,
       playerType: PlayerType.PITCHER,
       choiceType: SpecialAbilityChoiceType.TYPE_A,
+      name: "",
+      description: ""
     },
     mode: 'onChange'
   });
@@ -768,6 +770,8 @@ export default function AdminPage() {
         characterId: selectedCharacter || undefined,
         playerType: data.playerType,
         choiceType: data.choiceType,
+        name: "",
+        description: ""
       });
     },
     onError: (error: Error) => {
@@ -1023,6 +1027,14 @@ export default function AdminPage() {
         variant: "destructive",
       });
       return;
+    }
+
+    // 選択中のキャラクター名を取得
+    const characterName = characters.find(c => c.id === selectedCharacter)?.name || "";
+    
+    // 名前を自動的に設定 (必須フィールド)
+    if (!values.name) {
+      values.name = `${characterName}の${values.choiceType}`;
     }
 
     // フォームの値をコンソールに表示
