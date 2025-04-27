@@ -781,11 +781,20 @@ export default function AdminPage() {
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "エラー",
-        description: error.message,
-        variant: "destructive",
-      });
+      // エラーメッセージに"既に同じルート"という文字列が含まれる場合は特別なエラーメッセージを表示
+      if (error.message.includes("既に同じルート")) {
+        toast({
+          title: "重複エラー",
+          description: "同じキャラクター・タイプ・ルートの組み合わせの金特セットは一つしか作成できません",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "エラー",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   });
   
@@ -2551,7 +2560,6 @@ export default function AdminPage() {
                                                       <Button 
                                                         type="button" 
                                                         onClick={() => onSpecialAbilitySetItemSubmit(specialAbilitySetItemForm.getValues())}
-                                                        disabled={!specialAbilitySetItemForm.formState.isValid}
                                                       >
                                                         金特を追加
                                                       </Button>
