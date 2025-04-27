@@ -1923,7 +1923,31 @@ export default function AdminPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {[1, 5, 10, 15, 20, 25, 30, 35, 35.5, 37, 40, 42, 45, 50].map((level) => (
+                              {[1, 5, 10, 15, 20, 25, 30, 35, 35.5, 37, 40, 42, 45, 50]
+                                .filter(level => {
+                                  // レアリティフィルタが設定されている場合
+                                  if (selectedRarity) {
+                                    // SR専用レベルは、SRレアリティのみ表示
+                                    if (level === 37 && selectedRarity !== Rarity.SR) {
+                                      return false;
+                                    }
+                                    // PSR専用レベルは、PSRレアリティのみ表示
+                                    if ((level === 42 || level === 50) && selectedRarity !== Rarity.PSR) {
+                                      return false;
+                                    }
+                                  }
+                                  
+                                  // レアリティフィルタによるフィルタリングを通過した場合、
+                                  // そのレベルに対応するボーナスが登録済みかどうかをチェック
+                                  // 登録済みのボーナスがある場合のみ表示
+                                  const registeredBonuses = levelBonuses.filter(bonus => 
+                                    parseFloat(bonus.level.toString()) === level && 
+                                    (!selectedRarity || bonus.rarity === selectedRarity || !bonus.rarity)
+                                  );
+                                  
+                                  return registeredBonuses.length > 0;
+                                })
+                                .map((level) => (
                                 <tr key={level}>
                                   <td className="border p-2 text-center font-medium">
                                     {level === 35.5 ? (
