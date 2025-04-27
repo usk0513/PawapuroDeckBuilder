@@ -2178,6 +2178,26 @@ export default function AdminPage() {
                                         if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           const formValues = levelBonusForm.getValues();
+                                          const actualLevel = level === 35.5 ? 35 : level;
+                                          
+                                          // 既に同じレベルと効果タイプのボーナスが登録済みかチェック
+                                          const existingBonus = levelBonuses.find(b => 
+                                            b.characterId === selectedCharacter &&
+                                            b.level === actualLevel && 
+                                            b.effectType === formValues.effectType && 
+                                            (b.rarity === formValues.rarity || 
+                                              (!b.rarity && !formValues.rarity))
+                                          );
+                                          
+                                          if (existingBonus) {
+                                            toast({
+                                              title: "登録エラー",
+                                              description: "同じレベルと効果タイプの組み合わせは既に登録されています。別の効果タイプを選択するか、既存のボーナスを削除してください。",
+                                              variant: "destructive",
+                                            });
+                                            return;
+                                          }
+                                          
                                           onLevelBonusSubmit(formValues);
                                           
                                           // フォームリセットは onLevelBonusSubmit 内で行われるため不要
@@ -2562,6 +2582,22 @@ export default function AdminPage() {
                                 onClick={() => {
                                   const values = awakeningBonusForm.getValues();
                                   console.log("直接ボタンクリックによる送信:", values);
+                                  
+                                  // 既に同じ覚醒タイプのボーナスが登録済みかチェック
+                                  const existingBonus = awakeningBonuses.find(b => 
+                                    b.characterId === selectedCharacter &&
+                                    b.awakeningType === values.awakeningType
+                                  );
+                                  
+                                  if (existingBonus) {
+                                    toast({
+                                      title: "登録エラー",
+                                      description: `${values.awakeningType === "initial" ? "初回覚醒" : "二回目覚醒"}のボーナスは既に登録されています。既存のボーナスを削除してから再度登録してください。`,
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+                                  
                                   onAwakeningBonusSubmit(values);
                                 }}
                               >
