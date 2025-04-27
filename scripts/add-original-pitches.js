@@ -1,3 +1,4 @@
+// ESモジュール形式
 import { db } from '../server/db.js';
 import { specialAbilities, PlayerType } from '../shared/schema.js';
 import { eq } from 'drizzle-orm';
