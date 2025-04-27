@@ -1964,13 +1964,7 @@ export default function AdminPage() {
                             <tbody>
                               {[1, 5, 10, 15, 20, 25, 30, 35, 35.5, 37, 40, 42, 45, 50]
                                 .filter(level => {
-                                  // 新規登録されたキャラクターの場合は、全レベルを表示するか
-                                  // ボーナスがあるレベルのみを表示するかの条件
-                                  const hasAnyBonus = levelBonuses.some(bonus => 
-                                    bonus.characterId === selectedCharacter
-                                  );
-                                  
-                                  // レアリティフィルタが設定されている場合
+                                  // レアリティフィルタが設定されている場合のレベル制限
                                   if (selectedRarity) {
                                     // SR専用レベルは、SRレアリティのみ表示
                                     if (level === 37 && selectedRarity !== Rarity.SR) {
@@ -1982,22 +1976,8 @@ export default function AdminPage() {
                                     }
                                   }
                                   
-                                  // ボーナスがまったく登録されていない場合は全レベルを表示
-                                  if (!hasAnyBonus) {
-                                    return true;
-                                  }
-                                  
-                                  // レアリティフィルタによるフィルタリングを通過した場合、
-                                  // そのレベルに対応するボーナスが登録済みかどうかをチェック
-                                  // 登録済みのボーナスがある場合のみ表示
-                                  // かつ、現在選択中のキャラクターのボーナスのみを表示
-                                  const registeredBonuses = levelBonuses.filter(bonus => 
-                                    parseFloat(bonus.level.toString()) === level && 
-                                    bonus.characterId === selectedCharacter &&
-                                    (!selectedRarity || bonus.rarity === selectedRarity || !bonus.rarity)
-                                  );
-                                  
-                                  return registeredBonuses.length > 0;
+                                  // 常に全レベルを表示する
+                                  return true;
                                 })
                                 .map((level) => (
                                 <tr key={level}>
