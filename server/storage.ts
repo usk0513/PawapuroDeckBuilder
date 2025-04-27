@@ -20,6 +20,9 @@ import {
   characterAwakeningBonuses,
   type CharacterAwakeningBonus,
   type InsertCharacterAwakeningBonus,
+  characterFriendshipAbilities,
+  type CharacterFriendshipAbility,
+  type InsertCharacterFriendshipAbility,
   specialAbilities,
   type SpecialAbility,
   type InsertSpecialAbility,
@@ -318,6 +321,42 @@ export class DatabaseStorage implements IStorage {
   
   async deleteCharacterAwakeningBonus(id: number): Promise<boolean> {
     const result = await db.delete(characterAwakeningBonuses).where(eq(characterAwakeningBonuses.id, id));
+    return !!result;
+  }
+  
+  // Character Friendship Ability operations
+  async getCharacterFriendshipAbilities(characterId: number): Promise<CharacterFriendshipAbility[]> {
+    const abilities = await db.select()
+      .from(characterFriendshipAbilities)
+      .where(eq(characterFriendshipAbilities.characterId, characterId))
+      .orderBy(asc(characterFriendshipAbilities.playerType));
+    return abilities;
+  }
+  
+  async getCharacterFriendshipAbility(id: number): Promise<CharacterFriendshipAbility | undefined> {
+    const [ability] = await db.select()
+      .from(characterFriendshipAbilities)
+      .where(eq(characterFriendshipAbilities.id, id));
+    return ability;
+  }
+  
+  async createCharacterFriendshipAbility(ability: InsertCharacterFriendshipAbility): Promise<CharacterFriendshipAbility> {
+    const [newAbility] = await db.insert(characterFriendshipAbilities).values(ability).returning();
+    return newAbility;
+  }
+  
+  async updateCharacterFriendshipAbility(id: number, ability: Partial<InsertCharacterFriendshipAbility>): Promise<CharacterFriendshipAbility | undefined> {
+    const [updatedAbility] = await db
+      .update(characterFriendshipAbilities)
+      .set(ability)
+      .where(eq(characterFriendshipAbilities.id, id))
+      .returning();
+    
+    return updatedAbility;
+  }
+  
+  async deleteCharacterFriendshipAbility(id: number): Promise<boolean> {
+    const result = await db.delete(characterFriendshipAbilities).where(eq(characterFriendshipAbilities.id, id));
     return !!result;
   }
   
