@@ -1300,7 +1300,7 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {/* キャラクター情報と編集フォーム */}
         <div>
           <Card>
@@ -2669,60 +2669,6 @@ export default function AdminPage() {
                     </div>
                   </TabsContent>
                 </Tabs>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* キャラクター一覧 */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>イベントキャラクター一覧</CardTitle>
-              <CardDescription>
-                作成したキャラクターの一覧です。編集するにはキャラクターをクリックしてください。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center my-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : characters.length > 0 ? (
-                <div className="space-y-4">
-                  {characters.map((character: any) => (
-                    <div
-                      key={character.id}
-                      onClick={() => handleEditCharacter(character)}
-                      className={`p-4 border rounded-lg cursor-pointer hover:bg-accent ${
-                        selectedCharacter === character.id ? "ring-2 ring-primary" : ""
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">{character.name}</h3>
-                          <div className="text-sm text-muted-foreground">
-                            キャラ種別: {character.position}
-                            {character.eventTiming && ` | ${character.eventTiming}`}
-                          </div>
-                          {character.specialTrainings && character.specialTrainings.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {character.specialTrainings.map((training: any) => (
-                                <Badge key={String(training)} variant="outline" className="text-xs">
-                                  {String(training)}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  キャラクターがまだ登録されていません
-                </div>
               )}
             </CardContent>
           </Card>
