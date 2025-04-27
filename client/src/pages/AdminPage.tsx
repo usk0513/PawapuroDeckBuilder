@@ -2173,6 +2173,157 @@ export default function AdminPage() {
                     </div>
                   </TabsContent>
                   
+                  <TabsContent value="friendship">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">友情特殊能力管理</h3>
+                        
+                        {isLoadingFriendshipAbilities ? (
+                          <div className="flex justify-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            {/* 既存の友情特殊能力一覧 */}
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle>設定済み友情特殊能力</CardTitle>
+                                <CardDescription>
+                                  キャラクターごとに投手用・野手用の友情特殊能力を設定できます
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                {friendshipAbilities && friendshipAbilities.length > 0 ? (
+                                  <div className="space-y-4">
+                                    {friendshipAbilities.map((ability: any) => (
+                                      <div 
+                                        key={ability.id}
+                                        className="flex justify-between items-center p-3 border rounded"
+                                      >
+                                        <div>
+                                          <div className="flex items-center gap-2">
+                                            <Badge variant="outline">
+                                              {ability.playerType}
+                                            </Badge>
+                                            <span className="font-medium">{ability.name}</span>
+                                          </div>
+                                          {ability.description && (
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              {ability.description}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            if (window.confirm("本当に削除しますか？")) {
+                                              deleteFriendshipAbilityMutation.mutate(ability.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4 text-muted-foreground">
+                                    友情特殊能力がまだ登録されていません
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                            
+                            {/* 新規友情特殊能力追加フォーム */}
+                            <Card>
+                              <CardHeader>
+                                <CardTitle>友情特殊能力追加</CardTitle>
+                                <CardDescription>
+                                  キャラクターの友情特殊能力を追加します
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <form 
+                                  onSubmit={friendshipAbilityForm.handleSubmit((data) => {
+                                    createFriendshipAbilityMutation.mutate(data);
+                                  })}
+                                  className="space-y-4"
+                                >
+                                  <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                      <Label htmlFor="playerType">プレイヤータイプ</Label>
+                                      <Select
+                                        value={friendshipAbilityForm.watch("playerType")}
+                                        onValueChange={(value) => {
+                                          friendshipAbilityForm.setValue("playerType", value as PlayerType);
+                                          setFriendshipPlayerType(value as PlayerType);
+                                        }}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="プレイヤータイプを選択" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value={PlayerType.PITCHER}>{PlayerType.PITCHER}</SelectItem>
+                                          <SelectItem value={PlayerType.BATTER}>{PlayerType.BATTER}</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      {friendshipAbilityForm.formState.errors.playerType && (
+                                        <p className="text-sm text-destructive mt-1">
+                                          {friendshipAbilityForm.formState.errors.playerType.message}
+                                        </p>
+                                      )}
+                                    </div>
+                                    
+                                    <div>
+                                      <Label htmlFor="name">友情特殊能力名</Label>
+                                      <Input
+                                        id="name"
+                                        placeholder="例: 守備職人や球速アップなど"
+                                        {...friendshipAbilityForm.register("name")}
+                                      />
+                                      {friendshipAbilityForm.formState.errors.name && (
+                                        <p className="text-sm text-destructive mt-1">
+                                          {friendshipAbilityForm.formState.errors.name.message}
+                                        </p>
+                                      )}
+                                    </div>
+                                    
+                                    <div>
+                                      <Label htmlFor="description">説明（オプション）</Label>
+                                      <Textarea
+                                        id="description"
+                                        placeholder="友情特殊能力の効果説明"
+                                        {...friendshipAbilityForm.register("description")}
+                                      />
+                                      {friendshipAbilityForm.formState.errors.description && (
+                                        <p className="text-sm text-destructive mt-1">
+                                          {friendshipAbilityForm.formState.errors.description.message}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex justify-end">
+                                    <Button
+                                      type="submit"
+                                      disabled={createFriendshipAbilityMutation.isPending}
+                                    >
+                                      {createFriendshipAbilityMutation.isPending ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      ) : null}
+                                      追加する
+                                    </Button>
+                                  </div>
+                                </form>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
                   <TabsContent value="awakening">
                     <div className="space-y-6">
                       <div>
