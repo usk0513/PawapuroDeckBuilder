@@ -27,7 +27,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Trash, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { positionOptions, specialTrainingOptions, eventTimingOptions, uniqueBonusItems } from "@/lib/constants";
+import { 
+  positionOptions, 
+  specialTrainingOptions, 
+  eventTimingOptions, 
+  uniqueBonusItems,
+  characterRoleOptions,
+  CharacterRole
+} from "@/lib/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1228,6 +1235,7 @@ export default function AdminPage() {
       stats: character.stats,
       specialTrainings: character.specialTrainings || [],
       eventTiming: character.eventTiming,
+      role: character.role || CharacterRole.GUARD,
     });
     
     // レベルボーナスフォームの初期化

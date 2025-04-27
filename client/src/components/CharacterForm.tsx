@@ -249,6 +249,33 @@ const CharacterForm: React.FC = () => {
             />
           </div>
           
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">役割</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="役割を選択" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {characterRoleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          
           <Button 
             type="submit" 
             className="w-full bg-[hsl(var(--gaming-blue))] hover:bg-blue-700"
