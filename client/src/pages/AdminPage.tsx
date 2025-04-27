@@ -55,7 +55,12 @@ const characterSpecialAbilitySetSchema = insertCharacterSpecialAbilitySetSchema.
 type CharacterSpecialAbilitySetFormValues = z.infer<typeof characterSpecialAbilitySetSchema>;
 
 // 金特セットアイテム登録用スキーマ
-const specialAbilitySetItemSchema = insertSpecialAbilitySetItemSchema.extend({});
+// スキーマを修正：orderフィールドを不要にし、specialAbilityIdのみ必須に
+const specialAbilitySetItemSchema = z.object({
+  setId: z.number(),
+  specialAbilityId: z.number(),
+  customName: z.string().optional(),
+});
 type SpecialAbilitySetItemFormValues = z.infer<typeof specialAbilitySetItemSchema>;
 
 // 効果タイプによる単位の定義
@@ -496,9 +501,9 @@ export default function AdminPage() {
     defaultValues: {
       setId: undefined,
       specialAbilityId: undefined,
-      order: 1,
       customName: "",
-    }
+    },
+    mode: 'onChange'
   });
   
   // フォーム値変更時のデバッグ
@@ -2540,24 +2545,7 @@ export default function AdminPage() {
                                                         )
                                                       }
 
-                                                      <FormField
-                                                        control={specialAbilitySetItemForm.control}
-                                                        name="order"
-                                                        render={({ field }) => (
-                                                          <FormItem>
-                                                            <FormLabel>表示順</FormLabel>
-                                                            <FormControl>
-                                                              <Input 
-                                                                type="number" 
-                                                                min="1" 
-                                                                {...field} 
-                                                                onChange={(e) => field.onChange(Number(e.target.value))}
-                                                              />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                          </FormItem>
-                                                        )}
-                                                      />
+                                                      {/* 表示順フィールドを削除 */}
                                                       
                                                       <Button 
                                                         type="button" 
