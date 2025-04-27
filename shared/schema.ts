@@ -106,7 +106,6 @@ export enum SpecialAbilityChoiceType {
 export const FriendshipAbilitySchema = z.object({
   playerType: z.nativeEnum(PlayerType), // 投手か野手か
   name: z.string().min(1), // 友情特殊能力名
-  description: z.string().optional(), // 任意の説明
 });
 
 // キャラクターレベルごとのボーナス効果スキーマ

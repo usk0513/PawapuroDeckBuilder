@@ -249,14 +249,12 @@ type FriendshipAbilityFormValues = {
   characterId: number;
   playerType: PlayerType;
   name: string;
-  description?: string;
 }
 
 const friendshipAbilitySchema = z.object({
   characterId: z.number().min(1, "キャラクターを選択してください"),
   playerType: z.nativeEnum(PlayerType, { message: "プレイヤータイプを選択してください" }),
   name: z.string().min(1, "友情特殊能力名を入力してください"),
-  description: z.string().optional(),
 });
 
 export default function AdminPage() {
@@ -539,8 +537,7 @@ export default function AdminPage() {
     defaultValues: {
       characterId: selectedCharacter || undefined,
       playerType: PlayerType.PITCHER,
-      name: "",
-      description: ""
+      name: ""
     }
   });
 
@@ -776,7 +773,6 @@ export default function AdminPage() {
         characterId: selectedCharacter || undefined,
         playerType: data.playerType,
         name: "",
-        description: "",
       });
     },
     onError: (error: Error) => {
@@ -2289,19 +2285,7 @@ export default function AdminPage() {
                                       )}
                                     </div>
                                     
-                                    <div>
-                                      <Label htmlFor="description">説明（オプション）</Label>
-                                      <Textarea
-                                        id="description"
-                                        placeholder="友情特殊能力の効果説明"
-                                        {...friendshipAbilityForm.register("description")}
-                                      />
-                                      {friendshipAbilityForm.formState.errors.description && (
-                                        <p className="text-sm text-destructive mt-1">
-                                          {friendshipAbilityForm.formState.errors.description.message}
-                                        </p>
-                                      )}
-                                    </div>
+
                                   </div>
                                   
                                   <div className="flex justify-end">
