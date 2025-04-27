@@ -244,6 +244,21 @@ const getBonusEffectTypeOptions = () => {
 // BonusEffectTypeの選択肢
 const bonusEffectTypeOptions = getBonusEffectTypeOptions();
 
+// 友情特殊能力のフォーム用のスキーマとタイプ定義
+type FriendshipAbilityFormValues = {
+  characterId: number;
+  playerType: PlayerType;
+  name: string;
+  description?: string;
+}
+
+const friendshipAbilitySchema = z.object({
+  characterId: z.number().min(1, "キャラクターを選択してください"),
+  playerType: z.nativeEnum(PlayerType, { message: "プレイヤータイプを選択してください" }),
+  name: z.string().min(1, "友情特殊能力名を入力してください"),
+  description: z.string().optional(),
+});
+
 export default function AdminPage() {
   const { toast } = useToast();
   const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
@@ -258,6 +273,9 @@ export default function AdminPage() {
   const [awakeningEffect, setAwakeningEffect] = useState<string>("");
   const [awakeningValue, setAwakeningValue] = useState<string>("");
   const [awakeningType, setAwakeningType] = useState<string>("initial"); // 'initial' or 'second'
+  
+  // 友情特殊能力関連の状態
+  const [friendshipPlayerType, setFriendshipPlayerType] = useState<PlayerType>(PlayerType.PITCHER);
   
   // 金特関連の状態
   const [selectedSpecialAbility, setSelectedSpecialAbility] = useState<number | null>(null);
@@ -515,13 +533,46 @@ export default function AdminPage() {
     return () => subscription.unsubscribe();
   }, [awakeningBonusForm]);
   
+  // 友情特殊能力用フォーム
+  const friendshipAbilityForm = useForm<FriendshipAbilityFormValues>({
+    resolver: zodResolver(friendshipAbilitySchema),
+    defaultValues: {
+      characterId: selectedCharacter || undefined,
+      playerType: PlayerType.PITCHER,
+      name: "",
+      description: ""
+    }
+  });
+
+  // 友情特殊能力データの取得
+  const { data: friendshipAbilities = [], isLoading: isLoadingFriendshipAbilities } = useQuery({
+    queryKey: ["/api/character-friendship-abilities", selectedCharacter],
+    queryFn: async () => {
+      if (!selectedCharacter) return [];
+      try {
+        const url = `/api/character-friendship-abilities?characterId=${selectedCharacter}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.error("友情特殊能力データの取得に失敗しました: ", await res.text());
+          return [];
+        }
+        return await res.json();
+      } catch (error) {
+        console.error("友情特殊能力取得エラー:", error);
+        return [];
+      }
+    },
+    enabled: !!selectedCharacter,
+  });
+
   // 初期化: フォームのcharacterIdを更新
   useEffect(() => {
     if (selectedCharacter) {
       awakeningBonusForm.setValue("characterId", selectedCharacter);
+      friendshipAbilityForm.setValue("characterId", selectedCharacter);
       console.log("キャラクターIDを設定:", selectedCharacter);
     }
-  }, [selectedCharacter, awakeningBonusForm]);
+  }, [selectedCharacter, awakeningBonusForm, friendshipAbilityForm]);
   
   // 覚醒タイプを自動設定 (初回覚醒が登録済みの場合は二回目覚醒を強制的に選択)
   useEffect(() => {
@@ -689,6 +740,71 @@ export default function AdminPage() {
       toast({
         title: "覚醒ボーナス削除",
         description: "覚醒ボーナスが削除されました",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 友情特殊能力追加ミューテーション
+  const createFriendshipAbilityMutation = useMutation({
+    mutationFn: async (data: FriendshipAbilityFormValues) => {
+      const res = await apiRequest("POST", "/api/character-friendship-abilities", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "友情特殊能力追加に失敗しました");
+      }
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-friendship-abilities", selectedCharacter] 
+      });
+      
+      toast({
+        title: "友情特殊能力追加",
+        description: `${data.playerType}用の友情特殊能力が追加されました`,
+      });
+      
+      // フォームリセット
+      friendshipAbilityForm.reset({
+        characterId: selectedCharacter || undefined,
+        playerType: data.playerType,
+        name: "",
+        description: "",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "エラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // 友情特殊能力削除ミューテーション
+  const deleteFriendshipAbilityMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/character-friendship-abilities/${id}`);
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message || "友情特殊能力削除に失敗しました");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/character-friendship-abilities", selectedCharacter]
+      });
+      toast({
+        title: "友情特殊能力削除",
+        description: "友情特殊能力が削除されました",
       });
     },
     onError: (error: Error) => {
@@ -1478,10 +1594,11 @@ export default function AdminPage() {
                   onValueChange={setActiveTab}
                   className="w-full"
                 >
-                  <TabsList className="grid w-full grid-cols-4 mb-4">
+                  <TabsList className="grid w-full grid-cols-5 mb-4">
                     <TabsTrigger value="character">基本情報</TabsTrigger>
                     <TabsTrigger value="levelbonus">レベルボーナス</TabsTrigger>
                     <TabsTrigger value="awakening">覚醒ボーナス</TabsTrigger>
+                    <TabsTrigger value="friendship">友情特殊能力</TabsTrigger>
                     <TabsTrigger value="specialability">金特</TabsTrigger>
                   </TabsList>
 
