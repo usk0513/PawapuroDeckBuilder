@@ -1501,7 +1501,22 @@ export default function AdminPage() {
                               {specialTrainingOptions.map((option) => (
                                 <FormItem
                                   key={option.value}
-                                  className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                                  className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 cursor-pointer hover:bg-muted/50"
+                                  onClick={() => {
+                                    // チェックボックスの状態を切り替える
+                                    const isCurrentlyChecked = field.value?.includes(option.value);
+                                    if (isCurrentlyChecked) {
+                                      // チェックを外す
+                                      field.onChange(
+                                        field.value?.filter(
+                                          (value) => value !== option.value
+                                        )
+                                      );
+                                    } else {
+                                      // チェックを入れる
+                                      field.onChange([...(field.value || []), option.value]);
+                                    }
+                                  }}
                                 >
                                   <FormControl>
                                     <Checkbox
@@ -1516,6 +1531,10 @@ export default function AdminPage() {
                                             )
                                           );
                                         }
+                                      }}
+                                      onClick={(e) => {
+                                        // イベントバブリングを停止して、親要素のクリックイベントと重複しないようにする
+                                        e.stopPropagation();
                                       }}
                                     />
                                   </FormControl>
@@ -1710,7 +1729,22 @@ export default function AdminPage() {
                                   {specialTrainingOptions.map((option) => (
                                     <FormItem
                                       key={option.value}
-                                      className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                                      className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 cursor-pointer hover:bg-muted/50"
+                                      onClick={() => {
+                                        // チェックボックスの状態を切り替える
+                                        const isCurrentlyChecked = field.value?.includes(option.value);
+                                        if (isCurrentlyChecked) {
+                                          // チェックを外す
+                                          field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== option.value
+                                            )
+                                          );
+                                        } else {
+                                          // チェックを入れる
+                                          field.onChange([...(field.value || []), option.value]);
+                                        }
+                                      }}
                                     >
                                       <FormControl>
                                         <Checkbox
@@ -1725,6 +1759,10 @@ export default function AdminPage() {
                                                 )
                                               );
                                             }
+                                          }}
+                                          onClick={(e) => {
+                                            // イベントバブリングを停止して、親要素のクリックイベントと重複しないようにする
+                                            e.stopPropagation();
                                           }}
                                         />
                                       </FormControl>
