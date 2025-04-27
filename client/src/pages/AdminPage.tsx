@@ -1371,6 +1371,7 @@ export default function AdminPage() {
                     position: "",
                     specialTrainings: [],
                     eventTiming: "",
+                    role: CharacterRole.GUARD,
                   });
                 } else if (value) {
                   const character = characters.find(c => c.id === parseInt(value));
@@ -1582,6 +1583,41 @@ export default function AdminPage() {
                       />
                     </div>
 
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">キャラクター役割</h3>
+                      <FormField
+                        control={form.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>キャラクターの役割を選択してください</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="役割を選択" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {characterRoleOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormDescription>
+                              キャラクターのデッキ配置における役割
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     <div className="flex gap-2 justify-end">
                       <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1749,6 +1785,41 @@ export default function AdminPage() {
                                 </FormControl>
                                 <FormDescription>
                                   キャラクターイベントが発生するタイミング（前イベント・後イベント）
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">キャラクター役割</h3>
+                          <FormField
+                            control={form.control}
+                            name="role"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>キャラクターの役割を選択してください</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="役割を選択" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {characterRoleOptions.map((option) => (
+                                      <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription>
+                                  キャラクターのデッキ配置における役割
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
