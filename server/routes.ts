@@ -680,18 +680,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for special ability set items
   app.post("/api/special-ability-set-items", async (req, res) => {
     try {
+      console.log("Received special ability set item:", req.body);
       const result = insertSpecialAbilitySetItemSchema.safeParse(req.body);
       if (!result.success) {
+        console.error("Validation error:", result.error.issues);
         return res.status(400).json({ 
           message: "入力エラー", 
           errors: result.error.issues 
         });
       }
       
+      console.log("Validated data:", result.data);
       const newItem = await storage.addSpecialAbilityToSet(result.data);
       res.status(201).json(newItem);
     } catch (error) {
-      res.status(500).json({ message: "サーバーエラーが発生しました" });
+      console.error("Server error:", error);
+      res.status(500).json({ 
+        message: "サーバーエラーが発生しました", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
