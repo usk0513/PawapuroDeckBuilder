@@ -40,6 +40,14 @@ export enum EventTiming {
   POST = "後イベント"
 }
 
+// キャラクターの役割
+export enum CharacterRole {
+  GUARD = "ガード",
+  BOUNCER = "バウンサー",
+  RANGER = "レンジャー",
+  SNIPER = "スナイパー"
+}
+
 // ボーナス効果の種類
 export enum BonusEffectType {
   INITIAL_RATING = "初期評価",
@@ -175,6 +183,7 @@ export const characters = pgTable("characters", {
   specialTrainings: json("specialTrainings").$type<SpecialTraining[]>().default([]),
   eventTiming: text("event_timing").$type<EventTiming>(),
   canAwaken: boolean("can_awaken").notNull().default(true),
+  role: text("role").$type<CharacterRole>(),
 });
 
 export const insertCharacterSchema = createInsertSchema(characters).omit({

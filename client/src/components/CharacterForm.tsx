@@ -28,8 +28,10 @@ import {
   awakeningOptions, 
   positionOptions,
   rarityOptions,
+  characterRoleOptions,
   CharacterType,
-  Rarity 
+  Rarity,
+  CharacterRole
 } from "@/lib/constants";
 
 // Form schema for creating a character
@@ -39,6 +41,7 @@ const formSchema = z.object({
   rarity: z.nativeEnum(Rarity),
   level: z.coerce.number().min(1).max(5),
   awakening: z.coerce.number().min(0).max(4),
+  role: z.nativeEnum(CharacterRole).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,6 +58,7 @@ const CharacterForm: React.FC = () => {
       rarity: Rarity.SR,
       level: 1,
       awakening: 0,
+      role: CharacterRole.GUARD,
     },
   });
   

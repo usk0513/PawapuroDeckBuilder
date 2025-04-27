@@ -36,6 +36,14 @@ export enum EventTiming {
   POST = "後イベント"
 }
 
+// キャラクターの役割
+export enum CharacterRole {
+  GUARD = "ガード",
+  BOUNCER = "バウンサー",
+  RANGER = "レンジャー",
+  SNIPER = "スナイパー"
+}
+
 // Stat types
 export interface PitchingStats {
   velocity: number;
@@ -194,6 +202,14 @@ export const specialTrainingOptions = [
 export const eventTimingOptions = [
   { value: EventTiming.PRE, label: EventTiming.PRE },
   { value: EventTiming.POST, label: EventTiming.POST }
+];
+
+// キャラクター役割オプション
+export const characterRoleOptions = [
+  { value: CharacterRole.GUARD, label: CharacterRole.GUARD },
+  { value: CharacterRole.BOUNCER, label: CharacterRole.BOUNCER },
+  { value: CharacterRole.RANGER, label: CharacterRole.RANGER },
+  { value: CharacterRole.SNIPER, label: CharacterRole.SNIPER }
 ];
 
 // Rarity color mapping
