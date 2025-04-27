@@ -2181,18 +2181,6 @@ export default function AdminPage() {
                                             追加
                                           </Button>
                                         )}
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (window.confirm("この金特を削除しますか？")) {
-                                              deleteSpecialAbilityMutation.mutate(ability.id);
-                                            }
-                                          }}
-                                        >
-                                          <Trash className="h-4 w-4 text-destructive" />
-                                        </Button>
                                       </div>
                                     ))}
                                   </div>
