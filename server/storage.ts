@@ -345,7 +345,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Character Special Ability Set operations
-  async getCharacterSpecialAbilitySets(characterId: number, playerType?: PlayerType): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[] })[]> {
+  async getCharacterSpecialAbilitySets(characterId: number, playerType?: PlayerType): Promise<(CharacterSpecialAbilitySet & { abilities: SpecialAbility[], setItems?: any[] })[]> {
     // まずセットを取得
     let query = db.select().from(characterSpecialAbilitySets)
       .where(eq(characterSpecialAbilitySets.characterId, characterId));
@@ -358,12 +358,13 @@ export class DatabaseStorage implements IStorage {
     const sets = await query.orderBy(asc(characterSpecialAbilitySets.choiceType));
     
     // 各セットに関連する特殊能力を取得して結合
-    const results: (CharacterSpecialAbilitySet & { abilities: SpecialAbility[] })[] = [];
+    const results: (CharacterSpecialAbilitySet & { abilities: SpecialAbility[], setItems?: any[] })[] = [];
     
     for (const set of sets) {
-      const abilities = await db.select({
+      // 特殊能力とセットアイテム情報を取得
+      const abilitiesWithItems = await db.select({
         ability: specialAbilities,
-        order: specialAbilitySetItems.order
+        setItem: specialAbilitySetItems
       })
       .from(specialAbilitySetItems)
       .innerJoin(
@@ -373,9 +374,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(specialAbilitySetItems.setId, set.id))
       .orderBy(asc(specialAbilitySetItems.order));
       
+      // setItemsとabilitiesを別々に整形
+      const abilities = abilitiesWithItems.map(item => item.ability);
+      const setItems = abilitiesWithItems.map(item => item.setItem);
+      
       results.push({
         ...set,
-        abilities: abilities.map(item => item.ability)
+        abilities,
+        setItems
       });
     }
     
