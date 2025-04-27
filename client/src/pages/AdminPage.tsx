@@ -484,7 +484,8 @@ export default function AdminPage() {
       characterId: selectedCharacter || undefined,
       playerType: PlayerType.PITCHER,
       choiceType: SpecialAbilityChoiceType.TYPE_A,
-    }
+    },
+    mode: 'onChange'
   });
   
   // 金特セットアイテム用フォーム
@@ -525,6 +526,16 @@ export default function AdminPage() {
       }
     }
   }, [awakeningBonuses, awakeningBonusForm]);
+  
+  // 金特セットフォームのキャラクターIDとプレイヤータイプを更新
+  useEffect(() => {
+    if (selectedCharacter) {
+      specialAbilitySetForm.setValue("characterId", selectedCharacter);
+    }
+    if (selectedPlayerType && selectedPlayerType !== "_all" && selectedPlayerType !== "") {
+      specialAbilitySetForm.setValue("playerType", selectedPlayerType);
+    }
+  }, [selectedCharacter, selectedPlayerType, specialAbilitySetForm]);
   
   // レベルボーナス追加ミューテーション
   const createLevelBonusMutation = useMutation({
@@ -997,13 +1008,36 @@ export default function AdminPage() {
   
   // 金特セット作成時の送信処理
   const onSpecialAbilitySetSubmit = (values: CharacterSpecialAbilitySetFormValues) => {
-    if (selectedCharacter) {
-      const data = {
-        ...values,
-        characterId: selectedCharacter
-      };
-      createSpecialAbilitySetMutation.mutate(data);
+    if (!selectedCharacter) {
+      toast({
+        title: "エラー",
+        description: "キャラクターを選択してください",
+        variant: "destructive",
+      });
+      return;
     }
+    if (!selectedPlayerType || selectedPlayerType === "_all" || selectedPlayerType === "") {
+      toast({
+        title: "エラー",
+        description: "プレイヤータイプを選択してください",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // フォームの値をコンソールに表示
+    console.log("送信される金特セット:", {
+      ...values,
+      characterId: selectedCharacter,
+      playerType: selectedPlayerType
+    });
+
+    const data = {
+      ...values,
+      characterId: selectedCharacter,
+      playerType: selectedPlayerType
+    };
+    createSpecialAbilitySetMutation.mutate(data);
   };
   
   // 金特セットアイテム追加時の送信処理
@@ -2294,7 +2328,6 @@ export default function AdminPage() {
                                             values.playerType = selectedPlayerType;
                                             onSpecialAbilitySetSubmit(values);
                                           }}
-                                          disabled={!specialAbilitySetForm.formState.isValid || !selectedPlayerType}
                                         >
                                           金特セットを作成
                                         </Button>
