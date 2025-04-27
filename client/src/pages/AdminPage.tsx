@@ -1964,6 +1964,12 @@ export default function AdminPage() {
                             <tbody>
                               {[1, 5, 10, 15, 20, 25, 30, 35, 35.5, 37, 40, 42, 45, 50]
                                 .filter(level => {
+                                  // 新規登録されたキャラクターの場合は、全レベルを表示するか
+                                  // ボーナスがあるレベルのみを表示するかの条件
+                                  const hasAnyBonus = levelBonuses.some(bonus => 
+                                    bonus.characterId === selectedCharacter
+                                  );
+                                  
                                   // レアリティフィルタが設定されている場合
                                   if (selectedRarity) {
                                     // SR専用レベルは、SRレアリティのみ表示
@@ -1974,6 +1980,11 @@ export default function AdminPage() {
                                     if ((level === 42 || level === 50) && selectedRarity !== Rarity.PSR) {
                                       return false;
                                     }
+                                  }
+                                  
+                                  // ボーナスがまったく登録されていない場合は全レベルを表示
+                                  if (!hasAnyBonus) {
+                                    return true;
                                   }
                                   
                                   // レアリティフィルタによるフィルタリングを通過した場合、
