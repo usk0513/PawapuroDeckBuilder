@@ -1940,8 +1940,10 @@ export default function AdminPage() {
                                   // レアリティフィルタによるフィルタリングを通過した場合、
                                   // そのレベルに対応するボーナスが登録済みかどうかをチェック
                                   // 登録済みのボーナスがある場合のみ表示
+                                  // かつ、現在選択中のキャラクターのボーナスのみを表示
                                   const registeredBonuses = levelBonuses.filter(bonus => 
                                     parseFloat(bonus.level.toString()) === level && 
+                                    bonus.characterId === selectedCharacter &&
                                     (!selectedRarity || bonus.rarity === selectedRarity || !bonus.rarity)
                                   );
                                   
@@ -2201,6 +2203,8 @@ export default function AdminPage() {
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                       </div>
                                     ) : levelBonuses && levelBonuses.filter(b => 
+                                      // 現在選択中のキャラクターのボーナスのみ表示
+                                      b.characterId === selectedCharacter &&
                                       // 表示レベルに合わせて絞り込み
                                       // レベル35.5と35の特殊対応
                                       (level === 35.5 
@@ -2213,6 +2217,8 @@ export default function AdminPage() {
                                     ).length > 0 ? (
                                       <div className="space-y-2 text-sm">
                                         {levelBonuses.filter(b => 
+                                          // 現在選択中のキャラクターのボーナスのみ表示
+                                          b.characterId === selectedCharacter &&
                                           // 表示レベルに合わせて絞り込み
                                           // レベル35.5と35の特殊対応
                                           (level === 35.5 
