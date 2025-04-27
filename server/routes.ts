@@ -7,6 +7,7 @@ import {
   insertOwnedCharacterSchema, 
   insertCharacterLevelBonusSchema, 
   insertCharacterAwakeningBonusSchema,
+  insertCharacterFriendshipAbilitySchema,
   insertSpecialAbilitySchema,
   insertCharacterSpecialAbilitySetSchema,
   insertSpecialAbilitySetItemSchema,
@@ -748,7 +749,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 表示順の変更は不要になったため、このエンドポイントは削除
+  // API routes for character friendship abilities
+  app.get("/api/character-friendship-abilities", async (req, res) => {
+    try {
+      const characterId = req.query.characterId ? parseInt(req.query.characterId as string) : undefined;
+      
+      if (!characterId || isNaN(characterId)) {
+        return res.status(400).json({ message: "キャラクターIDを指定してください" });
+      }
+      
+      const abilities = await storage.getCharacterFriendshipAbilities(characterId);
+      res.json(abilities);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.get("/api/character-friendship-abilities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const ability = await storage.getCharacterFriendshipAbility(id);
+      if (!ability) {
+        return res.status(404).json({ message: "友情特殊能力が見つかりませんでした" });
+      }
+      
+      res.json(ability);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.post("/api/character-friendship-abilities", async (req, res) => {
+    try {
+      const result = insertCharacterFriendshipAbilitySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const newAbility = await storage.createCharacterFriendshipAbility(result.data);
+      res.status(201).json(newAbility);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.patch("/api/character-friendship-abilities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      // Validate partial schema
+      const partialSchema = insertCharacterFriendshipAbilitySchema.partial();
+      const result = partialSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "入力エラー", 
+          errors: result.error.issues 
+        });
+      }
+      
+      const updatedAbility = await storage.updateCharacterFriendshipAbility(id, result.data);
+      if (!updatedAbility) {
+        return res.status(404).json({ message: "友情特殊能力が見つかりませんでした" });
+      }
+      
+      res.json(updatedAbility);
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
+
+  app.delete("/api/character-friendship-abilities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "無効なIDです" });
+      }
+      
+      const deleted = await storage.deleteCharacterFriendshipAbility(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "友情特殊能力が見つかりませんでした" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "サーバーエラーが発生しました" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
