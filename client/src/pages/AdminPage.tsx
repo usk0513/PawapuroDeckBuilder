@@ -1028,16 +1028,21 @@ export default function AdminPage() {
         rarity: undefined,
       });
       
-      // 関連する状態変数もリセット
+      // 関連する状態変数もリセット - 画面表示を完全にクリア
       const level = values.level;
       setLevelBonusEffect((prev) => {
         const updated = { ...prev };
-        delete updated[level]; // 値を削除
+        delete updated[level]; // 効果タイプの選択状態をクリア
         return updated;
       });
       setLevelBonusValue((prev) => {
         const updated = { ...prev };
-        updated[level] = ""; // 値を空文字列にリセット
+        delete updated[level]; // 値を完全に削除
+        return updated;
+      });
+      setLevelBonusRarity((prev) => {
+        const updated = { ...prev };
+        // レアリティの選択状態は保持 (共通/SR/PSR)
         return updated;
       });
     }
