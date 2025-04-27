@@ -1242,14 +1242,9 @@ export default function AdminPage() {
               )}
             </div>
             <Select
-              value={selectedCharacter ? String(selectedCharacter) : ""}
+              value={selectedCharacter ? String(selectedCharacter) : "new"}
               onValueChange={(value) => {
-                if (value) {
-                  const character = characters.find(c => c.id === parseInt(value));
-                  if (character) {
-                    handleEditCharacter(character);
-                  }
-                } else {
+                if (value === "new") {
                   setSelectedCharacter(null);
                   form.reset({
                     name: "",
@@ -1257,6 +1252,11 @@ export default function AdminPage() {
                     specialTrainings: [],
                     eventTiming: "",
                   });
+                } else if (value) {
+                  const character = characters.find(c => c.id === parseInt(value));
+                  if (character) {
+                    handleEditCharacter(character);
+                  }
                 }
               }}
             >
@@ -1264,7 +1264,7 @@ export default function AdminPage() {
                 <SelectValue placeholder="キャラクターを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">新規キャラクター作成</SelectItem>
+                <SelectItem value="new">新規キャラクター作成</SelectItem>
                 {characters
                   .filter(character => 
                     !characterSearchTerm || 
