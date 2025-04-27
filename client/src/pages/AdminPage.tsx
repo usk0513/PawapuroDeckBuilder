@@ -2143,9 +2143,9 @@ export default function AdminPage() {
                   
                   <TabsContent value="specialability">
                     <div className="space-y-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* 左側: 金特一覧 */}
-                        <div>
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* 左側: 金特一覧 (2カラム分使用) */}
+                        <div className="lg:col-span-2">
                           <h3 className="text-lg font-medium mb-4">金特一覧</h3>
                             {isLoadingSpecialAbilities ? (
                               <div className="flex justify-center my-4">
@@ -2207,7 +2207,7 @@ export default function AdminPage() {
                                     条件に一致する金特はありません
                                   </div>
                                 ) : (
-                                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                                  <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
                                     {filteredSpecialAbilities.map((ability) => (
                                       <div 
                                         key={ability.id} 
@@ -2251,10 +2251,9 @@ export default function AdminPage() {
                               </div>
                             )}
                           </div>
-                        </div>
                         
-                        {/* 右側: キャラクター金特セット登録 */}
-                        <div>
+                        {/* 右側: キャラクター金特セット登録 (2カラム分使用) */}
+                        <div className="lg:col-span-2">
                           <h3 className="text-lg font-medium mb-4">キャラクター金特セット設定</h3>
                           
                           {!selectedCharacter ? (
@@ -2511,6 +2510,7 @@ export default function AdminPage() {
                           )}
                         </div>
                       </div>
+                    </div>
                   </TabsContent>
                 </Tabs>
               )}
