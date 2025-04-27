@@ -2106,7 +2106,24 @@ export default function AdminPage() {
                                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                               </div>
                             ) : (
-                              <div className="border rounded-md p-2">
+                              <div className="border rounded-md p-3">
+                                {selectedAbilitySetId ? (
+                                  <div className="bg-primary/5 p-3 rounded-md mb-4">
+                                    <h4 className="text-sm font-semibold mb-1">金特の追加方法</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      下記の金特リストから任意の金特を見つけ、「追加」ボタンを押すと選択中のセットに追加されます
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="bg-amber-50 p-3 rounded-md mb-4 border border-amber-200">
+                                    <h4 className="text-sm font-semibold mb-1 text-amber-800">注意</h4>
+                                    <p className="text-sm text-amber-700">
+                                      金特の追加には、先に右側で「キャラクター」「タイプ」「ルート」を選択して金特セットを作成し、
+                                      「編集」ボタンをクリックする必要があります
+                                    </p>
+                                  </div>
+                                )}
+                                
                                 <div className="mb-4 space-y-2">
                                   <Label htmlFor="ability-filter">金特タイプでフィルター</Label>
                                   <div className="flex items-center space-x-2">
@@ -2196,13 +2213,19 @@ export default function AdminPage() {
                           
                           {!selectedCharacter ? (
                             <div className="text-center text-muted-foreground py-8 border rounded-md">
+                              <h4 className="text-sm font-semibold mb-2">ステップ 1</h4>
                               左側のキャラクター一覧からキャラクターを選択してください
                             </div>
                           ) : (
                             <div className="space-y-6">
                               {/* タイプ選択 */}
-                              <div>
-                                <h4 className="text-sm font-medium mb-2">選手タイプ選択</h4>
+                              <div className="border rounded-md p-4 bg-muted/20">
+                                <h4 className="text-sm font-semibold mb-2">ステップ 1: キャラクター選択</h4>
+                                <p className="text-sm text-muted-foreground mb-2">選択中: <span className="font-medium text-foreground">{characters.find(c => c.id === selectedCharacter)?.name}</span></p>
+                              </div>
+                              
+                              <div className="border rounded-md p-4">
+                                <h4 className="text-sm font-semibold mb-2">ステップ 2: 選手タイプ選択</h4>
                                 <div className="flex space-x-2">
                                   <Button
                                     variant={selectedPlayerType === PlayerType.PITCHER ? "default" : "outline"}
@@ -2231,7 +2254,7 @@ export default function AdminPage() {
                                 <>
                                   {/* 金特セット作成フォーム */}
                                   <div className="border rounded-md p-4">
-                                    <h4 className="text-sm font-medium mb-2">金特セット作成</h4>
+                                    <h4 className="text-sm font-semibold mb-2">ステップ 3: 金特セット作成</h4>
                                     <Form {...specialAbilitySetForm}>
                                       <form className="space-y-4">
                                         <FormField
@@ -2280,8 +2303,8 @@ export default function AdminPage() {
                                   </div>
                                   
                                   {/* 金特セット一覧 */}
-                                  <div>
-                                    <h4 className="text-sm font-medium mb-2">登録済み金特セット</h4>
+                                  <div className="border rounded-md p-4">
+                                    <h4 className="text-sm font-semibold mb-2">ステップ 4: 金特セットを選択・編集</h4>
                                     {isLoadingSpecialAbilitySets ? (
                                       <div className="flex justify-center my-4">
                                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -2290,7 +2313,8 @@ export default function AdminPage() {
                                       <div className="space-y-4">
                                         {specialAbilitySets.length === 0 ? (
                                           <div className="text-center text-muted-foreground py-4 border rounded-md">
-                                            登録された金特セットはありません
+                                            まだ登録された金特セットはありません。<br />
+                                            上記フォームから新しい金特セットを作成してください。
                                           </div>
                                         ) : (
                                           specialAbilitySets.map((set) => (
@@ -2298,7 +2322,7 @@ export default function AdminPage() {
                                               key={set.id}
                                               className={cn(
                                                 "border rounded-md p-3",
-                                                selectedAbilitySetId === set.id ? "border-primary" : ""
+                                                selectedAbilitySetId === set.id ? "border-primary bg-muted/20" : ""
                                               )}
                                             >
                                               <div className="flex justify-between items-center mb-2">
@@ -2308,11 +2332,11 @@ export default function AdminPage() {
                                                 </div>
                                                 <div className="flex space-x-2">
                                                   <Button
-                                                    variant="outline"
+                                                    variant={selectedAbilitySetId === set.id ? "default" : "outline"}
                                                     size="sm"
                                                     onClick={() => setSelectedAbilitySetId(set.id)}
                                                   >
-                                                    編集
+                                                    {selectedAbilitySetId === set.id ? "編集中" : "編集"}
                                                   </Button>
                                                   <Button
                                                     variant="ghost"
@@ -2360,7 +2384,15 @@ export default function AdminPage() {
                                               {/* 金特追加フォーム (選択中の場合のみ表示) */}
                                               {selectedAbilitySetId === set.id && (
                                                 <div className="mt-4 pt-4 border-t">
-                                                  <h5 className="text-sm font-medium mb-2">金特追加</h5>
+                                                  <h5 className="text-sm font-semibold mb-2">ステップ 5: 金特を追加</h5>
+                                                  <div className="bg-primary/5 p-3 rounded-md mb-3">
+                                                    <p className="text-sm text-muted-foreground mb-1">
+                                                      <span className="font-medium">方法1:</span> 左側の金特一覧から金特を選び「追加」ボタンをクリックする
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                      <span className="font-medium">方法2:</span> 以下のドロップダウンから選択する
+                                                    </p>
+                                                  </div>
                                                   <Form {...specialAbilitySetItemForm}>
                                                     <form className="space-y-4">
                                                       <FormField
