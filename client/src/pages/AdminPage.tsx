@@ -1056,6 +1056,19 @@ export default function AdminPage() {
   // 金特セットアイテム追加時の送信処理
   const onSpecialAbilitySetItemSubmit = (values: SpecialAbilitySetItemFormValues) => {
     if (selectedAbilitySetId) {
+      // オリジナル変化球でカスタム名が未設定の場合、送信前にチェック
+      if (values.specialAbilityId) {
+        const selectedAbility = specialAbilities.find(ability => ability.id === values.specialAbilityId);
+        if (selectedAbility && selectedAbility.name.includes("オリジナル変化球") && !values.customName) {
+          // カスタム名が未入力の場合はプロンプトを表示
+          const customName = prompt(`${selectedAbility.name}のカスタム名を入力してください:`, "");
+          if (customName === null) {
+            return; // キャンセルされた場合は処理を中止
+          }
+          values.customName = customName;
+        }
+      }
+
       const data = {
         ...values,
         setId: selectedAbilitySetId
@@ -2234,11 +2247,25 @@ export default function AdminPage() {
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               if (selectedAbilitySetId) {
-                                                onSpecialAbilitySetItemSubmit({
-                                                  setId: selectedAbilitySetId,
-                                                  specialAbilityId: ability.id,
-                                                  order: 1
-                                                });
+                                                // オリジナル変化球の場合はカスタム名入力ダイアログを表示
+                                                if (ability.name.includes("オリジナル変化球")) {
+                                                  const customName = prompt(`${ability.name}のカスタム名を入力してください:`, "");
+                                                  if (customName !== null) {
+                                                    onSpecialAbilitySetItemSubmit({
+                                                      setId: selectedAbilitySetId,
+                                                      specialAbilityId: ability.id,
+                                                      order: 1,
+                                                      customName
+                                                    });
+                                                  }
+                                                } else {
+                                                  // 通常の金特
+                                                  onSpecialAbilitySetItemSubmit({
+                                                    setId: selectedAbilitySetId,
+                                                    specialAbilityId: ability.id,
+                                                    order: 1
+                                                  });
+                                                }
                                               }
                                             }}
                                           >
