@@ -839,7 +839,7 @@ export default function AdminPage() {
       specialAbilitySetItemForm.reset({
         setId: selectedAbilitySetId || undefined,
         specialAbilityId: undefined,
-        order: 1,
+        customName: ""
       });
     },
     onError: (error: Error) => {
@@ -1059,7 +1059,7 @@ export default function AdminPage() {
   };
   
   // 金特セットアイテム追加時の送信処理
-  const onSpecialAbilitySetItemSubmit = (values: SpecialAbilitySetItemFormValues) => {
+  const onSpecialAbilitySetItemSubmit = (values: Partial<SpecialAbilitySetItemFormValues>) => {
     if (selectedAbilitySetId) {
       // オリジナル変化球でカスタム名が未設定の場合、送信前にチェック
       if (values.specialAbilityId) {
@@ -1074,9 +1074,12 @@ export default function AdminPage() {
         }
       }
 
-      const data = {
-        ...values,
-        setId: selectedAbilitySetId
+      // 必須フィールドのみ含める（orderは除外）
+      // nullやundefinedをチェックして型安全にする
+      const data: SpecialAbilitySetItemFormValues = {
+        specialAbilityId: values.specialAbilityId || 0, // 0は代替値（実際には使用されない）
+        setId: selectedAbilitySetId,
+        customName: values.customName
       };
       addSpecialAbilityToSetMutation.mutate(data);
     }
@@ -2259,7 +2262,6 @@ export default function AdminPage() {
                                                     onSpecialAbilitySetItemSubmit({
                                                       setId: selectedAbilitySetId,
                                                       specialAbilityId: ability.id,
-                                                      order: 1,
                                                       customName
                                                     });
                                                   }
@@ -2267,8 +2269,7 @@ export default function AdminPage() {
                                                   // 通常の金特
                                                   onSpecialAbilitySetItemSubmit({
                                                     setId: selectedAbilitySetId,
-                                                    specialAbilityId: ability.id,
-                                                    order: 1
+                                                    specialAbilityId: ability.id
                                                   });
                                                 }
                                               }
