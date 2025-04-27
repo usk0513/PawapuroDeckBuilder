@@ -1677,7 +1677,12 @@ export default function AdminPage() {
                         <h3 className="text-lg font-medium mb-4">レベルボーナス一括登録</h3>
                         
                         <div className="mb-4">
-                          <h4 className="text-sm font-medium mb-2">レアリティフィルタ</h4>
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="text-sm font-medium">レアリティフィルタ</h4>
+                            <div className="text-sm">
+                              表示中: <Badge variant="secondary">{selectedRarity || "すべて"}</Badge>
+                            </div>
+                          </div>
                           <div className="flex space-x-2">
                             <Button 
                               variant={selectedRarity === "" ? "default" : "outline"} 
@@ -1722,6 +1727,7 @@ export default function AdminPage() {
                                 <th className="border p-2 bg-muted">効果タイプ</th>
                                 <th className="border p-2 bg-muted">効果値</th>
                                 <th className="border p-2 bg-muted">操作</th>
+                                <th className="border p-2 bg-muted">登録済みボーナス</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1972,78 +1978,80 @@ export default function AdminPage() {
                                       追加
                                     </Button>
                                   </td>
+                                  {/* 登録済みデータ */}
+                                  <td className="border p-2">
+                                    {isLoadingBonuses ? (
+                                      <div className="flex justify-center">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      </div>
+                                    ) : levelBonuses && levelBonuses.filter(b => 
+                                      // 表示レベルに合わせて絞り込み
+                                      // レベル35.5と35の特殊対応
+                                      (level === 35.5 
+                                        ? (b.level === 35 && b.value.startsWith("+")) 
+                                        : level === 35 
+                                          ? (b.level === 35 && !b.value.startsWith("+"))
+                                          : b.level === level)
+                                      // レアリティフィルタ
+                                      && (!selectedRarity || !b.rarity || b.rarity === selectedRarity)
+                                    ).length > 0 ? (
+                                      <div className="space-y-2 text-sm">
+                                        {levelBonuses.filter(b => 
+                                          // 表示レベルに合わせて絞り込み
+                                          // レベル35.5と35の特殊対応
+                                          (level === 35.5 
+                                            ? (b.level === 35 && b.value.startsWith("+")) 
+                                            : level === 35 
+                                              ? (b.level === 35 && !b.value.startsWith("+"))
+                                              : b.level === level)
+                                          // レアリティフィルタ
+                                          && (!selectedRarity || !b.rarity || b.rarity === selectedRarity)
+                                        ).map((bonus: any) => (
+                                          <div key={bonus.id} className="flex justify-between items-center">
+                                            <div>
+                                              <div className="font-medium flex items-center">
+                                                <span>{bonus.effectType}</span>
+                                                {bonus.rarity && (
+                                                  <Badge className="ml-2" variant="outline">
+                                                    {bonus.rarity}専用
+                                                  </Badge>
+                                                )}
+                                              </div>
+                                              <div>
+                                                {formatEffectValue(bonus.value, bonus.effectType, bonus.level)}
+                                              </div>
+                                            </div>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={() => {
+                                                if (window.confirm("このボーナスを削除しますか？")) {
+                                                  deleteLevelBonusMutation.mutate(bonus.id);
+                                                }
+                                              }}
+                                              disabled={isLevelBonusDeleting}
+                                            >
+                                              {isLevelBonusDeleting ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                              ) : (
+                                                <Trash className="h-3 w-3 text-destructive" />
+                                              )}
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-muted-foreground italic">
+                                        未登録
+                                      </div>
+                                    )}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
                         </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">登録済みレベルボーナス</h3>
-                        {isLoadingBonuses ? (
-                          <div className="flex justify-center my-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                          </div>
-                        ) : levelBonuses && levelBonuses.length > 0 ? (
-                          <div>
-                            <div className="mb-4">
-                              <h4 className="text-sm font-medium mb-2">表示中のレア度: {selectedRarity || "すべて"}</h4>
-                            </div>
-                            <div className="space-y-3">
-                              {levelBonuses.map((bonus: any) => (
-                                <div key={bonus.id} className="flex justify-between items-center p-3 border rounded-md">
-                                  <div>
-                                    <div className="font-medium flex items-center">
-                                      <span>Lv.{bonus.level} - {bonus.effectType}</span>
-                                      {bonus.rarity && (
-                                        <Badge className="ml-2" variant="outline">
-                                          {bonus.rarity}専用
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <div className="text-sm">
-                                      {formatEffectValue(bonus.value, bonus.effectType, bonus.level)}
-                                      {bonus.description && (
-                                        <span className="text-muted-foreground ml-2">
-                                          {bonus.description}
-                                        </span>
-                                      )}
-                                      {/* レベル35かつ値が+で始まる場合に固有ボーナスバッジを表示 */}
-                                      {bonus.level === 35 && bonus.value.startsWith("+") && (
-                                        <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
-                                      )}
-                                      {/* レベル35かつ値が+で始まらない場合に通常ボーナスバッジを表示 */}
-                                      {bonus.level === 35 && !bonus.value.startsWith("+") && (
-                                        <Badge className="ml-2 bg-muted">通常ボーナス</Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      if (window.confirm("このボーナスを削除しますか？")) {
-                                        deleteLevelBonusMutation.mutate(bonus.id);
-                                      }
-                                    }}
-                                    disabled={isLevelBonusDeleting}
-                                  >
-                                    {isLevelBonusDeleting ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Trash className="h-4 w-4 text-destructive" />
-                                    )}
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center py-6 text-muted-foreground">
-                            レベルボーナスが登録されていません
-                          </div>
-                        )}
                       </div>
                     </div>
                   </TabsContent>
