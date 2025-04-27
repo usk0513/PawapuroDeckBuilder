@@ -317,6 +317,7 @@ export const specialAbilitySetItems = pgTable("special_ability_set_items", {
   setId: integer("set_id").references(() => characterSpecialAbilitySets.id).notNull(),
   specialAbilityId: integer("special_ability_id").references(() => specialAbilities.id).notNull(),
   order: integer("order").notNull().default(0), // 表示順序
+  customName: text("custom_name"), // オリジナル変化球のカスタム名
 });
 
 export const insertSpecialAbilitySetItemSchema = createInsertSchema(specialAbilitySetItems).omit({

@@ -497,6 +497,7 @@ export default function AdminPage() {
       setId: undefined,
       specialAbilityId: undefined,
       order: 1,
+      customName: "",
     }
   });
   
@@ -2399,25 +2400,41 @@ export default function AdminPage() {
                                               <div className="space-y-2">
                                                 {/* 金特一覧 */}
                                                 {set.abilities && set.abilities.length > 0 ? (
-                                                  set.abilities.map((ability) => (
-                                                    <div key={ability.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
-                                                      <div className="text-sm font-medium">{ability.name}</div>
-                                                      <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                          if (window.confirm("この金特をセットから削除しますか？")) {
-                                                            removeSpecialAbilityFromSetMutation.mutate({
-                                                              setId: set.id,
-                                                              specialAbilityId: ability.id
-                                                            });
-                                                          }
-                                                        }}
-                                                      >
-                                                        <X className="h-4 w-4 text-destructive" />
-                                                      </Button>
-                                                    </div>
-                                                  ))
+                                                  set.abilities.map((ability) => {
+                                                    // ここでsetItemsからこの金特に対応するアイテムを検索
+                                                    const setItem = set.setItems?.find(item => item.specialAbilityId === ability.id);
+                                                    const isOriginalPitch = ability.name.includes("オリジナル変化球");
+                                                    const customName = setItem?.customName;
+
+                                                    return (
+                                                      <div key={ability.id} className="flex justify-between items-center p-2 bg-muted/50 rounded-md">
+                                                        <div className="text-sm font-medium">
+                                                          {isOriginalPitch && customName ? (
+                                                            <>
+                                                              <span className="text-primary">{customName}</span>
+                                                              <span className="text-xs text-muted-foreground ml-1">({ability.name})</span>
+                                                            </>
+                                                          ) : (
+                                                            ability.name
+                                                          )}
+                                                        </div>
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="sm"
+                                                          onClick={() => {
+                                                            if (window.confirm("この金特をセットから削除しますか？")) {
+                                                              removeSpecialAbilityFromSetMutation.mutate({
+                                                                setId: set.id,
+                                                                specialAbilityId: ability.id
+                                                              });
+                                                            }
+                                                          }}
+                                                        >
+                                                          <X className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                      </div>
+                                                    );
+                                                  })
                                                 ) : (
                                                   <div className="text-center text-muted-foreground py-2">
                                                     金特が設定されていません
@@ -2468,6 +2485,34 @@ export default function AdminPage() {
                                                         )}
                                                       />
                                                       
+                                                      {/* 選択した金特が「オリジナル変化球」の場合、カスタム名入力欄を表示 */}
+                                                      {specialAbilitySetItemForm.watch("specialAbilityId") && 
+                                                        specialAbilities.find(ability => 
+                                                          ability.id === specialAbilitySetItemForm.watch("specialAbilityId") && 
+                                                          ability.name.includes("オリジナル変化球")
+                                                        ) && (
+                                                          <FormField
+                                                            control={specialAbilitySetItemForm.control}
+                                                            name="customName"
+                                                            render={({ field }) => (
+                                                              <FormItem>
+                                                                <FormLabel>変化球名</FormLabel>
+                                                                <FormControl>
+                                                                  <Input 
+                                                                    placeholder="オリジナル変化球の名前を入力" 
+                                                                    {...field} 
+                                                                  />
+                                                                </FormControl>
+                                                                <FormDescription>
+                                                                  例: 「魔球」「エグザムライザー」など
+                                                                </FormDescription>
+                                                                <FormMessage />
+                                                              </FormItem>
+                                                            )}
+                                                          />
+                                                        )
+                                                      }
+
                                                       <FormField
                                                         control={specialAbilitySetItemForm.control}
                                                         name="order"
