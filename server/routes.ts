@@ -616,18 +616,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/character-special-ability-sets", async (req, res) => {
     try {
+      console.log("Received special ability set:", req.body);
       const result = insertCharacterSpecialAbilitySetSchema.safeParse(req.body);
       if (!result.success) {
+        console.error("Validation error:", result.error.issues);
         return res.status(400).json({ 
           message: "入力エラー", 
           errors: result.error.issues 
         });
       }
       
+      // 同じキャラクター・プレイヤータイプ・選択タイプの組み合わせが既に存在するか確認
+      const existingSets = await storage.getCharacterSpecialAbilitySets(
+        result.data.characterId, 
+        result.data.playerType as PlayerType
+      );
+      
+      const existingSet = existingSets.find(set => 
+        set.choiceType === result.data.choiceType
+      );
+      
+      if (existingSet) {
+        return res.status(400).json({
+          message: "既に同じルートの特殊能力セットが存在します",
+          existingSet
+        });
+      }
+      
       const newSet = await storage.createCharacterSpecialAbilitySet(result.data);
       res.status(201).json(newSet);
     } catch (error) {
-      res.status(500).json({ message: "サーバーエラーが発生しました" });
+      console.error("Server error:", error);
+      res.status(500).json({ 
+        message: "サーバーエラーが発生しました", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -690,6 +713,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // 常にorderを1に設定（表示順は無視）
+      result.data.order = 1;
+      
       console.log("Validated data:", result.data);
       const newItem = await storage.addSpecialAbilityToSet(result.data);
       res.status(201).json(newItem);
@@ -722,28 +748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/special-ability-set-items/:id/order", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "無効なIDです" });
-      }
-      
-      const { order } = req.body;
-      if (typeof order !== 'number') {
-        return res.status(400).json({ message: "順序は数値で指定してください" });
-      }
-      
-      const updatedItem = await storage.updateSpecialAbilitySetItemOrder(id, order);
-      if (!updatedItem) {
-        return res.status(404).json({ message: "特殊能力セット項目が見つかりませんでした" });
-      }
-      
-      res.json(updatedItem);
-    } catch (error) {
-      res.status(500).json({ message: "サーバーエラーが発生しました" });
-    }
-  });
+  // 表示順の変更は不要になったため、このエンドポイントは削除
 
   const httpServer = createServer(app);
   return httpServer;
