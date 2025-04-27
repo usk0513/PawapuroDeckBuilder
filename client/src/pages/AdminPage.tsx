@@ -264,6 +264,7 @@ export default function AdminPage() {
   const [selectedPlayerType, setSelectedPlayerType] = useState<PlayerType | string>("_all");
   const [selectedAbilitySetId, setSelectedAbilitySetId] = useState<number | null>(null);
   const [abilitySearchTerm, setAbilitySearchTerm] = useState<string>("");
+  const [characterSearchTerm, setCharacterSearchTerm] = useState<string>("");
 
   // キャラクターデータの取得
   const { data: characters = [], isLoading } = useQuery({
@@ -1213,6 +1214,92 @@ export default function AdminPage() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">管理者ページ</h1>
+      {/* キャラクター検索とドロップダウン */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>イベントキャラクター選択</CardTitle>
+          <CardDescription>
+            編集したいキャラクターを選択するか、新規作成してください
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="relative w-full sm:w-auto flex-1">
+              <Input
+                placeholder="キャラクター名で検索..."
+                value={characterSearchTerm}
+                onChange={(e) => setCharacterSearchTerm(e.target.value)}
+                className="pr-10 w-full"
+              />
+              {characterSearchTerm && (
+                <Button
+                  variant="ghost"
+                  className="absolute right-0 top-0 h-full aspect-square p-0 hover:bg-transparent"
+                  onClick={() => setCharacterSearchTerm("")}
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              )}
+            </div>
+            <Select
+              value={selectedCharacter ? String(selectedCharacter) : ""}
+              onValueChange={(value) => {
+                if (value) {
+                  const character = characters.find(c => c.id === parseInt(value));
+                  if (character) {
+                    handleEditCharacter(character);
+                  }
+                } else {
+                  setSelectedCharacter(null);
+                  form.reset({
+                    name: "",
+                    position: "",
+                    specialTrainings: [],
+                    eventTiming: "",
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="キャラクターを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">新規キャラクター作成</SelectItem>
+                {characters
+                  .filter(character => 
+                    !characterSearchTerm || 
+                    character.name.toLowerCase().includes(characterSearchTerm.toLowerCase())
+                  )
+                  .map((character: any) => (
+                    <SelectItem key={character.id} value={String(character.id)}>
+                      {character.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {selectedCharacter && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm(`${characters.find(c => c.id === selectedCharacter)?.name}を削除しますか？`)) {
+                    deleteCharacterMutation.mutate(selectedCharacter);
+                  }
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Trash className="h-4 w-4 mr-2" />
+                )}
+                削除
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* キャラクター情報と編集フォーム */}
         <div>
