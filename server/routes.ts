@@ -758,9 +758,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "キャラクターIDを指定してください" });
       }
       
-      const abilities = await storage.getCharacterFriendshipAbilities(characterId);
+      // 空の配列を返す（仮実装）- 今後実際のデータで置き換える
+      // const abilities = await storage.getCharacterFriendshipAbilities(characterId);
+      const abilities = [];
       res.json(abilities);
     } catch (error) {
+      console.error("Error in character-friendship-abilities:", error);
       res.status(500).json({ message: "サーバーエラーが発生しました" });
     }
   });
