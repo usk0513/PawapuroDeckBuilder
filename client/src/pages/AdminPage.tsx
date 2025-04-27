@@ -1498,51 +1498,49 @@ export default function AdminPage() {
                               </FormDescription>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                              {specialTrainingOptions.map((option) => (
-                                <FormItem
-                                  key={option.value}
-                                  className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 cursor-pointer hover:bg-muted/50"
-                                  onClick={() => {
-                                    // チェックボックスの状態を切り替える
-                                    const isCurrentlyChecked = field.value?.includes(option.value);
-                                    if (isCurrentlyChecked) {
-                                      // チェックを外す
-                                      field.onChange(
-                                        field.value?.filter(
-                                          (value) => value !== option.value
-                                        )
-                                      );
-                                    } else {
-                                      // チェックを入れる
-                                      field.onChange([...(field.value || []), option.value]);
-                                    }
-                                  }}
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(option.value)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          field.onChange([...(field.value || []), option.value]);
-                                        } else {
-                                          field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== option.value
-                                            )
-                                          );
-                                        }
-                                      }}
-                                      onClick={(e) => {
-                                        // イベントバブリングを停止して、親要素のクリックイベントと重複しないようにする
-                                        e.stopPropagation();
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal cursor-pointer">
-                                    {option.label}
-                                  </FormLabel>
-                                </FormItem>
-                              ))}
+                              {specialTrainingOptions.map((option) => {
+                                const isChecked = field.value?.includes(option.value);
+                                return (
+                                  <div
+                                    key={option.value}
+                                    className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 cursor-pointer hover:bg-muted/50"
+                                    onClick={() => {
+                                      // チェックボックスの状態を切り替える
+                                      if (isChecked) {
+                                        // チェックを外す
+                                        field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== option.value
+                                          )
+                                        );
+                                      } else {
+                                        // チェックを入れる
+                                        field.onChange([...(field.value || []), option.value]);
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary shadow">
+                                      {isChecked && (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          viewBox="0 0 24 24"
+                                          width="16"
+                                          height="16"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="3"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          className="text-primary"
+                                        >
+                                          <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <span className="font-normal">{option.label}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                             <div className="flex flex-wrap gap-1 mt-2">
                               {field.value && Array.isArray(field.value) && field.value.map((value) => (
@@ -1726,51 +1724,49 @@ export default function AdminPage() {
                                   </FormDescription>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                  {specialTrainingOptions.map((option) => (
-                                    <FormItem
-                                      key={option.value}
-                                      className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 cursor-pointer hover:bg-muted/50"
-                                      onClick={() => {
-                                        // チェックボックスの状態を切り替える
-                                        const isCurrentlyChecked = field.value?.includes(option.value);
-                                        if (isCurrentlyChecked) {
-                                          // チェックを外す
-                                          field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== option.value
-                                            )
-                                          );
-                                        } else {
-                                          // チェックを入れる
-                                          field.onChange([...(field.value || []), option.value]);
-                                        }
-                                      }}
-                                    >
-                                      <FormControl>
-                                        <Checkbox
-                                          checked={field.value?.includes(option.value)}
-                                          onCheckedChange={(checked) => {
-                                            if (checked) {
-                                              field.onChange([...(field.value || []), option.value]);
-                                            } else {
-                                              field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value !== option.value
-                                                )
-                                              );
-                                            }
-                                          }}
-                                          onClick={(e) => {
-                                            // イベントバブリングを停止して、親要素のクリックイベントと重複しないようにする
-                                            e.stopPropagation();
-                                          }}
-                                        />
-                                      </FormControl>
-                                      <FormLabel className="font-normal cursor-pointer">
-                                        {option.label}
-                                      </FormLabel>
-                                    </FormItem>
-                                  ))}
+                                  {specialTrainingOptions.map((option) => {
+                                    const isChecked = field.value?.includes(option.value);
+                                    return (
+                                      <div
+                                        key={option.value}
+                                        className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 cursor-pointer hover:bg-muted/50"
+                                        onClick={() => {
+                                          // チェックボックスの状態を切り替える
+                                          if (isChecked) {
+                                            // チェックを外す
+                                            field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== option.value
+                                              )
+                                            );
+                                          } else {
+                                            // チェックを入れる
+                                            field.onChange([...(field.value || []), option.value]);
+                                          }
+                                        }}
+                                      >
+                                        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary shadow">
+                                          {isChecked && (
+                                            <svg
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              viewBox="0 0 24 24"
+                                              width="16"
+                                              height="16"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth="3"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              className="text-primary"
+                                            >
+                                              <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                          )}
+                                        </div>
+                                        <span className="font-normal">{option.label}</span>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                                 <div className="flex flex-wrap gap-1 mt-2">
                                   {field.value && Array.isArray(field.value) && field.value.map((value) => (
