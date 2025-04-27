@@ -1984,7 +1984,7 @@ export default function AdminPage() {
                                   <td className="border p-2 text-center font-medium">
                                     {level === 35.5 ? (
                                       <div className="inline-flex items-center">
-                                        Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
+                                        Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">アイテム追加枠</Badge>
                                       </div>
                                     ) : level === 35 ? (
                                       <div className="inline-flex items-center">
@@ -2077,43 +2077,56 @@ export default function AdminPage() {
                                   <td className="border p-2">
                                     {level === 35.5 ? (
                                       <div className="space-y-2">
-                                        <Select
-                                          onValueChange={(value) => {
-                                            // 選択した固有アイテム名の先頭に+を付ける
-                                            const formattedValue = `+${value}`;
-                                            
-                                            // 画面表示は35.5だが、データベースには35として保存
-                                            levelBonusForm.setValue("level", 35);
-                                            levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM); // 固定効果タイプ
-                                            levelBonusForm.setValue("value", formattedValue);
-                                            
-                                            setLevelBonusEffect((prev) => {
-                                              const updated = { ...prev };
-                                              updated[level] = BonusEffectType.UNIQUE_ITEM; // 効果タイプを固定
-                                              return updated;
-                                            });
-                                            
-                                            setLevelBonusValue((prev) => {
-                                              const updated = { ...prev };
-                                              updated[level] = formattedValue;
-                                              return updated;
-                                            });
-                                          }}
-                                          value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="固有アイテムを選択" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {uniqueBonusItems.map(item => (
-                                              <SelectItem key={item.value} value={item.value}>
-                                                {item.label}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
+                                        {/* 効果タイプが固有アイテムの場合のみドロップダウン表示、それ以外はテキスト入力 */}
+                                        {levelBonusEffect[level] === BonusEffectType.UNIQUE_ITEM ? (
+                                          <Select
+                                            onValueChange={(value) => {
+                                              // 選択した固有アイテム名の先頭に+を付ける
+                                              const formattedValue = `+${value}`;
+                                              
+                                              // 画面表示は35.5だが、データベースには35として保存
+                                              levelBonusForm.setValue("level", 35);
+                                              levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
+                                              levelBonusForm.setValue("value", formattedValue);
+                                              
+                                              setLevelBonusValue((prev) => {
+                                                const updated = { ...prev };
+                                                updated[level] = formattedValue;
+                                                return updated;
+                                              });
+                                            }}
+                                            value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="アイテム追加枠を選択" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {uniqueBonusItems.map(item => (
+                                                <SelectItem key={item.value} value={item.value}>
+                                                  {item.label}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        ) : (
+                                          <Input 
+                                            placeholder="数値のみ入力"
+                                            value={levelBonusValue[level] || ""}
+                                            onChange={(e) => {
+                                              // 画面表示は35.5だが、データベースには35として保存
+                                              levelBonusForm.setValue("level", 35);
+                                              levelBonusForm.setValue("value", e.target.value);
+                                              
+                                              setLevelBonusValue((prev) => {
+                                                const updated = { ...prev };
+                                                updated[level] = e.target.value;
+                                                return updated;
+                                              });
+                                            }}
+                                          />
+                                        )}
                                         <div className="text-xs text-muted-foreground">
-                                          固有ボーナス：特殊アイテムでチームに追加効果を与えます
+                                          アイテム追加枠：特殊アイテムでチームに追加効果を与えます
                                         </div>
                                       </div>
                                     ) : level === 35 ? (
