@@ -175,8 +175,8 @@ export default function FriendshipAbilityTab({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value={PlayerType.PITCHER}>投手</SelectItem>
-                            <SelectItem value={PlayerType.FIELDER}>野手</SelectItem>
+                            <SelectItem key="pitcher-option" value={PlayerType.PITCHER}>投手</SelectItem>
+                            <SelectItem key="fielder-option" value={PlayerType.FIELDER}>野手</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
