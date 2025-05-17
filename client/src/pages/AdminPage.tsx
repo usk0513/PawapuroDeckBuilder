@@ -2308,10 +2308,10 @@ export default function AdminPage() {
                                           levelBonusForm.reset({
                                             characterId: selectedCharacter || undefined,
                                             level: level, // レベルは保持
-                                            effectType: "", // 効果タイプをリセット（文字列として空文字をセット）
+                                            effectType: undefined, // 効果タイプを未選択状態にリセット
                                             value: "", // 値をリセット
                                             description: "", // 説明をリセット
-                                            rarity: "" // レア度をリセット（文字列として空文字をセット）
+                                            rarity: undefined // レア度を未選択状態にリセット
                                           });
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
