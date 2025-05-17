@@ -2290,9 +2290,11 @@ export default function AdminPage() {
                                           }
                                           
                                           // APIリクエスト実行
+                                          // レベル35.5の場合は固有ボーナスとしてマーク
                                           createLevelBonusMutation.mutate({
                                             ...formValues,
                                             level: actualLevel, // 35.5の場合は35に変換
+                                            isUniqueBonus: level === 35.5 ? true : false,
                                           });
 
                                           // ボーナス追加成功後にそのレベルの入力内容だけをリセット
@@ -2353,14 +2355,9 @@ export default function AdminPage() {
                                       // 表示レベルに合わせて絞り込み
                                       // レベル35.5と35の特殊対応
                                       (level === 35.5 
-                                        ? (b.level === 35 && (
-                                            b.effectType === BonusEffectType.UNIQUE_ITEM || 
-                                            (typeof b.value === 'string' && b.value.startsWith('+'))
-                                          )) 
+                                        ? (b.level === 35 && b.isUniqueBonus === true)
                                         : level === 35 
-                                          ? (b.level === 35 && 
-                                             b.effectType !== BonusEffectType.UNIQUE_ITEM && 
-                                             !(typeof b.value === 'string' && b.value.startsWith('+')))
+                                          ? (b.level === 35 && (b.isUniqueBonus === false || b.isUniqueBonus === null))
                                           : b.level === level)
                                       // レアリティフィルタ
                                       && (!selectedRarity || !b.rarity || b.rarity === selectedRarity)
@@ -2372,14 +2369,9 @@ export default function AdminPage() {
                                           // 表示レベルに合わせて絞り込み
                                           // レベル35.5と35の特殊対応
                                           (level === 35.5 
-                                            ? (b.level === 35 && (
-                                                b.effectType === BonusEffectType.UNIQUE_ITEM || 
-                                                (typeof b.value === 'string' && b.value.startsWith('+'))
-                                              )) 
+                                            ? (b.level === 35 && b.isUniqueBonus === true)
                                             : level === 35 
-                                              ? (b.level === 35 && 
-                                                 b.effectType !== BonusEffectType.UNIQUE_ITEM && 
-                                                 !(typeof b.value === 'string' && b.value.startsWith('+')))
+                                              ? (b.level === 35 && (b.isUniqueBonus === false || b.isUniqueBonus === null))
                                               : b.level === level)
                                           // レアリティフィルタ
                                           && (!selectedRarity || !b.rarity || b.rarity === selectedRarity)
