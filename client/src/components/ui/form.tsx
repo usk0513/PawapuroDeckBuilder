@@ -35,22 +35,24 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
-  // キーの生成 (renderがリスト内で呼ばれる場合のため)
+  // 各フォームフィールドに一意のIDを生成
   const fieldId = React.useId();
   
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller 
         {...props} 
+        // React-Hook-Formの内部でマップを使用する際にkeyを追加
+        key={`field-${props.name}`}
         render={(renderProps) => {
           // オリジナルのrenderプロップを呼び出し
           const originalRender = props.render;
           const element = originalRender(renderProps);
           
-          // これによりControllerが内部でリストレンダリングしても
-          // 各子要素がユニークなキーを持つようになる
+          // キーを明示的に要素に伝播
           return React.cloneElement(element, { 
-            'data-field-id': fieldId 
+            'data-field-id': fieldId,
+            key: `field-item-${props.name}`
           });
         }}
       />
