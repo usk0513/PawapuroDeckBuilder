@@ -309,27 +309,27 @@ export default function CharacterBasicInfoTab({
                               <FormLabel>特殊訓練</FormLabel>
                               <div className="grid grid-cols-2 gap-2">
                                 {specialTrainingOptions.map((item) => {
-                                  console.log("▶️ mapping specialTrainingOptions:", item.id);
+                                  console.log("▶️ mapping specialTrainingOptions:", item.value);
                                   return (
-                                    <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <div key={item.value} className="flex flex-row items-start space-x-3 space-y-0">
                                       <Checkbox
-                                        id={`training-${item.id}`}
-                                        checked={form.watch("specialTrainings")?.includes(item.id)}
+                                        id={`training-${item.value}`}
+                                        checked={form.watch("specialTrainings")?.includes(item.value)}
                                         onCheckedChange={(checked) => {
                                           const currentValue = form.getValues("specialTrainings") || [];
                                           if (checked) {
-                                            form.setValue("specialTrainings", [...currentValue, item.id], { shouldValidate: true });
+                                            form.setValue("specialTrainings", [...currentValue, item.value], { shouldValidate: true });
                                           } else {
                                             form.setValue(
                                               "specialTrainings", 
-                                              currentValue.filter((value) => value !== item.id),
+                                              currentValue.filter((value) => value !== item.value),
                                               { shouldValidate: true }
                                             );
                                           }
                                         }}
                                       />
                                       <label 
-                                        htmlFor={`training-${item.id}`}
+                                        htmlFor={`training-${item.value}`}
                                         className="text-sm font-normal cursor-pointer"
                                       >
                                         {item.label}
