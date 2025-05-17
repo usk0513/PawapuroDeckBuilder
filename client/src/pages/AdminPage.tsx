@@ -2122,6 +2122,7 @@ export default function AdminPage() {
                                               const formattedValue = `+${value}`;
                                               
                                               // 画面表示は35.5だが、データベースには35として保存
+                                              // 必ず固有アイテムタイプとして保存
                                               levelBonusForm.setValue("level", 35);
                                               levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
                                               levelBonusForm.setValue("value", formattedValue);
@@ -2152,6 +2153,8 @@ export default function AdminPage() {
                                             onChange={(e) => {
                                               // 画面表示は35.5だが、データベースには35として保存
                                               levelBonusForm.setValue("level", 35);
+                                              // レベル35.5の場合は必ず固有アイテム効果タイプを設定する
+                                              levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
                                               levelBonusForm.setValue("value", e.target.value);
                                               
                                               setLevelBonusValue((prev) => {
