@@ -426,7 +426,7 @@ export default function LevelBonusTab({
                                       <SelectValue placeholder="レアリティを選択" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="">共通</SelectItem>
+                                      <SelectItem value="common">共通</SelectItem>
                                       {Object.values(Rarity).map(rarity => (
                                         <SelectItem key={rarity} value={rarity}>{rarity}</SelectItem>
                                       ))}
@@ -564,7 +564,7 @@ export default function LevelBonusTab({
                                       <SelectValue placeholder="レアリティを選択" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="">共通</SelectItem>
+                                      <SelectItem value="common">共通</SelectItem>
                                       {Object.values(Rarity).map(rarity => (
                                         <SelectItem key={rarity} value={rarity}>{rarity}</SelectItem>
                                       ))}
@@ -672,7 +672,7 @@ export default function LevelBonusTab({
                                       <SelectValue placeholder="レアリティを選択" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="">共通</SelectItem>
+                                      <SelectItem value="common">共通</SelectItem>
                                       {Object.values(Rarity).map(rarity => (
                                         <SelectItem key={rarity} value={rarity}>{rarity}</SelectItem>
                                       ))}
