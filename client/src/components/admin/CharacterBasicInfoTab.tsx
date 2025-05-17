@@ -301,40 +301,39 @@ export default function CharacterBasicInfoTab({
                               このキャラクターが実行できる特殊訓練
                             </FormDescription>
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <FormField
-                              control={form.control}
-                              name="specialTrainings"
-                              render={({ field }) => {
-                                return (
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {specialTrainingOptions.map((item) => (
-                                      <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                        <Checkbox
-                                          id={`training-${item.id}`}
-                                          checked={field.value?.includes(item.id)}
-                                          onCheckedChange={(checked) => {
-                                            return checked
-                                              ? field.onChange([...field.value, item.id])
-                                              : field.onChange(
-                                                  field.value?.filter(
-                                                    (value) => value !== item.id
-                                                  )
-                                                )
-                                          }}
-                                        />
-                                        <label 
-                                          htmlFor={`training-${item.id}`}
-                                          className="text-sm font-normal cursor-pointer"
-                                        >
-                                          {item.label}
-                                        </label>
-                                      </div>
-                                    ))}
+                          <div className="space-y-2">
+                            <FormItem>
+                              <FormLabel>特殊訓練</FormLabel>
+                              <div className="grid grid-cols-2 gap-2">
+                                {specialTrainingOptions.map((item) => (
+                                  <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <Checkbox
+                                      id={`training-${item.id}`}
+                                      checked={form.watch("specialTrainings")?.includes(item.id)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValue = form.getValues("specialTrainings") || [];
+                                        if (checked) {
+                                          form.setValue("specialTrainings", [...currentValue, item.id], { shouldValidate: true });
+                                        } else {
+                                          form.setValue(
+                                            "specialTrainings", 
+                                            currentValue.filter((value) => value !== item.id),
+                                            { shouldValidate: true }
+                                          );
+                                        }
+                                      }}
+                                    />
+                                    <label 
+                                      htmlFor={`training-${item.id}`}
+                                      className="text-sm font-normal cursor-pointer"
+                                    >
+                                      {item.label}
+                                    </label>
                                   </div>
-                                )
-                              }}
-                            />
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
                           </div>
                           <FormMessage />
                         </FormItem>

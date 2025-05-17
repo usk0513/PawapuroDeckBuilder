@@ -1,0 +1,109 @@
+以下のいずれかのアプローチで、Controller 内部で出続ける “Each child in a list should have a unique 'key' prop” 警告を解消できます。
+
+A. Controller の render 内で返す配列要素に直接 key を振る
+あなたのケースでは、Controller の中で <FormField> を map していますが、Shadcn の FormField 自身がラッパーコンポーネントのため、そこに key を付けても React からは “直下の配列要素” として認識されません。
+解決策 としては、map の直下に必ず DOM 要素か Fragment を置き、そこに key を指定します。
+
+tsx
+コピーする
+編集する
+<Controller
+  control={form.control}
+  name="specialTrainings"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>特殊訓練</FormLabel>
+      <div className="grid grid-cols-2 gap-2">
+        {specialTrainingOptions.map((item) => (
+          // ← ここが map の「直下」。必ず key を付与する
+          <div key={item.id} className="flex items-start space-x-3">
+            {/* Shadcn の FormField を使わず、直接 Checkbox を制御 */}
+            <Checkbox
+              id={`training-${item.id}`}
+              checked={field.value.includes(item.id)}
+              onCheckedChange={(checked) =>
+                checked
+                  ? field.onChange([...field.value, item.id])
+                  : field.onChange(field.value.filter((v) => v !== item.id))
+              }
+            />
+            <label
+              htmlFor={`training-${item.id}`}
+              className="font-normal cursor-pointer"
+            >
+              {item.label}
+            </label>
+          </div>
+        ))}
+      </div>
+    </FormItem>
+  )}
+/>
+ポイント
+
+<FormField> ではなく <div> を map の直下に置く
+
+その <div key={…}> の中で Shadcn UI の Checkbox／FormLabel を使う
+
+これで Controller の render は常に単一要素（<FormItem>）を返し、かつ配列要素には全て一意の key がつくので警告が消えます。
+
+B. そもそも Controller を使わず register でチェックボックス群を制御する
+複数チェックボックスで単一の配列値を扱う場合、register を使ったほうがシンプルです。こうすると Controller の中で map をせずに済むため警告が発生しません。
+
+tsx
+コピーする
+編集する
+<FormItem>
+  <FormLabel>特殊訓練</FormLabel>
+  <div className="grid grid-cols-2 gap-2">
+    {specialTrainingOptions.map((item) => (
+      <div key={item.id} className="flex items-start space-x-3">
+        <Checkbox
+          id={`training-${item.id}`}
+          {...form.register("specialTrainings")}
+          value={item.id}
+        />
+        <label
+          htmlFor={`training-${item.id}`}
+          className="font-normal cursor-pointer"
+        >
+          {item.label}
+        </label>
+      </div>
+    ))}
+  </div>
+  <FormMessage />
+</FormItem>
+C. チェックボックス１つずつを個別の Controller に分割する
+配列ではなく「項目ごとに Controller」を立て直す方法です。map の直下に <Controller key={…}> を置けば、必ず１コンポーネント＝１キーなので警告は出ません。
+
+tsx
+コピーする
+編集する
+{specialTrainingOptions.map((item) => (
+  <FormField
+    key={item.id}
+    control={form.control}
+    name={`specialTrainings.${item.id}`} 
+    render={({ field }) => (
+      <FormItem className="flex items-start space-x-3">
+        <FormControl>
+          <Checkbox
+            id={`training-${item.id}`}
+            checked={field.value}
+            onCheckedChange={field.onChange}
+          />
+        </FormControl>
+        <FormLabel htmlFor={`training-${item.id}`}>
+          {item.label}
+        </FormLabel>
+      </FormItem>
+    )}
+  />
+))}
+警告を無視してはいけない理由
+リストの再レンダリング時、React が要素の対応付けを正しく行えず、予期せぬ再マウントやステート消失を招きます。
+
+開発モードでは警告だけですが、本番ビルド時のパフォーマンス低下にもつながる可能性があります。
+
+以上のいずれかのパターンで “Controller 内部” ではなく map の “直下” に一意の key を割り当てるようリファクタしてください。これで警告は解消します！
