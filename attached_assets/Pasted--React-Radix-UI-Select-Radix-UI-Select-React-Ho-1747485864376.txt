@@ -1,0 +1,224 @@
+# React + Radix UI Select リセット実装
+
+以下のポイントで整理します。Radix UI の Select を確実にリセットするには「制御コンポーネント化」＋「React Hook Form のリセット機能」を組み合わせるのがベストプラクティスです。
+
+## 1. Radix UI Select を確実にリセットする方法
+
+### 制御コンポーネント化
+
+Radix の `<Select.Root>` はデフォルトではアンコントロールド（内部で状態を持つ）ですが、リセットを効かせるには `value`／`onValueChange` を渡して外部 state で制御します。
+
+```tsx
+// SelectField.tsx
+import * as Select from '@radix-ui/react-select'
+
+type Props = {
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  options: { value: string; label: string }[]
+}
+
+export function SelectField({ value, onChange, placeholder, options }: Props) {
+  return (
+    <Select.Root value={value} onValueChange={onChange}>
+      <Select.Trigger className="trigger">
+        <Select.Value placeholder={placeholder} />
+        <Select.Icon />
+      </Select.Trigger>
+      <Select.Content className="content">
+        <Select.Viewport>
+          {options.map((opt) => (
+            <Select.Item key={opt.value} value={opt.value}>
+              <Select.ItemText>{opt.label}</Select.ItemText>
+            </Select.Item>
+          ))}
+        </Select.Viewport>
+      </Select.Content>
+    </Select.Root>
+  )
+}
+```
+
+* **リセット時**：`value` を `""` や `undefined` に戻せば、UI 上の表示も placeholder に戻ります。
+
+## 2. フォーム送信後の DOM 状態の完全リセット
+
+### React Hook Form の `reset`／`resetField`
+
+```ts
+const { control, handleSubmit, reset, resetField } = useForm<{ levelBonuses: { effect: string; rarity: string; value: string }[] }>({
+  defaultValues: { levelBonuses: [] },
+})
+
+const onSubmit = (data) => {
+  // ...送信処理...
+  // 全件リセット
+  reset({ levelBonuses: [] })
+}
+```
+
+* **特定インデックスのみリセット**:
+
+  ```ts
+  resetField(`levelBonuses.${i}.effect`)
+  resetField(`levelBonuses.${i}.rarity`)
+  resetField(`levelBonuses.${i}.value`)
+  ```
+* **完全にアンマウント→再マウント**:
+
+  * `useFieldArray.remove(i)` でその項目をアンマウントし、DOM／state をクリア。
+
+## 3. React Hook Form＋カスタム state 両立時の推奨パターン
+
+* **なるべく「FormState 一本化」**
+
+  * `levelBonusEffect`／`levelBonusRarity` のカスタム state は、RHF の `watch` や `getValues` で代替可能。二重管理は不整合・バグ源になります。
+* **併用する場合**
+
+  ```ts
+  const effects = watch('levelBonuses')
+  useEffect(() => {
+    const map = Object.fromEntries(
+      effects.map((b, i) => [i, b.effect])
+    )
+    setLevelBonusEffect(map)
+  }, [effects])
+  ```
+
+  * リセットは必ず RHF 側で行い、同期処理で UI をクリア。
+
+## 4. パフォーマンスを考慮したリセット実装
+
+1. **部分リセットは `resetField`**
+2. **`useFieldArray` の `remove`／`append`**
+3. **`React.memo`＋`Controller`** で個別再描画を最適化
+4. **`shouldUnregister: true`** の設定でアンマウント時に自動で登録解除
+
+## サンプル実装まとめ
+
+```tsx
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { SelectField } from './SelectField'
+
+type LevelBonus = { effect: string; rarity: string; value: string }
+type FormData = { levelBonuses: LevelBonus[] }
+
+export function AdminPage() {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    resetField,
+  } = useForm<FormData>({
+    defaultValues: { levelBonuses: [] },
+    shouldUnregister: true,
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'levelBonuses',
+  })
+
+  const onSubmit = (data: FormData) => {
+    // ...送信処理...
+    reset({ levelBonuses: [] })
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {fields.map((field, i) => (
+        <div key={field.id} className="bonus-row">
+          <Controller
+            name={`levelBonuses.${i}.effect`}
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <SelectField
+                {...field}
+                placeholder="効果タイプ"
+                options={[
+                  { value: 'atk', label: '攻撃' },
+                  { value: 'def', label: '防御' },
+                ]}
+              />
+            )}
+          />
+
+          <Controller
+            name={`levelBonuses.${i}.rarity`}
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <SelectField
+                {...field}
+                placeholder="レア度"
+                options={[
+                  { value: 'common', label: '通常' },
+                  { value: 'legend', label: '伝説' },
+                ]}
+              />
+            )}
+          />
+
+          <input
+            type="text"
+            {...control.register(`levelBonuses.${i}.value`)}
+            placeholder="値"
+          />
+
+          <button
+            type="button"
+            onClick={() => {
+              resetField(`levelBonuses.${i}.effect`)
+              resetField(`levelBonuses.${i}.rarity`)
+              resetField(`levelBonuses.${i}.value`)
+            }}
+          >
+            リセット
+          </button>
+
+          <button type="button" onClick={() => remove(i)}>
+            行ごと削除
+          </button>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={() => append({ effect: '', rarity: '', value: '' })}
+      >
+        ボーナス追加
+      </button>
+
+      <button type="submit">送信</button>
+    </form>
+  )
+}
+```
+
+### なぜこの実装が適切か
+
+* **単一ソース（React Hook Form）** で状態管理 → バグ減少
+* **Controller＋value/onChange** で Radix の選択を完全に外部制御 → リセット保証
+* **useFieldArray** で追加・削除を最適化 → DOM／state の整合性保持
+* **reset / resetField** の分割利用で最小限の再レンダリング
+
+### 考えられる副作用と対処
+
+* **Index シフトによる意図しないリセット**
+
+  * `remove(i)` で後続インデックスが前倒し。キーに必ず `field.id` を使用。
+* **フォーカスが外れる**
+
+  * 大量リセット時は `setFocus('fieldName')` でフォーカス復帰。
+* **パフォーマンス**
+
+  * 標準 `reset()` はコスト高 → 部分リセット／行削除を優先。
+
+### 実装時の注意点
+
+1. **カスタム state の重複管理は避ける**
+2. **Controller で必ず `defaultValue` を指定**
+3. **Radix UI のスタイリングやデフォルト挙動を理解**
+4. **Dynamic Field Array のキーは一意な `field.id`**
