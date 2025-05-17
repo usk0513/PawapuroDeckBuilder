@@ -9,7 +9,9 @@ import SpecialAbilityTab from "../components/admin/SpecialAbilityTab";
 
 export default function AdminPage() {
   // 共通の状態
-  const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<number | null>(
+    null,
+  );
   const [characterSearchTerm, setCharacterSearchTerm] = useState<string>("");
   const [selectedRarity, setSelectedRarity] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("characters");
@@ -17,8 +19,12 @@ export default function AdminPage() {
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">管理者ページ</h1>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="characters">キャラクター</TabsTrigger>
           <TabsTrigger value="level-bonus">レベルボーナス</TabsTrigger>
@@ -26,7 +32,7 @@ export default function AdminPage() {
           <TabsTrigger value="friendship-ability">友情特殊能力</TabsTrigger>
           <TabsTrigger value="special-ability">金特（特殊能力）</TabsTrigger>
         </TabsList>
-        
+
         {/* キャラクター基本情報タブ */}
         <TabsContent value="characters">
           <CharacterBasicInfoTab
@@ -36,7 +42,7 @@ export default function AdminPage() {
             setCharacterSearchTerm={setCharacterSearchTerm}
           />
         </TabsContent>
-        
+
         {/* レベルボーナスタブ */}
         <TabsContent value="level-bonus">
           <LevelBonusTab
@@ -45,26 +51,20 @@ export default function AdminPage() {
             setSelectedRarity={setSelectedRarity}
           />
         </TabsContent>
-        
+
         {/* 覚醒ボーナスタブ */}
         <TabsContent value="awakening-bonus">
-          <AwakeningBonusTab
-            selectedCharacter={selectedCharacter}
-          />
+          <AwakeningBonusTab selectedCharacter={selectedCharacter} />
         </TabsContent>
-        
+
         {/* 友情特殊能力タブ */}
         <TabsContent value="friendship-ability">
-          <FriendshipAbilityTab
-            selectedCharacter={selectedCharacter}
-          />
+          <FriendshipAbilityTab selectedCharacter={selectedCharacter} />
         </TabsContent>
-        
+
         {/* 金特（特殊能力）タブ */}
         <TabsContent value="special-ability">
-          <SpecialAbilityTab
-            selectedCharacter={selectedCharacter}
-          />
+          <SpecialAbilityTab selectedCharacter={selectedCharacter} />
         </TabsContent>
       </Tabs>
     </div>
