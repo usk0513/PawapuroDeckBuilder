@@ -268,6 +268,7 @@ export const characterLevelBonuses = pgTable("character_level_bonuses", {
   value: text("value").notNull(),
   rarity: text("rarity").$type<Rarity>(),
   description: text("description"),
+  isUniqueBonus: boolean("is_unique_bonus").default(false), // 固有ボーナス（Lv35.5）かどうかのフラグ
 });
 
 export const insertCharacterLevelBonusSchema = createInsertSchema(characterLevelBonuses).omit({
