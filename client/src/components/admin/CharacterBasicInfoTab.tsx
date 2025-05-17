@@ -193,6 +193,7 @@ export default function CharacterBasicInfoTab({
                   {/* 基本情報 */}
                   <div className="space-y-4">
                     <FormField
+                      key="field-name"
                       control={form.control}
                       name="name"
                       render={({ field }) => (
@@ -207,6 +208,7 @@ export default function CharacterBasicInfoTab({
                     />
                     
                     <FormField
+                      key="field-position"
                       control={form.control}
                       name="position"
                       render={({ field }) => (
