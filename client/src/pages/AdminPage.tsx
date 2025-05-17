@@ -2122,7 +2122,7 @@ export default function AdminPage() {
                                               const formattedValue = `+${value}`;
                                               
                                               // 画面表示は35.5だが、データベースには35として保存
-                                              // 必ず固有アイテムタイプとして保存
+                                              // 固有アイテムを選択した場合は固有アイテムタイプを設定
                                               levelBonusForm.setValue("level", 35);
                                               levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
                                               levelBonusForm.setValue("value", formattedValue);
@@ -2153,8 +2153,7 @@ export default function AdminPage() {
                                             onChange={(e) => {
                                               // 画面表示は35.5だが、データベースには35として保存
                                               levelBonusForm.setValue("level", 35);
-                                              // レベル35.5の場合は必ず固有アイテム効果タイプを設定する
-                                              levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
+                                              // ユーザーが選択した効果タイプを維持する
                                               levelBonusForm.setValue("value", e.target.value);
                                               
                                               setLevelBonusValue((prev) => {
@@ -2264,12 +2263,8 @@ export default function AdminPage() {
                                         
                                         if (currentEffectType && currentValue) {
                                           // フォームの値をセット
-                                          // レベル35.5の場合は強制的に固有アイテムタイプを設定
-                                          if (level === 35.5) {
-                                            levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
-                                          } else {
-                                            levelBonusForm.setValue("effectType", currentEffectType);
-                                          }
+                                          // レベル35.5(固有ボーナス)でも、ユーザーが選択した効果タイプをそのまま使用
+                                          levelBonusForm.setValue("effectType", currentEffectType);
                                           levelBonusForm.setValue("value", currentValue);
                                           
                                           // 効果値にフォーマットを適用しない状態でAPI送信
