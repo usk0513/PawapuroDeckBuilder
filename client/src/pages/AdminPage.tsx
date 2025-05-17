@@ -2249,9 +2249,15 @@ export default function AdminPage() {
                                             return;
                                           }
                                           
-                                          onLevelBonusSubmit(formValues);
+                                          // ここで個別のレベルだけをリセットするための準備
+                                          const currentLevel = level;
                                           
-                                          // フォームリセットは onLevelBonusSubmit 内で行われるため不要
+                                          // APIリクエスト実行
+                                          onLevelBonusSubmit({
+                                            ...formValues,
+                                            // カスタム属性を追加：個別レベル追加であることを示す
+                                            _resetSingleLevel: currentLevel
+                                          });
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
                                           const missingFields = [];
