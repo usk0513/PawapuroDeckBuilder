@@ -121,7 +121,7 @@ export default function LevelBonusTab({
                     <SelectValue placeholder="すべてのレアリティ" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">すべて</SelectItem>
+                    <SelectItem value="all">すべて</SelectItem>
                     {Object.values(Rarity).map(rarity => (
                       <SelectItem key={rarity} value={rarity}>{rarity}</SelectItem>
                     ))}
