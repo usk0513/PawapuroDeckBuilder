@@ -2264,7 +2264,12 @@ export default function AdminPage() {
                                         
                                         if (currentEffectType && currentValue) {
                                           // フォームの値をセット
-                                          levelBonusForm.setValue("effectType", currentEffectType);
+                                          // レベル35.5の場合は強制的に固有アイテムタイプを設定
+                                          if (level === 35.5) {
+                                            levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
+                                          } else {
+                                            levelBonusForm.setValue("effectType", currentEffectType);
+                                          }
                                           levelBonusForm.setValue("value", currentValue);
                                           
                                           // 効果値にフォーマットを適用しない状態でAPI送信
