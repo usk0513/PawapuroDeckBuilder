@@ -315,12 +315,12 @@ export default function SpecialAbilityTab({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="スタジアム">スタジアム</SelectItem>
-                                    <SelectItem value="寮">寮</SelectItem>
-                                    <SelectItem value="ジム">ジム</SelectItem>
-                                    <SelectItem value="レストラン">レストラン</SelectItem>
-                                    <SelectItem value="交換">交換</SelectItem>
-                                    <SelectItem value="その他">その他</SelectItem>
+                                    <SelectItem key="stadium-option" value="スタジアム">スタジアム</SelectItem>
+                                    <SelectItem key="dorm-option" value="寮">寮</SelectItem>
+                                    <SelectItem key="gym-option" value="ジム">ジム</SelectItem>
+                                    <SelectItem key="restaurant-option" value="レストラン">レストラン</SelectItem>
+                                    <SelectItem key="exchange-option" value="交換">交換</SelectItem>
+                                    <SelectItem key="other-option" value="その他">その他</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -344,8 +344,8 @@ export default function SpecialAbilityTab({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value={PlayerType.PITCHER}>投手</SelectItem>
-                                    <SelectItem value={PlayerType.FIELDER}>野手</SelectItem>
+                                    <SelectItem key="pitcher-type" value={PlayerType.PITCHER}>投手</SelectItem>
+                                    <SelectItem key="fielder-type" value={PlayerType.FIELDER}>野手</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
