@@ -1984,7 +1984,7 @@ export default function AdminPage() {
                                   <td className="border p-2 text-center font-medium">
                                     {level === 35.5 ? (
                                       <div className="inline-flex items-center">
-                                        Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">アイテム追加枠</Badge>
+                                        Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
                                       </div>
                                     ) : level === 35 ? (
                                       <div className="inline-flex items-center">
@@ -2098,7 +2098,7 @@ export default function AdminPage() {
                                             value={levelBonusValue[level]?.replace(/^\+/, "") || ""}
                                           >
                                             <SelectTrigger>
-                                              <SelectValue placeholder="アイテム追加枠を選択" />
+                                              <SelectValue placeholder="固有ボーナスを選択" />
                                             </SelectTrigger>
                                             <SelectContent>
                                               {uniqueBonusItems.map(item => (
@@ -2126,7 +2126,7 @@ export default function AdminPage() {
                                           />
                                         )}
                                         <div className="text-xs text-muted-foreground">
-                                          アイテム追加枠：特殊アイテムでチームに追加効果を与えます
+                                          固有ボーナス：特殊アイテムでチームに追加効果を与えます
                                         </div>
                                       </div>
                                     ) : level === 35 ? (
