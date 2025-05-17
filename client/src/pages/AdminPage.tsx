@@ -2332,28 +2332,20 @@ export default function AdminPage() {
 
                                           // 2. 他のレベルの入力には影響しない形でリセット
 
-                                          // フォームリセット処理の別アプローチ
-                                          
-                                          // この2つのフィールドはReactフック経由で手動で再設定
-                                          levelBonusForm.setValue("effectType", "", { 
-                                            shouldValidate: true,
-                                            shouldDirty: false,
-                                            shouldTouch: false 
-                                          });
-                                          
-                                          levelBonusForm.setValue("rarity", "", { 
-                                            shouldValidate: true,
-                                            shouldDirty: false,
-                                            shouldTouch: false 
-                                          });
-                                          
-                                          // 残りのフィールドは通常のリセットで
+                                          // フォームリセット処理を単純化
+                                          // 全てのフィールドを一度にリセット
                                           levelBonusForm.reset({
                                             characterId: selectedCharacter || undefined,
                                             level: level, // レベルは保持
-                                            value: "", // 値をリセット
-                                            description: "" // 説明をリセット
-                                          }, { keepValues: false, keepDirtyValues: false });
+                                            effectType: "",
+                                            value: "",
+                                            description: "",
+                                            rarity: ""
+                                          });
+                                          
+                                          // フィールドを個別にリセット（これがUIの表示をリセットする）
+                                          levelBonusForm.resetField("effectType");
+                                          levelBonusForm.resetField("rarity");
                                           
                                           // ユーザーに視覚的フィードバックを提供
                                           toast({
