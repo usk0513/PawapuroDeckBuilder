@@ -626,9 +626,8 @@ export default function AdminPage() {
       // それ以外（まとめて追加など）の場合は、従来通りの完全リセット
       const level = data.level;
 
-      // 個別レベル追加の場合は、そのレベルだけをリセット
-      if (_resetSingleLevel !== undefined) {
-        const levelToReset = _resetSingleLevel;
+      // レベルが指定されている場合は、そのレベルだけをリセット
+      if (level) {
 
         // フォームフィールドをリセット
         levelBonusForm.resetField('effectType', { defaultValue: '' });
