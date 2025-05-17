@@ -28,37 +28,18 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
 )
 
-// カスタム実装のFormField
+// 単純なFormFieldの実装に戻す
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
-  // 各フィールドに固有のIDを生成
-  const fieldId = React.useMemo(() => 
-    `field-${props.name.toString()}-${Math.random().toString(36).substring(2, 7)}`, 
-    [props.name]
-  );
-  
   return (
-    <FormFieldContext.Provider value={{ name: props.name }} key={fieldId}>
-      <Controller 
-        {...props} 
-        // render関数をラップして、独自のkeyを追加
-        render={(renderProps) => {
-          if (typeof props.render === "function") {
-            const originalRender = props.render;
-            // レンダープロップを呼び出すときに、一意のキーを含める
-            const element = originalRender(renderProps);
-            // Reactエレメントに追加のキープロパティを設定
-            return React.cloneElement(element, { key: fieldId });
-          }
-          return null;
-        }}
-      />
+    <FormFieldContext.Provider value={{ name: props.name }}>
+      <Controller {...props} />
     </FormFieldContext.Provider>
-  );
+  )
 }
 
 const useFormField = () => {

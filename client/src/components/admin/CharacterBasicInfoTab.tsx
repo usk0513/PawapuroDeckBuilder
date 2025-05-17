@@ -302,19 +302,16 @@ export default function CharacterBasicInfoTab({
                             </FormDescription>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
-                            {specialTrainingOptions.map((item) => (
-                              <FormField
-                                key={item.id}
-                                control={form.control}
-                                name="specialTrainings"
-                                render={({ field }) => {
-                                  return (
-                                    <FormItem
-                                      key={item.id}
-                                      className="flex flex-row items-start space-x-3 space-y-0"
-                                    >
-                                      <FormControl>
+                            <FormField
+                              control={form.control}
+                              name="specialTrainings"
+                              render={({ field }) => {
+                                return (
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {specialTrainingOptions.map((item) => (
+                                      <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
                                         <Checkbox
+                                          id={`training-${item.id}`}
                                           checked={field.value?.includes(item.id)}
                                           onCheckedChange={(checked) => {
                                             return checked
@@ -326,15 +323,18 @@ export default function CharacterBasicInfoTab({
                                                 )
                                           }}
                                         />
-                                      </FormControl>
-                                      <FormLabel className="font-normal cursor-pointer">
-                                        {item.label}
-                                      </FormLabel>
-                                    </FormItem>
-                                  )
-                                }}
-                              />
-                            ))}
+                                        <label 
+                                          htmlFor={`training-${item.id}`}
+                                          className="text-sm font-normal cursor-pointer"
+                                        >
+                                          {item.label}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )
+                              }}
+                            />
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -354,14 +354,15 @@ export default function CharacterBasicInfoTab({
                               className="flex flex-col space-y-1"
                             >
                               {eventTimingOptions.map((option) => (
-                                <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
-                                  <FormControl>
-                                    <RadioGroupItem value={option.value} />
-                                  </FormControl>
-                                  <FormLabel className="font-normal cursor-pointer">
+                                <div key={option.value} className="flex items-center space-x-3 space-y-0">
+                                  <RadioGroupItem value={option.value} id={`event-${option.value}`} />
+                                  <label
+                                    htmlFor={`event-${option.value}`}
+                                    className="text-sm font-normal cursor-pointer"
+                                  >
                                     {option.label}
-                                  </FormLabel>
-                                </FormItem>
+                                  </label>
+                                </div>
                               ))}
                             </RadioGroup>
                           </FormControl>

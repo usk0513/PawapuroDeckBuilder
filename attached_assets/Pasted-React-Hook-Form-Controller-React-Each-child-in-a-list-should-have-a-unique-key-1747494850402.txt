@@ -1,0 +1,83 @@
+React Hook Form Controller内部で発生するキー警告の解決方法
+
+React が出す「Each child in a list should have a unique 'key' prop」警告は、Controllerのrender内で配列要素にkeyを付与していないことが原因です。以下のポイントに沿って実装すれば解消できます。
+
+1. map して返している「直下の要素」に必ず key を振る
+
+<Controller
+  control={control}
+  name="category"
+  defaultValue=""
+  render={({ field }) => (
+    <div>
+      {categories.map((cat) => (
+        <FormItem key={cat.value}>
+          <FormLabel htmlFor={cat.value}>{cat.label}</FormLabel>
+          <FormControl>
+            <Radio
+              id={cat.value}
+              {...field}
+              value={cat.value}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      ))}
+    </div>
+  )}
+/>
+
+render内で配列を返す場合、配列要素（<FormItem>）に一意なkeyを設定します。
+
+<div>などでラップして単一要素にすれば警告は消えますが、配列のまま返したい場合は必ずkeyを付与しましょう。
+
+2. 複数コンポーネントを返すパターンは Fragment に key を振る
+
+兄弟要素を直接返したい場合は、React.Fragmentにkeyを付与します。
+
+<Controller
+  control={control}
+  name="items"
+  render={({ field }) => (
+    <>
+      {fields.map((item, idx) => (
+        <React.Fragment key={item.id}>
+          <FormField
+            control={control}
+            name={`items.${idx}.name`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name={`items.${idx}.value`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Value</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </React.Fragment>
+      ))}
+    </>
+  )}
+/>
+
+keyは配列要素を束ねるFragmentに付与します。
+
+なぜ FormField に key を渡しても警告が消えないのか？
+
+JSX 上で<FormField key="foo" />と設定しても、FormField内部でさらに配列を返すと、その配列要素にkeyがなければ警告は残ります。
+
+keyは「配列要素を一意に識別するため」のものなので、配列を作っている箇所（mapの直下）に振りましょう。
+
+以上の対応で、Controller内部で発生するキー警告は解消します。警告がまだ残る場合は、コンソールのスタックトレースで警告箇所のJSXを特定し、map直下にkeyがあるかを再確認してください。
