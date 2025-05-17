@@ -152,16 +152,19 @@ export default function CharacterBasicInfoTab({
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                   {filteredCharacters.length > 0 ? (
-                    filteredCharacters.map((c: any) => (
-                      <Button
-                        key={c.id}
-                        variant={selectedCharacter === c.id ? "default" : "outline"}
-                        className="w-full justify-start"
-                        onClick={() => setSelectedCharacter(c.id)}
-                      >
-                        {c.name}
-                      </Button>
-                    ))
+                    filteredCharacters.map((c: any) => {
+                      console.log("▶️ mapping filteredCharacters:", c.id);
+                      return (
+                        <Button
+                          key={c.id}
+                          variant={selectedCharacter === c.id ? "default" : "outline"}
+                          className="w-full justify-start"
+                          onClick={() => setSelectedCharacter(c.id)}
+                        >
+                          {c.name}
+                        </Button>
+                      );
+                    })
                   ) : (
                     <p className="text-muted-foreground text-center">キャラクターが見つかりません</p>
                   )}
@@ -305,32 +308,35 @@ export default function CharacterBasicInfoTab({
                             <FormItem>
                               <FormLabel>特殊訓練</FormLabel>
                               <div className="grid grid-cols-2 gap-2">
-                                {specialTrainingOptions.map((item) => (
-                                  <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                    <Checkbox
-                                      id={`training-${item.id}`}
-                                      checked={form.watch("specialTrainings")?.includes(item.id)}
-                                      onCheckedChange={(checked) => {
-                                        const currentValue = form.getValues("specialTrainings") || [];
-                                        if (checked) {
-                                          form.setValue("specialTrainings", [...currentValue, item.id], { shouldValidate: true });
-                                        } else {
-                                          form.setValue(
-                                            "specialTrainings", 
-                                            currentValue.filter((value) => value !== item.id),
-                                            { shouldValidate: true }
-                                          );
-                                        }
-                                      }}
-                                    />
-                                    <label 
-                                      htmlFor={`training-${item.id}`}
-                                      className="text-sm font-normal cursor-pointer"
-                                    >
-                                      {item.label}
-                                    </label>
-                                  </div>
-                                ))}
+                                {specialTrainingOptions.map((item) => {
+                                  console.log("▶️ mapping specialTrainingOptions:", item.id);
+                                  return (
+                                    <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                      <Checkbox
+                                        id={`training-${item.id}`}
+                                        checked={form.watch("specialTrainings")?.includes(item.id)}
+                                        onCheckedChange={(checked) => {
+                                          const currentValue = form.getValues("specialTrainings") || [];
+                                          if (checked) {
+                                            form.setValue("specialTrainings", [...currentValue, item.id], { shouldValidate: true });
+                                          } else {
+                                            form.setValue(
+                                              "specialTrainings", 
+                                              currentValue.filter((value) => value !== item.id),
+                                              { shouldValidate: true }
+                                            );
+                                          }
+                                        }}
+                                      />
+                                      <label 
+                                        htmlFor={`training-${item.id}`}
+                                        className="text-sm font-normal cursor-pointer"
+                                      >
+                                        {item.label}
+                                      </label>
+                                    </div>
+                                  );
+                                })}
                               </div>
                               <FormMessage />
                             </FormItem>
@@ -352,17 +358,20 @@ export default function CharacterBasicInfoTab({
                               value={field.value as string | undefined}
                               className="flex flex-col space-y-1"
                             >
-                              {eventTimingOptions.map((option) => (
-                                <div key={option.value} className="flex items-center space-x-3 space-y-0">
-                                  <RadioGroupItem value={option.value} id={`event-${option.value}`} />
-                                  <label
-                                    htmlFor={`event-${option.value}`}
-                                    className="text-sm font-normal cursor-pointer"
-                                  >
-                                    {option.label}
-                                  </label>
-                                </div>
-                              ))}
+                              {eventTimingOptions.map((option) => {
+                                console.log("▶️ mapping eventTimingOptions:", option.value);
+                                return (
+                                  <div key={option.value} className="flex items-center space-x-3 space-y-0">
+                                    <RadioGroupItem value={option.value} id={`event-${option.value}`} />
+                                    <label
+                                      htmlFor={`event-${option.value}`}
+                                      className="text-sm font-normal cursor-pointer"
+                                    >
+                                      {option.label}
+                                    </label>
+                                  </div>
+                                );
+                              })}
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
