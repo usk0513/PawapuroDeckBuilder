@@ -17,7 +17,7 @@ export function useLevelBonusAdmin(selectedCharacter: number | null, selectedRar
     queryFn: async () => {
       if (!selectedCharacter) return [];
       let url = `/api/character-level-bonuses?characterId=${selectedCharacter}`;
-      if (selectedRarity) {
+      if (selectedRarity && selectedRarity !== "_all") {
         url += `&rarity=${selectedRarity}`;
       }
       const res = await fetch(url);
@@ -172,7 +172,7 @@ export function useLevelBonusAdmin(selectedCharacter: number | null, selectedRar
     
     const effectType = levelBonusEffect[level];
     const value = levelBonusValue[level];
-    const rarity = levelBonusRarity[level];
+    const rarity = levelBonusRarity[level] === "_all" ? "" : levelBonusRarity[level];
     
     if (!effectType || !value) {
       toast({
