@@ -1,0 +1,21 @@
+Warning: Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.%s data-replit-metadata 
+    at LevelBonusTab (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/src/components/admin/LevelBonusTab.tsx?t=1747496937796:33:3)
+    at div
+    at https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=b16fa74d:42:13
+    at Presence (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SM4W46IE.js?v=b16fa74d:24:11)
+    at https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=b16fa74d:173:13
+    at _c5 (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=b16fa74d:42:13
+    at Provider (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-P23V4H6I.js?v=b16fa74d:48:15)
+    at https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=b16fa74d:51:7
+    at div
+    at AdminPage (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/src/pages/AdminPage.tsx?t=1747497933529:27:53)
+    at Route (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=b16fa74d:323:16)
+    at Switch (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=b16fa74d:379:17)
+    at Router
+    at Provider (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-P23V4H6I.js?v=b16fa74d:48:15)
+    at TooltipProvider (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=b16fa74d:61:5)
+    at QueryClientProvider (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=b16fa74d:2805:3)
+    at App
+    at DndProvider2 (https://d0760e4e-cea6-417d-8ca9-9d65410b0650-00-2pxxofy9a15zr.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dnd.js?v=b16fa74d:1505:9)
