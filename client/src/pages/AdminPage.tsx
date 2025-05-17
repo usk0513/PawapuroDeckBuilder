@@ -622,14 +622,16 @@ export default function AdminPage() {
         description: `Lv.${data.level}の${data.effectType}${rarityText}ボーナスが追加されました`,
       });
       
-      // クリア
-      setLevelBonusEffect({
-        ...levelBonusEffect,
-        [data.level]: ""
+      // クリア - 効果タイプと値を完全に削除
+      setLevelBonusEffect((prev) => {
+        const updated = { ...prev };
+        delete updated[data.level]; // 効果タイプを完全に削除
+        return updated;
       });
-      setLevelBonusValue({
-        ...levelBonusValue,
-        [data.level]: ""
+      setLevelBonusValue((prev) => {
+        const updated = { ...prev };
+        delete updated[data.level]; // 値を完全に削除
+        return updated;
       });
       
       // フォームリセット
