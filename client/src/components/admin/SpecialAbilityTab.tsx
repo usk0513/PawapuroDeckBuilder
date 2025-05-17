@@ -75,17 +75,20 @@ export default function SpecialAbilityTab({
     }
   });
 
+  // useRefはコンポーネントのトップレベルで宣言
+  const shouldResetAbility = React.useRef(true);
+
   // 選択された金特が変更されたときの処理
   React.useEffect(() => {
     console.log("🌀 [effect] selectedSpecialAbility:", selectedSpecialAbility, "specialAbilities.length:", specialAbilities.length);
     
-    // 無限ループ防止のための参照比較
-    const shouldReset = React.useRef(true);
+    // データのロードを待つ
+    if (specialAbilities.length === 0) return;
     
     if (selectedSpecialAbility) {
       const ability = specialAbilities.find((a: any) => a.id === selectedSpecialAbility);
-      if (ability && shouldReset.current) {
-        shouldReset.current = false;
+      if (ability && shouldResetAbility.current) {
+        shouldResetAbility.current = false;
         specialAbilityForm.reset({
           name: ability.name,
           description: ability.description,
@@ -93,8 +96,8 @@ export default function SpecialAbilityTab({
           playerType: ability.playerType
         });
       }
-    } else if (shouldReset.current) {
-      shouldReset.current = false;
+    } else if (shouldResetAbility.current) {
+      shouldResetAbility.current = false;
       specialAbilityForm.reset({
         name: "",
         description: "",
@@ -104,24 +107,24 @@ export default function SpecialAbilityTab({
     }
     
     return () => {
-      shouldReset.current = true;
+      shouldResetAbility.current = true;
     };
   }, [selectedSpecialAbility, specialAbilities]); // specialAbilityFormを依存配列から削除
 
+  // useRefはコンポーネントのトップレベルで宣言
+  const shouldUpdateCharacter = React.useRef(true);
+  
   // 選択されたキャラクターが変更されたときの処理
   React.useEffect(() => {
     console.log("🌀 [effect] selectedCharacter:", selectedCharacter);
     
-    // 無限ループ防止のための参照比較
-    const shouldUpdate = React.useRef(true);
-    
-    if (selectedCharacter && shouldUpdate.current) {
-      shouldUpdate.current = false;
+    if (selectedCharacter && shouldUpdateCharacter.current) {
+      shouldUpdateCharacter.current = false;
       specialAbilitySetForm.setValue("characterId", selectedCharacter);
     }
     
     return () => {
-      shouldUpdate.current = true;
+      shouldUpdateCharacter.current = true;
     };
   }, [selectedCharacter]); // specialAbilitySetFormを依存配列から削除
 
