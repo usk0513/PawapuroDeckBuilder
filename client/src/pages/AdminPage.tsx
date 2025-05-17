@@ -628,40 +628,32 @@ export default function AdminPage() {
 
       // レベルが指定されている場合は、そのレベルだけをリセット
       if (level) {
-
         // フォームフィールドをリセット
-        levelBonusForm.resetField('effectType', { defaultValue: '' });
-        levelBonusForm.resetField('value', { defaultValue: '' });
-        levelBonusForm.resetField('rarity', { defaultValue: '' });
-
-        // Select コンポーネントの状態をリセット
-        setTimeout(() => {
-          const selects = document.querySelectorAll(`[data-level="${levelToReset}"] select`);
-          selects.forEach(select => {
-            select.value = '';
-            // イベント発火でReactに変更を通知
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-          });
-        }, 0);
+        levelBonusForm.resetField('effectType');
+        levelBonusForm.resetField('value');
+        levelBonusForm.resetField('rarity');
 
         // カスタムstateもクリア
         setLevelBonusEffect((prev) => {
           const updated = { ...prev };
-          delete updated[levelToReset];
+          delete updated[level];
           return updated;
         });
 
         setLevelBonusValue((prev) => {
           const updated = { ...prev };
-          delete updated[levelToReset];
+          delete updated[level];
           return updated;
         });
 
-        setLevelBonusRarity((prev) => {
-          const updated = { ...prev };
-          delete updated[levelToReset];
-          return updated;
-        });
+        // レア度のステートがある場合はクリア
+        if (typeof setLevelBonusRarity === 'function') {
+          setLevelBonusRarity((prev) => {
+            const updated = { ...prev };
+            delete updated[level];
+            return updated;
+          });
+        }
       }
     },
     onError: (error: Error) => {
@@ -1031,21 +1023,17 @@ export default function AdminPage() {
     }
   });
 
-  const onLevelBonusSubmit = (values: LevelBonusFormValues & { _resetSingleLevel?: number }) => {
+  const onLevelBonusSubmit = (values: LevelBonusFormValues) => {
     // characterIdを現在選択中のキャラクターIDに設定
     if (selectedCharacter) {
-      // カスタム属性を除外してAPIに送信（APIで処理されない属性のため）
-      const { _resetSingleLevel, ...apiData } = values;
-
       const data = {
-        ...apiData,
+        ...values,
         characterId: selectedCharacter
       };
       createLevelBonusMutation.mutate(data);
 
-      // 個別レベル追加の場合は、そのレベルだけをリセット
-      if (_resetSingleLevel !== undefined) {
-        const levelToReset = _resetSingleLevel;
+      // 個別レベル追加の場合は、現在のレベルだけをリセット
+      const currentLevel = values.level;
 
         // フォームフィールドをリセット
         levelBonusForm.resetField('effectType', { defaultValue: '' });
