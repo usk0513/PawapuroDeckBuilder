@@ -163,11 +163,11 @@ export default function FriendshipAbilityTab({
                       <FormItem>
                         <FormLabel>プレイヤータイプ</FormLabel>
                         <Select
+                          {...field}
                           onValueChange={(value) => {
                             field.onChange(value);
                             setFriendshipPlayerType(value as PlayerType);
                           }}
-                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
