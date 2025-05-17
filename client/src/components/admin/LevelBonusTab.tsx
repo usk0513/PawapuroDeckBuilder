@@ -112,7 +112,7 @@ export default function LevelBonusTab({
           <CardContent>
             <div className="space-y-4">
               <div>
-                <FormLabel>レアリティでフィルター</FormLabel>
+                <div className="text-sm font-medium mb-2">レアリティでフィルター</div>
                 <Select
                   value={selectedRarity}
                   onValueChange={setSelectedRarity}
