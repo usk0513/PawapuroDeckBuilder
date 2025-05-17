@@ -2332,29 +2332,35 @@ export default function AdminPage() {
 
                                           // 2. 他のレベルの入力には影響しない形でリセット
 
-                                          // 3. フォーム自体をリセット
+                                          // フォームリセット処理の別アプローチ
+                                          
+                                          // この2つのフィールドはReactフック経由で手動で再設定
+                                          levelBonusForm.setValue("effectType", "", { 
+                                            shouldValidate: true,
+                                            shouldDirty: false,
+                                            shouldTouch: false 
+                                          });
+                                          
+                                          levelBonusForm.setValue("rarity", "", { 
+                                            shouldValidate: true,
+                                            shouldDirty: false,
+                                            shouldTouch: false 
+                                          });
+                                          
+                                          // 残りのフィールドは通常のリセットで
                                           levelBonusForm.reset({
                                             characterId: selectedCharacter || undefined,
                                             level: level, // レベルは保持
-                                            effectType: "", // 空文字列で効果タイプをクリア
                                             value: "", // 値をリセット
-                                            description: "", // 説明をリセット
-                                            rarity: "" // 空文字列でレア度をクリア
+                                            description: "" // 説明をリセット
+                                          }, { keepValues: false, keepDirtyValues: false });
+                                          
+                                          // ユーザーに視覚的フィードバックを提供
+                                          toast({
+                                            title: `Lv.${level}ボーナス追加完了`,
+                                            description: "次のボーナスを入力できます",
+                                            duration: 1500,
                                           });
-
-                                          // 4. DOM要素を直接リセット
-                                          // effectTypeやrarityのセレクトボックスをリセット
-                                          setTimeout(() => {
-                                            const selects = document.querySelectorAll('select');
-                                            selects.forEach(select => {
-                                              if (select.name === 'effectType' || select.name === 'rarity') {
-                                                // リセット処理
-                                                select.value = '';
-                                                // イベント発火でReactに変更を通知
-                                                select.dispatchEvent(new Event('change', { bubbles: true }));
-                                              }
-                                            });
-                                          }, 0);
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
                                           const missingFields = [];
