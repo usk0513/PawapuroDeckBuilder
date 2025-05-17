@@ -2278,12 +2278,18 @@ export default function AdminPage() {
                                             return;
                                           }
                                           
-                                          // ここで個別のレベルだけをリセットするための準備
+                                          // 個別のレベルだけをリセットするため、次のステップで
+                                          // レベルを変数に保存しておく
                                           const currentLevel = level;
                                           
-                                          // APIリクエスト実行 - 個別レベル追加時のリセット用コード
-                                          // 型エラーを回避するため、formValuesを変更せずそのまま渡す
-                                          onLevelBonusSubmit(formValues);
+                                          // レベル情報をカスタム属性として追加
+                                          formValues._singleLevel = currentLevel;
+                                          
+                                          // APIリクエスト実行
+                                          createLevelBonusMutation.mutate({
+                                            ...formValues,
+                                            level: actualLevel, // 35.5の場合は35に変換
+                                          });
                                           
                                           // 追加後に該当レベルの入力値だけをリセット
                                           setLevelBonusEffect((prev) => {
