@@ -1989,7 +1989,7 @@ export default function AdminPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {[1, 5, 10, 15, 20, 25, 30, 35, 35.5, 37, 40, 42, 45, 50]
+                              {[1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50]
                                 .filter(level => {
                                   // レアリティフィルタが設定されている場合のレベル制限
                                   if (selectedRarity) {
@@ -2009,14 +2009,16 @@ export default function AdminPage() {
                                 .map((level) => (
                                 <tr key={level}>
                                   <td className="border p-2 text-center font-medium">
-                                    {level === 35.5 ? (
-                                      <div className="inline-flex items-center">
-                                        Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
-                                      </div>
-                                    ) : level === 35 ? (
-                                      <div className="inline-flex items-center">
-                                        Lv.35 <Badge className="ml-2 bg-muted">通常ボーナス</Badge>
-                                      </div>
+                                    {level === 35 ? (
+                                      <>
+                                        {/* 通常ボーナスと固有ボーナスを分けて2行表示 */}
+                                        <div className="inline-flex items-center mb-1">
+                                          Lv.35 <Badge className="ml-2 bg-muted">通常ボーナス</Badge>
+                                        </div>
+                                        <div className="inline-flex items-center">
+                                          Lv.35 <Badge className="ml-2 bg-blue-500 hover:bg-blue-600">固有ボーナス</Badge>
+                                        </div>
+                                      </>
                                     ) : (
                                       <div className="inline-flex items-center">
                                         Lv.{level}
