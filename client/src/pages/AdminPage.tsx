@@ -2218,7 +2218,15 @@ export default function AdminPage() {
                                           return;
                                         }
                                         
-                                        if (levelBonusForm.getValues("effectType") && levelBonusForm.getValues("value")) {
+                                        // 現在のレベルに対応する効果タイプと効果値のみを取得
+                                        const currentEffectType = levelBonusEffect[level];
+                                        const currentValue = levelBonusValue[level];
+                                        
+                                        if (currentEffectType && currentValue) {
+                                          // フォームの値をセット
+                                          levelBonusForm.setValue("effectType", currentEffectType);
+                                          levelBonusForm.setValue("value", currentValue);
+                                          
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           const formValues = levelBonusForm.getValues();
                                           const actualLevel = level === 35.5 ? 35 : level;
@@ -2227,7 +2235,7 @@ export default function AdminPage() {
                                           const existingBonus = levelBonuses.find(b => 
                                             b.characterId === selectedCharacter &&
                                             b.level === actualLevel && 
-                                            b.effectType === formValues.effectType && 
+                                            b.effectType === currentEffectType && 
                                             (b.rarity === formValues.rarity || 
                                               (!b.rarity && !formValues.rarity))
                                           );
@@ -2245,9 +2253,14 @@ export default function AdminPage() {
                                           
                                           // フォームリセットは onLevelBonusSubmit 内で行われるため不要
                                         } else {
+                                          // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
+                                          const missingFields = [];
+                                          if (!currentEffectType) missingFields.push("効果タイプ");
+                                          if (!currentValue) missingFields.push("効果値");
+                                          
                                           toast({
                                             title: "入力エラー",
-                                            description: "効果タイプと効果値を入力してください",
+                                            description: `Lv.${level === 35.5 ? "35.5" : level} の${missingFields.join("と")}を入力してください`,
                                             variant: "destructive",
                                           });
                                         }
