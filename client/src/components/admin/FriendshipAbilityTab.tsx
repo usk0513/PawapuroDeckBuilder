@@ -162,23 +162,20 @@ export default function FriendshipAbilityTab({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>プレイヤータイプ</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setFriendshipPlayerType(value as PlayerType);
-                          }}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="プレイヤータイプを選択" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem key="pitcher-option" value={PlayerType.PITCHER}>投手</SelectItem>
-                            <SelectItem key="fielder-option" value={PlayerType.FIELDER}>野手</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <select
+                            className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={field.value}
+                            onChange={(e) => {
+                              const val = e.target.value as PlayerType;
+                              field.onChange(val);
+                              setFriendshipPlayerType(val);
+                            }}
+                          >
+                            <option key="pitcher-option" value={PlayerType.PITCHER}>投手</option>
+                            <option key="fielder-option" value={PlayerType.FIELDER}>野手</option>
+                          </select>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
