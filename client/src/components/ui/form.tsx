@@ -28,16 +28,32 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
 )
 
-// 単純なFormFieldの実装に戻す
+// リスト表示用にキー伝播機能を追加したFormField
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
+  // キーの生成 (renderがリスト内で呼ばれる場合のため)
+  const fieldId = React.useId();
+  
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
+      <Controller 
+        {...props} 
+        render={(renderProps) => {
+          // オリジナルのrenderプロップを呼び出し
+          const originalRender = props.render;
+          const element = originalRender(renderProps);
+          
+          // これによりControllerが内部でリストレンダリングしても
+          // 各子要素がユニークなキーを持つようになる
+          return React.cloneElement(element, { 
+            'data-field-id': fieldId 
+          });
+        }}
+      />
     </FormFieldContext.Provider>
   )
 }
