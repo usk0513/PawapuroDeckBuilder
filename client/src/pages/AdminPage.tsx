@@ -2308,6 +2308,9 @@ export default function AdminPage() {
                                           
                                           // 個別レベル追加時は、そのレベルだけをリセット
                                           // 他のレベルの入力には影響しない
+                                          // レア度も一緒にリセット
+                                          levelBonusForm.setValue("rarity", undefined);
+                                          levelBonusForm.setValue("effectType", undefined);
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
                                           const missingFields = [];
