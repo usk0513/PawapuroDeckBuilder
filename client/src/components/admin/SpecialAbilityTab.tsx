@@ -27,8 +27,8 @@ export default function SpecialAbilityTab({
   selectedCharacter
 }: SpecialAbilityTabProps) {
   // レンダー回数をカウント（デバッグ用）
+  // Remove debugging console logs
   const renderCount = React.useRef(0);
-  console.log("🔄 SpecialAbilityTab render:", ++renderCount.current);
 
   const {
     specialAbilities,
@@ -80,7 +80,7 @@ export default function SpecialAbilityTab({
 
   // 選択された金特が変更されたときの処理
   React.useEffect(() => {
-    console.log("🌀 [effect] selectedSpecialAbility:", selectedSpecialAbility, "specialAbilities.length:", specialAbilities.length);
+    // デバッグログを削除
     
     // データのロードを待つ
     if (specialAbilities.length === 0) return;
@@ -116,7 +116,7 @@ export default function SpecialAbilityTab({
   
   // 選択されたキャラクターが変更されたときの処理
   React.useEffect(() => {
-    console.log("🌀 [effect] selectedCharacter:", selectedCharacter);
+    // デバッグログを削除
     
     if (selectedCharacter && shouldUpdateCharacter.current) {
       shouldUpdateCharacter.current = false;
