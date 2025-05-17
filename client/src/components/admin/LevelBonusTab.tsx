@@ -360,7 +360,7 @@ export default function LevelBonusTab({
                         
                         {/* レギュラーレベル (2-10) */}
                         {levelSectionsState.regular && (
-                          <React.Fragment key="section-regular">
+                          <>
                             <tr key="section-regular-header">
                               <td colSpan={5} className="bg-muted p-2 font-medium">
                                 レギュラーレベル (2-10)
@@ -455,12 +455,12 @@ export default function LevelBonusTab({
                                 </td>
                               </tr>
                             ))}
-                          </React.Fragment>
+                          </>
                         )}
                         
                         {/* 特殊レベル (11-35) */}
                         {levelSectionsState.special && (
-                          <React.Fragment key="section-special">
+                          <>
                             <tr key="section-special-header">
                               <td colSpan={5} className="bg-muted p-2 font-medium">
                                 特殊レベル (11-35)
@@ -593,12 +593,12 @@ export default function LevelBonusTab({
                                 </td>
                               </tr>
                             ))}
-                          </React.Fragment>
+                          </>
                         )}
                         
                         {/* 固有レベル (35.5) */}
                         {levelSectionsState.unique && (
-                          <React.Fragment key="section-unique">
+                          <>
                             <tr key="section-unique-header">
                               <td colSpan={5} className="bg-muted p-2 font-medium">
                                 固有レベル (35.5)
@@ -709,7 +709,7 @@ export default function LevelBonusTab({
                                 </td>
                               </tr>
                             ))}
-                          </React.Fragment>
+                          </>
                         )}
                       </tbody>
                     </table>
