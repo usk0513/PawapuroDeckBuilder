@@ -611,7 +611,7 @@ export default function AdminPage() {
       }
       return await res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/character-level-bonuses", selectedCharacter, selectedRarity] 
       });
@@ -622,27 +622,35 @@ export default function AdminPage() {
         description: `Lv.${data.level}の${data.effectType}${rarityText}ボーナスが追加されました`,
       });
       
-      // クリア - 効果タイプと値を完全に削除
+      // 個別レベル追加からの場合は、そのレベルだけリセット
+      // それ以外（まとめて追加など）の場合は、従来通りの完全リセット
+      const level = data.level;
+      
+      // 効果タイプのリセット
       setLevelBonusEffect((prev) => {
         const updated = { ...prev };
-        delete updated[data.level]; // 効果タイプを完全に削除
-        return updated;
-      });
-      setLevelBonusValue((prev) => {
-        const updated = { ...prev };
-        delete updated[data.level]; // 値を完全に削除
+        delete updated[level]; // 効果タイプの選択状態をクリア
         return updated;
       });
       
-      // フォームリセット
-      levelBonusForm.reset({
-        characterId: selectedCharacter || undefined,
-        level: data.level, // 同じレベルを保持
-        effectType: undefined,
-        value: "",
-        description: "",
-        rarity: undefined
+      // 値のリセット
+      setLevelBonusValue((prev) => {
+        const updated = { ...prev };
+        delete updated[level]; // 値を完全に削除
+        return updated;
       });
+      
+      // フォームは個別レベル追加時にはリセットしない（他のレベルへの影響を避けるため）
+      if (!data.fromSingleLevel) {
+        levelBonusForm.reset({
+          characterId: selectedCharacter || undefined,
+          level: level, // 同じレベルを保持
+          effectType: undefined,
+          value: "",
+          description: "",
+          rarity: undefined
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -2278,31 +2286,28 @@ export default function AdminPage() {
                                             return;
                                           }
                                           
-                                          // 個別のレベルだけをリセットするため、次のステップで
-                                          // レベルを変数に保存しておく
-                                          const currentLevel = level;
-                                          
-                                          // レベル情報をカスタム属性として追加
-                                          formValues._singleLevel = currentLevel;
-                                          
                                           // APIリクエスト実行
                                           createLevelBonusMutation.mutate({
                                             ...formValues,
                                             level: actualLevel, // 35.5の場合は35に変換
                                           });
-                                          
-                                          // 追加後に該当レベルの入力値だけをリセット
+
+                                          // ボーナス追加成功後にそのレベルの入力内容だけをリセット
+                                          // これにより個別レベルの入力だけをクリアできる
                                           setLevelBonusEffect((prev) => {
                                             const updated = { ...prev };
-                                            delete updated[currentLevel]; // 効果タイプの選択状態をクリア
+                                            delete updated[level]; // 効果タイプの選択状態をクリア
                                             return updated;
                                           });
                                           
                                           setLevelBonusValue((prev) => {
                                             const updated = { ...prev };
-                                            delete updated[currentLevel]; // 値を完全に削除
+                                            delete updated[level]; // 値の入力をクリア
                                             return updated;
                                           });
+                                          
+                                          // 個別レベル追加時は、そのレベルだけをリセット
+                                          // 他のレベルの入力には影響しない
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
                                           const missingFields = [];
