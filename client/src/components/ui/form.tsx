@@ -34,21 +34,11 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
+  // keyプロパティを追加してControllerに渡す
+  const uniqueKey = `field-${props.name}-${Math.random().toString(36).substring(2, 7)}`;
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller
-        {...props}
-        render={(renderProps) => {
-          // ここでrenderPropsに一意のキーを追加
-          return props.render({
-            ...renderProps,
-            field: {
-              ...renderProps.field,
-              key: `field-${props.name}` // フィールド名に基づいたキーを追加
-            }
-          });
-        }}
-      />
+    <FormFieldContext.Provider value={{ name: props.name }} key={uniqueKey}>
+      <Controller {...props} key={uniqueKey} />
     </FormFieldContext.Provider>
   )
 }

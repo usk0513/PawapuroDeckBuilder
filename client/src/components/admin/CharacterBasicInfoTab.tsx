@@ -193,11 +193,10 @@ export default function CharacterBasicInfoTab({
                   {/* 基本情報 */}
                   <div className="space-y-4">
                     <FormField
-                      key="field-name"
                       control={form.control}
                       name="name"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem key="form-item-name">
                           <FormLabel>キャラクター名</FormLabel>
                           <FormControl>
                             <Input placeholder="例：猪狩守" {...field} />
@@ -208,11 +207,10 @@ export default function CharacterBasicInfoTab({
                     />
                     
                     <FormField
-                      key="field-position"
                       control={form.control}
                       name="position"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem key="form-item-position">
                           <FormLabel>ポジション</FormLabel>
                           <Select
                             onValueChange={field.onChange}
