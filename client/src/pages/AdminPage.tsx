@@ -1009,42 +1009,69 @@ export default function AdminPage() {
     }
   });
   
-  const onLevelBonusSubmit = (values: LevelBonusFormValues) => {
+  const onLevelBonusSubmit = (values: LevelBonusFormValues & { _resetSingleLevel?: number }) => {
     // characterIdを現在選択中のキャラクターIDに設定
     if (selectedCharacter) {
+      // カスタム属性を除外してAPIに送信（APIで処理されない属性のため）
+      const { _resetSingleLevel, ...apiData } = values;
+      
       const data = {
-        ...values,
+        ...apiData,
         characterId: selectedCharacter
       };
       createLevelBonusMutation.mutate(data);
       
-      // 送信後にフォームを完全にリセット
-      levelBonusForm.reset({
-        characterId: selectedCharacter,
-        level: values.level, // levelだけは保持
-        effectType: undefined,
-        value: "",
-        description: "",
-        rarity: undefined,
-      });
-      
-      // 関連する状態変数もリセット - 画面表示を完全にクリア
-      const level = values.level;
-      setLevelBonusEffect((prev) => {
-        const updated = { ...prev };
-        delete updated[level]; // 効果タイプの選択状態をクリア
-        return updated;
-      });
-      setLevelBonusValue((prev) => {
-        const updated = { ...prev };
-        delete updated[level]; // 値を完全に削除
-        return updated;
-      });
-      setLevelBonusRarity((prev) => {
-        const updated = { ...prev };
-        // レアリティの選択状態は保持 (共通/SR/PSR)
-        return updated;
-      });
+      // 個別レベル追加の場合は、そのレベルだけをリセット
+      if (_resetSingleLevel !== undefined) {
+        const levelToReset = _resetSingleLevel;
+        
+        // 該当レベルの入力値だけをリセット
+        setLevelBonusEffect((prev) => {
+          const updated = { ...prev };
+          delete updated[levelToReset]; // 効果タイプの選択状態をクリア
+          return updated;
+        });
+        
+        setLevelBonusValue((prev) => {
+          const updated = { ...prev };
+          delete updated[levelToReset]; // 値を完全に削除
+          return updated;
+        });
+        
+        // フォーム値はリセットしない（他のレベルの入力に影響するため）
+      } 
+      // 「まとめて追加」の場合は全てリセット
+      else {
+        // 送信後にフォームを完全にリセット
+        levelBonusForm.reset({
+          characterId: selectedCharacter,
+          level: values.level, // levelだけは保持
+          effectType: undefined,
+          value: "",
+          description: "",
+          rarity: undefined,
+        });
+        
+        // 関連する状態変数もリセット - 画面表示を完全にクリア
+        const level = values.level;
+        setLevelBonusEffect((prev) => {
+          const updated = { ...prev };
+          delete updated[level]; // 効果タイプの選択状態をクリア
+          return updated;
+        });
+        
+        setLevelBonusValue((prev) => {
+          const updated = { ...prev };
+          delete updated[level]; // 値を完全に削除
+          return updated;
+        });
+        
+        setLevelBonusRarity((prev) => {
+          const updated = { ...prev };
+          // レアリティの選択状態は保持 (共通/SR/PSR)
+          return updated;
+        });
+      }
     }
   };
   
@@ -2252,11 +2279,21 @@ export default function AdminPage() {
                                           // ここで個別のレベルだけをリセットするための準備
                                           const currentLevel = level;
                                           
-                                          // APIリクエスト実行
-                                          onLevelBonusSubmit({
-                                            ...formValues,
-                                            // カスタム属性を追加：個別レベル追加であることを示す
-                                            _resetSingleLevel: currentLevel
+                                          // APIリクエスト実行 - 個別レベル追加時のリセット用コード
+                                          // 型エラーを回避するため、formValuesを変更せずそのまま渡す
+                                          onLevelBonusSubmit(formValues);
+                                          
+                                          // 追加後に該当レベルの入力値だけをリセット
+                                          setLevelBonusEffect((prev) => {
+                                            const updated = { ...prev };
+                                            delete updated[currentLevel]; // 効果タイプの選択状態をクリア
+                                            return updated;
+                                          });
+                                          
+                                          setLevelBonusValue((prev) => {
+                                            const updated = { ...prev };
+                                            delete updated[currentLevel]; // 値を完全に削除
+                                            return updated;
                                           });
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
