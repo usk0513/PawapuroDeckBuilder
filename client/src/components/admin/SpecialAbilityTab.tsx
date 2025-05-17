@@ -26,6 +26,10 @@ interface SpecialAbilityTabProps {
 export default function SpecialAbilityTab({
   selectedCharacter
 }: SpecialAbilityTabProps) {
+  // レンダー回数をカウント（デバッグ用）
+  const renderCount = React.useRef(0);
+  console.log("🔄 SpecialAbilityTab render:", ++renderCount.current);
+
   const {
     specialAbilities,
     filteredSpecialAbilities,
@@ -73,9 +77,15 @@ export default function SpecialAbilityTab({
 
   // 選択された金特が変更されたときの処理
   React.useEffect(() => {
+    console.log("🌀 [effect] selectedSpecialAbility:", selectedSpecialAbility, "specialAbilities.length:", specialAbilities.length);
+    
+    // 無限ループ防止のための参照比較
+    const shouldReset = React.useRef(true);
+    
     if (selectedSpecialAbility) {
       const ability = specialAbilities.find((a: any) => a.id === selectedSpecialAbility);
-      if (ability) {
+      if (ability && shouldReset.current) {
+        shouldReset.current = false;
         specialAbilityForm.reset({
           name: ability.name,
           description: ability.description,
@@ -83,7 +93,8 @@ export default function SpecialAbilityTab({
           playerType: ability.playerType
         });
       }
-    } else {
+    } else if (shouldReset.current) {
+      shouldReset.current = false;
       specialAbilityForm.reset({
         name: "",
         description: "",
@@ -91,14 +102,28 @@ export default function SpecialAbilityTab({
         playerType: PlayerType.PITCHER
       });
     }
-  }, [selectedSpecialAbility, specialAbilities, specialAbilityForm]);
+    
+    return () => {
+      shouldReset.current = true;
+    };
+  }, [selectedSpecialAbility, specialAbilities]); // specialAbilityFormを依存配列から削除
 
   // 選択されたキャラクターが変更されたときの処理
   React.useEffect(() => {
-    if (selectedCharacter) {
+    console.log("🌀 [effect] selectedCharacter:", selectedCharacter);
+    
+    // 無限ループ防止のための参照比較
+    const shouldUpdate = React.useRef(true);
+    
+    if (selectedCharacter && shouldUpdate.current) {
+      shouldUpdate.current = false;
       specialAbilitySetForm.setValue("characterId", selectedCharacter);
     }
-  }, [selectedCharacter, specialAbilitySetForm]);
+    
+    return () => {
+      shouldUpdate.current = true;
+    };
+  }, [selectedCharacter]); // specialAbilitySetFormを依存配列から削除
 
   // 金特追加・更新処理
   const onSpecialAbilitySubmit = (values: SpecialAbilityFormValues) => {
