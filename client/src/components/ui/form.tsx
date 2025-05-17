@@ -36,7 +36,19 @@ const FormField = <
 }: ControllerProps<TFieldValues, TName>) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
+      <Controller
+        {...props}
+        render={(renderProps) => {
+          // ここでrenderPropsに一意のキーを追加
+          return props.render({
+            ...renderProps,
+            field: {
+              ...renderProps.field,
+              key: `field-${props.name}` // フィールド名に基づいたキーを追加
+            }
+          });
+        }}
+      />
     </FormFieldContext.Provider>
   )
 }
