@@ -2350,9 +2350,9 @@ export default function AdminPage() {
                                       // 表示レベルに合わせて絞り込み
                                       // レベル35.5と35の特殊対応
                                       (level === 35.5 
-                                        ? (b.level === 35 && b.value.startsWith("+")) 
+                                        ? (b.level === 35 && b.effectType === BonusEffectType.UNIQUE_ITEM) 
                                         : level === 35 
-                                          ? (b.level === 35 && !b.value.startsWith("+"))
+                                          ? (b.level === 35 && b.effectType !== BonusEffectType.UNIQUE_ITEM)
                                           : b.level === level)
                                       // レアリティフィルタ
                                       && (!selectedRarity || !b.rarity || b.rarity === selectedRarity)
@@ -2364,9 +2364,9 @@ export default function AdminPage() {
                                           // 表示レベルに合わせて絞り込み
                                           // レベル35.5と35の特殊対応
                                           (level === 35.5 
-                                            ? (b.level === 35 && b.value.startsWith("+")) 
+                                            ? (b.level === 35 && b.effectType === BonusEffectType.UNIQUE_ITEM) 
                                             : level === 35 
-                                              ? (b.level === 35 && !b.value.startsWith("+"))
+                                              ? (b.level === 35 && b.effectType !== BonusEffectType.UNIQUE_ITEM)
                                               : b.level === level)
                                           // レアリティフィルタ
                                           && (!selectedRarity || !b.rarity || b.rarity === selectedRarity)
