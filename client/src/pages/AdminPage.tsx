@@ -2287,8 +2287,8 @@ export default function AdminPage() {
                                             isUniqueBonus: level === 35.5 ? true : false,
                                           });
 
-                                          // ボーナス追加成功後にそのレベルの入力内容だけをリセット
-                                          // これにより個別レベルの入力だけをクリアできる
+                                          // 追加後に確実にリセットするための処理
+                                          // 1. ステート変数をリセット
                                           setLevelBonusEffect((prev) => {
                                             const updated = { ...prev };
                                             delete updated[level]; // 効果タイプの選択状態をクリア
@@ -2301,18 +2301,31 @@ export default function AdminPage() {
                                             return updated;
                                           });
                                           
-                                          // 個別レベル追加時は、そのレベルだけをリセット
-                                          // 他のレベルの入力には影響しない
+                                          // 2. 他のレベルの入力には影響しない形でリセット
                                           
-                                          // すべての入力項目をリセット - UIが確実に更新されるように
+                                          // 3. フォーム自体をリセット
                                           levelBonusForm.reset({
                                             characterId: selectedCharacter || undefined,
                                             level: level, // レベルは保持
-                                            effectType: undefined, // 効果タイプを未選択状態にリセット
+                                            effectType: "", // 空文字列で効果タイプをクリア
                                             value: "", // 値をリセット
                                             description: "", // 説明をリセット
-                                            rarity: undefined // レア度を未選択状態にリセット
+                                            rarity: "" // 空文字列でレア度をクリア
                                           });
+                                          
+                                          // 4. DOM要素を直接リセット
+                                          // effectTypeやrarityのセレクトボックスをリセット
+                                          setTimeout(() => {
+                                            const selects = document.querySelectorAll('select');
+                                            selects.forEach(select => {
+                                              if (select.name === 'effectType' || select.name === 'rarity') {
+                                                // リセット処理
+                                                select.value = '';
+                                                // イベント発火でReactに変更を通知
+                                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                                              }
+                                            });
+                                          }, 0);
                                         } else {
                                           // 現在のレベルに対応する効果タイプまたは効果値が設定されていない場合のエラー
                                           const missingFields = [];
