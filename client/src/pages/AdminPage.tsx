@@ -640,17 +640,22 @@ export default function AdminPage() {
         return updated;
       });
       
-      // フォームは個別レベル追加時にはリセットしない（他のレベルへの影響を避けるため）
-      if (!data.fromSingleLevel) {
-        levelBonusForm.reset({
-          characterId: selectedCharacter || undefined,
-          level: level, // 同じレベルを保持
-          effectType: undefined,
-          value: "",
-          description: "",
-          rarity: undefined
-        });
-      }
+      // レアリティのリセット
+      setLevelBonusRarity((prev) => {
+        const updated = { ...prev };
+        delete updated[level]; // レアリティ選択状態をクリア
+        return updated;
+      });
+      
+      // フォームをリセット - 常に現在のフォームフィールド値をクリアする
+      levelBonusForm.reset({
+        characterId: selectedCharacter || undefined,
+        level: level, // 同じレベルを保持
+        effectType: undefined, // 効果タイプをリセット
+        value: "", // 値をリセット
+        rarity: undefined, // レアリティをリセット
+        description: ""
+      });
     },
     onError: (error: Error) => {
       toast({
