@@ -1038,49 +1038,39 @@ export default function AdminPage() {
         // 該当レベルの入力値だけをリセット
         setLevelBonusEffect((prev) => {
           const updated = { ...prev };
-          delete updated[levelToReset]; // 効果タイプの選択状態をクリア
+          delete updated[levelToReset];
           return updated;
         });
         
         setLevelBonusValue((prev) => {
           const updated = { ...prev };
-          delete updated[levelToReset]; // 値を完全に削除
+          delete updated[levelToReset];
           return updated;
         });
         
-        // フォーム値はリセットしない（他のレベルの入力に影響するため）
+        setLevelBonusRarity((prev) => {
+          const updated = { ...prev };
+          delete updated[levelToReset];
+          return updated;
+        });
       } 
       // 「まとめて追加」の場合は全てリセット
       else {
         // 送信後にフォームを完全にリセット
         levelBonusForm.reset({
           characterId: selectedCharacter,
-          level: values.level, // levelだけは保持
+          level: values.level,
           effectType: undefined,
           value: "",
           description: "",
           rarity: undefined,
         });
         
-        // 関連する状態変数もリセット - 画面表示を完全にクリア
+        // 関連する状態変数も完全にリセット
         const level = values.level;
-        setLevelBonusEffect((prev) => {
-          const updated = { ...prev };
-          delete updated[level]; // 効果タイプの選択状態をクリア
-          return updated;
-        });
-        
-        setLevelBonusValue((prev) => {
-          const updated = { ...prev };
-          delete updated[level]; // 値を完全に削除
-          return updated;
-        });
-        
-        setLevelBonusRarity((prev) => {
-          const updated = { ...prev };
-          // レアリティの選択状態は保持 (共通/SR/PSR)
-          return updated;
-        });
+        setLevelBonusEffect({});
+        setLevelBonusValue({});
+        setLevelBonusRarity({});
       }
     }
   };
