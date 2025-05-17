@@ -129,22 +129,22 @@ const isLv35UniqueBonus = (level: number): boolean => {
 const formatEffectValue = (value: string, effectType?: string, level?: number, isAwakening?: boolean): string => {
   if (!effectType) return value;
   const unit = effectTypeUnits[effectType] || "";
-  
+
   // 1. 値が既に+で始まる場合は追加効果として表示
   if (value.startsWith("+")) {
     return `${value}${unit}`;
   }
-  
+
   // 2. 覚醒ボーナスの場合は+を付けて表示
   if (isAwakening) {
     return `+${value}${unit}`;
   }
-  
+
   // 3. LV35固有ボーナスの場合は+を付けて表示
   if (level === 35 && effectType === BonusEffectType.UNIQUE_ITEM) {
     return `+${value}${unit}`;
   }
-  
+
   // 4. それ以外は通常の値として表示
   return `${value}${unit}`;
 };
@@ -233,7 +233,7 @@ const getBonusEffectTypeOptions = () => {
   };
 
   const options: { label: string; value: string; group?: string }[] = [];
-  
+
   // グループごとにオプションを追加
   Object.entries(groups).forEach(([groupKey, group]) => {
     group.items.forEach(item => {
@@ -244,7 +244,7 @@ const getBonusEffectTypeOptions = () => {
       });
     });
   });
-  
+
   return options;
 };
 
@@ -273,15 +273,15 @@ export default function AdminPage() {
   const [levelBonusEffect, setLevelBonusEffect] = useState<Record<number, string>>({});
   const [levelBonusValue, setLevelBonusValue] = useState<Record<number, string>>({});
   const [isBatchSubmitting, setIsBatchSubmitting] = useState(false);
-  
+
   // 覚醒ボーナス関連の状態
   const [awakeningEffect, setAwakeningEffect] = useState<string>("");
   const [awakeningValue, setAwakeningValue] = useState<string>("");
   const [awakeningType, setAwakeningType] = useState<string>("initial"); // 'initial' or 'second'
-  
+
   // 友情特殊能力関連の状態
   const [friendshipPlayerType, setFriendshipPlayerType] = useState<PlayerType>(PlayerType.PITCHER);
-  
+
   // 金特関連の状態
   const [selectedSpecialAbility, setSelectedSpecialAbility] = useState<number | null>(null);
   const [selectedPlayerType, setSelectedPlayerType] = useState<PlayerType | string>("_all");
@@ -314,7 +314,7 @@ export default function AdminPage() {
     },
     enabled: !!selectedCharacter,
   });
-  
+
   // 覚醒ボーナスデータの取得
   const { data: awakeningBonuses = [], isLoading: isLoadingAwakeningBonuses } = useQuery({
     queryKey: ["/api/character-awakening-bonuses", selectedCharacter],
@@ -335,7 +335,7 @@ export default function AdminPage() {
     },
     enabled: !!selectedCharacter,
   });
-  
+
   // 金特データの取得
   const { data: specialAbilities = [], isLoading: isLoadingSpecialAbilities } = useQuery({
     queryKey: ["/api/special-abilities"],
@@ -345,7 +345,7 @@ export default function AdminPage() {
       return await res.json();
     }
   });
-  
+
   // 金特セットデータの取得
   const { data: specialAbilitySets = [], isLoading: isLoadingSpecialAbilitySets } = useQuery({
     queryKey: ["/api/character-special-ability-sets", selectedCharacter, selectedPlayerType],
@@ -484,7 +484,7 @@ export default function AdminPage() {
       description: "",
     }
   });
-  
+
   // 覚醒ボーナス用フォーム
   const awakeningBonusForm = useForm<AwakeningBonusFormValues>({
     resolver: zodResolver(awakeningBonusSchema),
@@ -495,7 +495,7 @@ export default function AdminPage() {
       awakeningType: "initial", // 'initial'(初回覚醒) or 'second'(2回目覚醒)
     }
   });
-  
+
   // 金特用フォーム
   const specialAbilityForm = useForm<SpecialAbilityFormValues>({
     resolver: zodResolver(specialAbilitySchema),
@@ -505,7 +505,7 @@ export default function AdminPage() {
       description: "",
     }
   });
-  
+
   // 金特セット用フォーム
   const specialAbilitySetForm = useForm<CharacterSpecialAbilitySetFormValues>({
     resolver: zodResolver(characterSpecialAbilitySetSchema),
@@ -518,7 +518,7 @@ export default function AdminPage() {
     },
     mode: 'onChange'
   });
-  
+
   // 金特セットアイテム用フォーム
   const specialAbilitySetItemForm = useForm<SpecialAbilitySetItemFormValues>({
     resolver: zodResolver(specialAbilitySetItemSchema),
@@ -529,7 +529,7 @@ export default function AdminPage() {
     },
     mode: 'onChange'
   });
-  
+
   // フォーム値変更時のデバッグ
   useEffect(() => {
     const subscription = awakeningBonusForm.watch((value, { name, type }) => {
@@ -537,7 +537,7 @@ export default function AdminPage() {
     });
     return () => subscription.unsubscribe();
   }, [awakeningBonusForm]);
-  
+
   // 友情特殊能力用フォーム
   const friendshipAbilityForm = useForm<FriendshipAbilityFormValues>({
     resolver: zodResolver(friendshipAbilitySchema),
@@ -577,20 +577,20 @@ export default function AdminPage() {
       console.log("キャラクターIDを設定:", selectedCharacter);
     }
   }, [selectedCharacter, awakeningBonusForm, friendshipAbilityForm]);
-  
+
   // 覚醒タイプを自動設定 (初回覚醒が登録済みの場合は二回目覚醒を強制的に選択)
   useEffect(() => {
     if (awakeningBonuses && awakeningBonuses.length > 0) {
       // 初回覚醒が既に登録されているか確認
       const hasInitialAwakening = awakeningBonuses.some((bonus: { awakeningType: string }) => bonus.awakeningType === "initial");
-      
+
       if (hasInitialAwakening) {
         // 初回覚醒が登録済みの場合、二回目覚醒を選択
         awakeningBonusForm.setValue("awakeningType", "second");
       }
     }
   }, [awakeningBonuses, awakeningBonusForm]);
-  
+
   // 金特セットフォームのキャラクターIDとプレイヤータイプを更新
   useEffect(() => {
     if (selectedCharacter) {
@@ -600,7 +600,7 @@ export default function AdminPage() {
       specialAbilitySetForm.setValue("playerType", selectedPlayerType);
     }
   }, [selectedCharacter, selectedPlayerType, specialAbilitySetForm]);
-  
+
   // レベルボーナス追加ミューテーション
   const createLevelBonusMutation = useMutation({
     mutationFn: async (data: LevelBonusFormValues) => {
@@ -615,40 +615,53 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/character-level-bonuses", selectedCharacter, selectedRarity] 
       });
-      
+
       const rarityText = data.rarity ? `（${data.rarity}専用）` : "";
       toast({
         title: "レベルボーナス追加",
         description: `Lv.${data.level}の${data.effectType}${rarityText}ボーナスが追加されました`,
       });
-      
+
       // 個別レベル追加からの場合は、そのレベルだけリセット
       // それ以外（まとめて追加など）の場合は、従来通りの完全リセット
       const level = data.level;
-      
-      // 効果タイプのリセット
-      setLevelBonusEffect((prev) => {
-        const updated = { ...prev };
-        delete updated[level]; // 効果タイプの選択状態をクリア
-        return updated;
-      });
-      
-      // 値のリセット
-      setLevelBonusValue((prev) => {
-        const updated = { ...prev };
-        delete updated[level]; // 値を完全に削除
-        return updated;
-      });
-      
-      // フォームは個別レベル追加時にはリセットしない（他のレベルへの影響を避けるため）
-      if (!data.fromSingleLevel) {
-        levelBonusForm.reset({
-          characterId: selectedCharacter || undefined,
-          level: level, // 同じレベルを保持
-          effectType: undefined,
-          value: "",
-          description: "",
-          rarity: undefined
+
+      // 個別レベル追加の場合は、そのレベルだけをリセット
+      if (_resetSingleLevel !== undefined) {
+        const levelToReset = _resetSingleLevel;
+
+        // フォームフィールドをリセット
+        levelBonusForm.resetField('effectType', { defaultValue: '' });
+        levelBonusForm.resetField('value', { defaultValue: '' });
+        levelBonusForm.resetField('rarity', { defaultValue: '' });
+
+        // Select コンポーネントの状態をリセット
+        setTimeout(() => {
+          const selects = document.querySelectorAll(`[data-level="${levelToReset}"] select`);
+          selects.forEach(select => {
+            select.value = '';
+            // イベント発火でReactに変更を通知
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+        }, 0);
+
+        // カスタムstateもクリア
+        setLevelBonusEffect((prev) => {
+          const updated = { ...prev };
+          delete updated[levelToReset];
+          return updated;
+        });
+
+        setLevelBonusValue((prev) => {
+          const updated = { ...prev };
+          delete updated[levelToReset];
+          return updated;
+        });
+
+        setLevelBonusRarity((prev) => {
+          const updated = { ...prev };
+          delete updated[levelToReset];
+          return updated;
         });
       }
     },
@@ -660,7 +673,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // レベルボーナス削除ミューテーション
   const deleteLevelBonusMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -688,7 +701,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 覚醒ボーナス追加ミューテーション
   const createAwakeningBonusMutation = useMutation({
     mutationFn: async (data: AwakeningBonusFormValues) => {
@@ -697,7 +710,7 @@ export default function AdminPage() {
         ...data,
         value: data.value && !data.value.startsWith('+') ? `+${data.value}` : data.value
       };
-      
+
       const res = await apiRequest("POST", "/api/character-awakening-bonuses", modifiedData);
       if (!res.ok) {
         const error = await res.json();
@@ -709,17 +722,17 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/character-awakening-bonuses", selectedCharacter] 
       });
-      
+
       const awakeningTypeText = data.awakeningType === "initial" ? "初回覚醒" : "二回目覚醒";
       toast({
         title: "覚醒ボーナス追加",
         description: `${awakeningTypeText}の${data.effectType}ボーナスが追加されました`,
       });
-      
+
       // クリア
       setAwakeningEffect("");
       setAwakeningValue("");
-      
+
       // フォームリセット
       awakeningBonusForm.reset({
         characterId: selectedCharacter || undefined,
@@ -736,7 +749,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 覚醒ボーナス削除ミューテーション
   const deleteAwakeningBonusMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -764,7 +777,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 友情特殊能力追加ミューテーション
   const createFriendshipAbilityMutation = useMutation({
     mutationFn: async (data: FriendshipAbilityFormValues) => {
@@ -779,12 +792,12 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/character-friendship-abilities", selectedCharacter] 
       });
-      
+
       toast({
         title: "友情特殊能力追加",
         description: `${data.playerType}用の友情特殊能力が追加されました`,
       });
-      
+
       // フォームリセット
       friendshipAbilityForm.reset({
         characterId: selectedCharacter || undefined,
@@ -800,7 +813,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 友情特殊能力削除ミューテーション
   const deleteFriendshipAbilityMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -828,7 +841,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 金特作成ミューテーション
   const createSpecialAbilityMutation = useMutation({
     mutationFn: async (data: SpecialAbilityFormValues) => {
@@ -855,7 +868,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 金特削除ミューテーション
   const deleteSpecialAbilityMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -882,7 +895,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 金特セット作成ミューテーション
   const createSpecialAbilitySetMutation = useMutation({
     mutationFn: async (data: CharacterSpecialAbilitySetFormValues) => {
@@ -927,7 +940,7 @@ export default function AdminPage() {
       }
     }
   });
-  
+
   // 金特セット削除ミューテーション
   const deleteSpecialAbilitySetMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -956,7 +969,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 金特セットアイテム追加ミューテーション
   const addSpecialAbilityToSetMutation = useMutation({
     mutationFn: async (data: SpecialAbilitySetItemFormValues) => {
@@ -989,7 +1002,7 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   // 金特セットアイテム削除ミューテーション
   const removeSpecialAbilityFromSetMutation = useMutation({
     mutationFn: async ({ setId, specialAbilityId }: { setId: number; specialAbilityId: number }) => {
@@ -1018,36 +1031,51 @@ export default function AdminPage() {
       });
     }
   });
-  
+
   const onLevelBonusSubmit = (values: LevelBonusFormValues & { _resetSingleLevel?: number }) => {
     // characterIdを現在選択中のキャラクターIDに設定
     if (selectedCharacter) {
       // カスタム属性を除外してAPIに送信（APIで処理されない属性のため）
       const { _resetSingleLevel, ...apiData } = values;
-      
+
       const data = {
         ...apiData,
         characterId: selectedCharacter
       };
       createLevelBonusMutation.mutate(data);
-      
+
       // 個別レベル追加の場合は、そのレベルだけをリセット
       if (_resetSingleLevel !== undefined) {
         const levelToReset = _resetSingleLevel;
-        
-        // 該当レベルの入力値だけをリセット
+
+        // フォームフィールドをリセット
+        levelBonusForm.resetField('effectType', { defaultValue: '' });
+        levelBonusForm.resetField('value', { defaultValue: '' });
+        levelBonusForm.resetField('rarity', { defaultValue: '' });
+
+        // Select コンポーネントの状態をリセット
+        setTimeout(() => {
+          const selects = document.querySelectorAll(`[data-level="${levelToReset}"] select`);
+          selects.forEach(select => {
+            select.value = '';
+            // イベント発火でReactに変更を通知
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+        }, 0);
+
+        // カスタムstateもクリア
         setLevelBonusEffect((prev) => {
           const updated = { ...prev };
           delete updated[levelToReset];
           return updated;
         });
-        
+
         setLevelBonusValue((prev) => {
           const updated = { ...prev };
           delete updated[levelToReset];
           return updated;
         });
-        
+
         setLevelBonusRarity((prev) => {
           const updated = { ...prev };
           delete updated[levelToReset];
@@ -1065,7 +1093,7 @@ export default function AdminPage() {
           description: "",
           rarity: undefined,
         });
-        
+
         // 関連する状態変数も完全にリセット
         const level = values.level;
         setLevelBonusEffect({});
@@ -1074,21 +1102,21 @@ export default function AdminPage() {
       }
     }
   };
-  
+
   // すべてのレベルボーナスをまとめて追加する関数
   const submitAllLevelBonuses = async () => {
     if (!selectedCharacter) return;
-    
+
     setIsBatchSubmitting(true);
     const levels = [1, 5, 10, 15, 20, 25, 30, 35, 37, 40, 42, 45, 50];
-    
+
     // 入力されているレベルボーナスを収集
     const bonusesToSubmit: Array<{level: number, effectType: string, value: string, rarity?: string}> = [];
-    
+
     levels.forEach(level => {
       const effectType = levelBonusEffect[level];
       const value = levelBonusValue[level];
-      
+
       if (effectType && value) {
         const bonus = {
           level,
@@ -1097,7 +1125,7 @@ export default function AdminPage() {
           characterId: selectedCharacter,
           description: "",
         };
-        
+
         // 特定レベルでのレアリティを強制設定
         if (level === 37) {
           Object.assign(bonus, { rarity: Rarity.SR });
@@ -1108,11 +1136,11 @@ export default function AdminPage() {
         else if (levelBonusRarity[level] && levelBonusRarity[level] !== "common") {
           Object.assign(bonus, { rarity: levelBonusRarity[level] });
         }
-        
+
         bonusesToSubmit.push(bonus);
       }
     });
-    
+
     if (bonusesToSubmit.length === 0) {
       setIsBatchSubmitting(false);
       toast({
@@ -1122,7 +1150,7 @@ export default function AdminPage() {
       });
       return;
     }
-    
+
     try {
       // 順番に処理
       for (const bonus of bonusesToSubmit) {
@@ -1142,12 +1170,12 @@ export default function AdminPage() {
           });
         });
       }
-      
+
       // すべて送信後にフォームをリセット
       setLevelBonusRarity(prev => ({}));
       setLevelBonusEffect(prev => ({}));
       setLevelBonusValue(prev => ({}));
-      
+
       toast({
         title: "レベルボーナス一括追加",
         description: `${bonusesToSubmit.length}件のレベルボーナスを追加しました`,
@@ -1156,27 +1184,27 @@ export default function AdminPage() {
       setIsBatchSubmitting(false);
     }
   };
-  
+
   // 金特作成時の送信処理
   const onSpecialAbilitySubmit = (values: SpecialAbilityFormValues) => {
     createSpecialAbilityMutation.mutate(values);
   };
-  
+
   // 金特のフィルタリング
   const filteredSpecialAbilities = specialAbilities.filter((ability) => {
     // タイプでフィルタリング（タイプが選択されている場合）
     const matchesType = selectedPlayerType === "" || selectedPlayerType === "_all" || 
                         ability.playerType === selectedPlayerType;
-    
+
     // 検索語句でフィルタリング
     const matchesSearch = 
       abilitySearchTerm === "" || 
       ability.name.toLowerCase().includes(abilitySearchTerm.toLowerCase()) ||
       (ability.description && ability.description.toLowerCase().includes(abilitySearchTerm.toLowerCase()));
-    
+
     return matchesType && matchesSearch;
   });
-  
+
   // 金特セット作成時の送信処理
   const onSpecialAbilitySetSubmit = (values: CharacterSpecialAbilitySetFormValues) => {
     if (!selectedCharacter) {
@@ -1198,7 +1226,7 @@ export default function AdminPage() {
 
     // 選択中のキャラクター名を取得
     const characterName = characters.find(c => c.id === selectedCharacter)?.name || "";
-    
+
     // 名前を自動的に設定 (必須フィールド)
     if (!values.name) {
       values.name = `${characterName}の${values.choiceType}`;
@@ -1218,7 +1246,7 @@ export default function AdminPage() {
     };
     createSpecialAbilitySetMutation.mutate(data);
   };
-  
+
   // 金特セットアイテム追加時の送信処理
   const onSpecialAbilitySetItemSubmit = (values: Partial<SpecialAbilitySetItemFormValues>) => {
     if (selectedAbilitySetId) {
@@ -1245,7 +1273,7 @@ export default function AdminPage() {
       addSpecialAbilityToSetMutation.mutate(data);
     }
   };
-  
+
   const handleEditCharacter = (character: any) => {
     setSelectedCharacter(character.id);
     setActiveTab("character");
@@ -1253,13 +1281,13 @@ export default function AdminPage() {
     setLevelBonusRarity({}); // レアリティ選択をリセット
     setLevelBonusEffect({}); // 効果タイプ選択をリセット
     setLevelBonusValue({}); // 効果値をリセット
-    
+
     // 状態変数のクリア
     setAwakeningEffect("");
     setAwakeningValue("");
     setSelectedPlayerType("_all");
     setSelectedAbilitySetId(null);
-    
+
     // キャラクター編集フォームの初期化
     form.reset({
       name: character.name,
@@ -1269,7 +1297,7 @@ export default function AdminPage() {
       eventTiming: character.eventTiming,
       role: character.role || CharacterRole.GUARD,
     });
-    
+
     // レベルボーナスフォームの初期化
     levelBonusForm.reset({
       characterId: character.id,
@@ -1279,7 +1307,7 @@ export default function AdminPage() {
       description: "",
       rarity: undefined,
     });
-    
+
     // 覚醒ボーナスフォームの初期化
     awakeningBonusForm.reset({
       characterId: character.id,
@@ -1301,7 +1329,7 @@ export default function AdminPage() {
   };
 
 
-  
+
   // 覚醒ボーナス送信ハンドラ
   const onAwakeningBonusSubmit = (values: AwakeningBonusFormValues) => {
     console.log("覚醒ボーナス送信：", values);
@@ -1310,7 +1338,7 @@ export default function AdminPage() {
       if (!values.characterId) {
         values.characterId = selectedCharacter;
       }
-      
+
       const data = {
         ...values,
         characterId: selectedCharacter,
@@ -1318,7 +1346,7 @@ export default function AdminPage() {
         awakeningLevel: 1 // 覚醒レベルを追加（データベース互換性のため）
       };
       console.log("覚醒ボーナス送信データ：", data);
-      
+
       // ボタンクリックでフォーム送信を行わずに直接ミューテーションを呼び出す
       createAwakeningBonusMutation.mutate(data, {
         onSuccess: (newBonus) => {
@@ -1332,7 +1360,7 @@ export default function AdminPage() {
             effectType: undefined, 
             value: "" 
           });
-          
+
           toast({
             title: "覚醒ボーナスが登録されました",
             description: `${newBonus.effectType}：${newBonus.value}${effectTypeUnits[newBonus.effectType] || ""}`,
@@ -1355,7 +1383,7 @@ export default function AdminPage() {
       });
     }
   };
-  
+
   const isSubmitting = createCharacterMutation.isPending || updateCharacterMutation.isPending;
   const isDeleting = deleteCharacterMutation.isPending;
   const isLevelBonusSubmitting = createLevelBonusMutation.isPending;
@@ -1596,7 +1624,7 @@ export default function AdminPage() {
                         )}
                       />
                     </div>
-                    
+
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium">イベント発生タイミング</h3>
                       <FormField
@@ -1822,7 +1850,7 @@ export default function AdminPage() {
                             )}
                           />
                         </div>
-                        
+
                         <div className="space-y-4">
                           <h3 className="text-lg font-medium">イベント発生タイミング</h3>
                           <FormField
@@ -1928,12 +1956,12 @@ export default function AdminPage() {
                       </form>
                     </Form>
                   </TabsContent>
-                  
+
                   <TabsContent value="levelbonus">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-medium mb-4">レベルボーナス一括登録</h3>
-                        
+
                         <div className="mb-4">
                           <div className="flex justify-between items-center mb-2">
                             <h4 className="text-sm font-medium">レアリティフィルタ</h4>
@@ -1961,7 +1989,7 @@ export default function AdminPage() {
                             ))}
                           </div>
                         </div>
-                        
+
                         <div className="mb-4">
                           <Button
                             type="button"
@@ -1975,7 +2003,7 @@ export default function AdminPage() {
                             全入力項目をまとめて追加
                           </Button>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                           <table className="w-full border-collapse">
                             <thead>
@@ -2002,7 +2030,7 @@ export default function AdminPage() {
                                       return false;
                                     }
                                   }
-                                  
+
                                   // 常に全レベルを表示する
                                   return true;
                                 })
@@ -2072,6 +2100,7 @@ export default function AdminPage() {
                                         });
                                       }}
                                       value={levelBonusEffect[level] || undefined}
+                                      data-level={level}
                                     >
                                       <SelectTrigger>
                                         <SelectValue placeholder="効果タイプを選択" />
@@ -2110,13 +2139,13 @@ export default function AdminPage() {
                                             onValueChange={(value) => {
                                               // 選択した固有アイテム名の先頭に+を付ける
                                               const formattedValue = `+${value}`;
-                                              
+
                                               // 画面表示は35.5だが、データベースには35として保存
                                               // 固有アイテムを選択した場合は固有アイテムタイプを設定
                                               levelBonusForm.setValue("level", 35);
                                               levelBonusForm.setValue("effectType", BonusEffectType.UNIQUE_ITEM);
                                               levelBonusForm.setValue("value", formattedValue);
-                                              
+
                                               setLevelBonusValue((prev) => {
                                                 const updated = { ...prev };
                                                 updated[level] = formattedValue;
@@ -2145,7 +2174,7 @@ export default function AdminPage() {
                                               levelBonusForm.setValue("level", 35);
                                               // ユーザーが選択した効果タイプを維持する
                                               levelBonusForm.setValue("value", e.target.value);
-                                              
+
                                               setLevelBonusValue((prev) => {
                                                 const updated = { ...prev };
                                                 updated[level] = e.target.value;
@@ -2166,10 +2195,10 @@ export default function AdminPage() {
                                           onChange={(e) => {
                                             // 通常ボーナスは+をつけない
                                             const value = e.target.value;
-                                            
+
                                             levelBonusForm.setValue("level", level);
                                             levelBonusForm.setValue("value", value);
-                                            
+
                                             setLevelBonusValue((prev) => {
                                               const updated = { ...prev };
                                               updated[level] = value;
@@ -2188,7 +2217,7 @@ export default function AdminPage() {
                                         onChange={(e) => {
                                           levelBonusForm.setValue("level", level);
                                           levelBonusForm.setValue("value", e.target.value);
-                                          
+
                                           setLevelBonusValue((prev) => {
                                             const updated = { ...prev };
                                             updated[level] = e.target.value;
@@ -2228,14 +2257,14 @@ export default function AdminPage() {
                                         const actualLevel = level === 35.5 ? 35 : level;
                                         levelBonusForm.setValue("level", actualLevel);
                                         levelBonusForm.setValue("description", "");
-                                        
+
                                         // 特定のレベルではレアリティを自動設定
                                         if (actualLevel === 37) {
                                           levelBonusForm.setValue("rarity", Rarity.SR);
                                         } else if (actualLevel === 42 || actualLevel === 50) {
                                           levelBonusForm.setValue("rarity", Rarity.PSR);
                                         }
-                                        
+
                                         // 初期評価の場合はレアリティチェック
                                         if (levelBonusForm.getValues("effectType") === BonusEffectType.INITIAL_RATING && 
                                             !levelBonusForm.getValues("rarity")) {
@@ -2246,21 +2275,21 @@ export default function AdminPage() {
                                           });
                                           return;
                                         }
-                                        
+
                                         // 現在のレベルに対応する効果タイプと効果値のみを取得
                                         const currentEffectType = levelBonusEffect[level];
                                         const currentValue = levelBonusValue[level];
-                                        
+
                                         if (currentEffectType && currentValue) {
                                           // フォームの値をセット
                                           // レベル35.5(固有ボーナス)でも、ユーザーが選択した効果タイプをそのまま使用
                                           levelBonusForm.setValue("effectType", currentEffectType);
                                           levelBonusForm.setValue("value", currentValue);
-                                          
+
                                           // 効果値にフォーマットを適用しない状態でAPI送信
                                           const formValues = levelBonusForm.getValues();
                                           const actualLevel = level === 35.5 ? 35 : level;
-                                          
+
                                           // 既に同じレベルと効果タイプのボーナスが登録済みかチェック
                                           const existingBonus = levelBonuses.find(b => 
                                             b.characterId === selectedCharacter &&
@@ -2269,7 +2298,7 @@ export default function AdminPage() {
                                             (b.rarity === formValues.rarity || 
                                               (!b.rarity && !formValues.rarity))
                                           );
-                                          
+
                                           if (existingBonus) {
                                             toast({
                                               title: "登録エラー",
@@ -2278,7 +2307,7 @@ export default function AdminPage() {
                                             });
                                             return;
                                           }
-                                          
+
                                           // APIリクエスト実行
                                           // レベル35.5の場合は固有ボーナスとしてマーク
                                           createLevelBonusMutation.mutate({
@@ -2294,15 +2323,15 @@ export default function AdminPage() {
                                             delete updated[level]; // 効果タイプの選択状態をクリア
                                             return updated;
                                           });
-                                          
+
                                           setLevelBonusValue((prev) => {
                                             const updated = { ...prev };
                                             delete updated[level]; // 値の入力をクリア
                                             return updated;
                                           });
-                                          
+
                                           // 2. 他のレベルの入力には影響しない形でリセット
-                                          
+
                                           // 3. フォーム自体をリセット
                                           levelBonusForm.reset({
                                             characterId: selectedCharacter || undefined,
@@ -2312,7 +2341,7 @@ export default function AdminPage() {
                                             description: "", // 説明をリセット
                                             rarity: "" // 空文字列でレア度をクリア
                                           });
-                                          
+
                                           // 4. DOM要素を直接リセット
                                           // effectTypeやrarityのセレクトボックスをリセット
                                           setTimeout(() => {
@@ -2331,7 +2360,7 @@ export default function AdminPage() {
                                           const missingFields = [];
                                           if (!currentEffectType) missingFields.push("効果タイプ");
                                           if (!currentValue) missingFields.push("効果値");
-                                          
+
                                           toast({
                                             title: "入力エラー",
                                             description: `Lv.${level === 35.5 ? "35.5" : level} の${missingFields.join("と")}を入力してください`,
@@ -2427,12 +2456,12 @@ export default function AdminPage() {
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="friendship">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-medium mb-4">友情特殊能力管理</h3>
-                        
+
                         {isLoadingFriendshipAbilities ? (
                           <div className="flex justify-center">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -2489,7 +2518,7 @@ export default function AdminPage() {
                                 )}
                               </CardContent>
                             </Card>
-                            
+
                             {/* 新規友情特殊能力追加フォーム */}
                             <Card>
                               <CardHeader>
@@ -2529,7 +2558,7 @@ export default function AdminPage() {
                                         </p>
                                       )}
                                     </div>
-                                    
+
                                     <div>
                                       <Label htmlFor="name">友情特殊能力名</Label>
                                       <Input
@@ -2543,10 +2572,10 @@ export default function AdminPage() {
                                         </p>
                                       )}
                                     </div>
-                                    
+
 
                                   </div>
-                                  
+
                                   <div className="flex justify-end">
                                     <Button
                                       type="submit"
@@ -2566,19 +2595,19 @@ export default function AdminPage() {
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="awakening">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-medium mb-4">覚醒ボーナス登録</h3>
-                        
+
                         <div className="mb-4">
                           <h4 className="text-sm font-medium mb-2">覚醒ボーナス設定</h4>
                           <p className="text-sm text-muted-foreground mb-4">
                             SR（PSR）キャラの覚醒時に適用されるボーナスを設定します。
                             SR: 1回覚醒可能、PSR: 2回覚醒可能。
                           </p>
-                          
+
                           <Form {...awakeningBonusForm}>
                             <form className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
@@ -2588,7 +2617,7 @@ export default function AdminPage() {
                                   render={({ field }) => {
                                     // 初回覚醒ボーナスが既に登録されているか確認
                                     const hasInitialAwakening = awakeningBonuses && awakeningBonuses.some(bonus => bonus.awakeningType === "initial");
-                                    
+
                                     return (
                                       <FormItem>
                                         <FormLabel>覚醒タイプ</FormLabel>
@@ -2633,7 +2662,7 @@ export default function AdminPage() {
                                     );
                                   }}
                                 />
-                                
+
                                 <FormField
                                   control={awakeningBonusForm.control}
                                   name="effectType"
@@ -2676,7 +2705,7 @@ export default function AdminPage() {
                                   )}
                                 />
                               </div>
-                              
+
                               <FormField
                                 control={awakeningBonusForm.control}
                                 name="value"
@@ -2690,7 +2719,7 @@ export default function AdminPage() {
                                         onChange={(e) => {
                                           // 入力値からプラス記号を取り除く
                                           let value = e.target.value.replace(/^\+/, '');
-                                          
+
                                           // 数値のみ受け付ける
                                           if (/^[0-9]*$/.test(value) || value === '') {
                                             field.onChange(value);
@@ -2705,20 +2734,20 @@ export default function AdminPage() {
                                   </FormItem>
                                 )}
                               />
-                              
+
                               <Button 
                                 type="button" 
                                 disabled={isAwakeningBonusSubmitting}
                                 onClick={() => {
                                   const values = awakeningBonusForm.getValues();
                                   console.log("直接ボタンクリックによる送信:", values);
-                                  
+
                                   // 既に同じ覚醒タイプのボーナスが登録済みかチェック
                                   const existingBonus = awakeningBonuses.find(b => 
                                     b.characterId === selectedCharacter &&
                                     b.awakeningType === values.awakeningType
                                   );
-                                  
+
                                   if (existingBonus) {
                                     toast({
                                       title: "登録エラー",
@@ -2727,7 +2756,7 @@ export default function AdminPage() {
                                     });
                                     return;
                                   }
-                                  
+
                                   onAwakeningBonusSubmit(values);
                                 }}
                               >
@@ -2738,10 +2767,10 @@ export default function AdminPage() {
                           </Form>
                         </div>
                       </div>
-                      
+
                       <div>
                         <h3 className="text-lg font-medium mb-4">登録済み覚醒ボーナス</h3>
-                        
+
                         {isLoadingAwakeningBonuses ? (
                           <div className="flex justify-center my-8">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -2793,7 +2822,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="specialability">
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -2822,7 +2851,7 @@ export default function AdminPage() {
                                     </p>
                                   </div>
                                 )}
-                                
+
                                 <div className="mb-4 space-y-2">
                                   <Label htmlFor="ability-filter">金特タイプでフィルター</Label>
                                   <div className="flex items-center space-x-2">
@@ -2916,11 +2945,11 @@ export default function AdminPage() {
                               </div>
                             )}
                           </div>
-                        
+
                         {/* 右側: キャラクター金特セット登録 (2カラム分使用) */}
                         <div className="lg:col-span-2">
                           <h3 className="text-lg font-medium mb-4">キャラクター金特セット設定</h3>
-                          
+
                           {!selectedCharacter ? (
                             <div className="text-center text-muted-foreground py-8 border rounded-md">
                               <h4 className="text-sm font-semibold mb-2">ステップ 1</h4>
@@ -2933,7 +2962,7 @@ export default function AdminPage() {
                                 <h4 className="text-sm font-semibold mb-2">ステップ 1: キャラクター選択</h4>
                                 <p className="text-sm text-muted-foreground mb-2">選択中: <span className="font-medium text-foreground">{characters.find(c => c.id === selectedCharacter)?.name}</span></p>
                               </div>
-                              
+
                               <div className="border rounded-md p-4">
                                 <h4 className="text-sm font-semibold mb-2">ステップ 2: 選手タイプ選択</h4>
                                 <div className="flex space-x-2">
@@ -2959,7 +2988,7 @@ export default function AdminPage() {
                                   </Button>
                                 </div>
                               </div>
-                              
+
                               {selectedPlayerType && (
                                 <>
                                   {/* 金特セット作成フォーム */}
@@ -2996,7 +3025,7 @@ export default function AdminPage() {
                                             </FormItem>
                                           )}
                                         />
-                                        
+
                                         <Button 
                                           type="button" 
                                           onClick={() => {
@@ -3010,7 +3039,7 @@ export default function AdminPage() {
                                       </form>
                                     </Form>
                                   </div>
-                                  
+
                                   {/* 金特セット一覧 */}
                                   <div className="border rounded-md p-4">
                                     <h4 className="text-sm font-semibold mb-2">ステップ 4: 金特セットを選択・編集</h4>
@@ -3060,7 +3089,7 @@ export default function AdminPage() {
                                                   </Button>
                                                 </div>
                                               </div>
-                                              
+
                                               <div className="space-y-2">
                                                 {/* 金特一覧 */}
                                                 {set.abilities && set.abilities.length > 0 ? (
@@ -3105,7 +3134,7 @@ export default function AdminPage() {
                                                   </div>
                                                 )}
                                               </div>
-                                              
+
                                               {/* 金特追加フォーム (選択中の場合のみ表示) */}
                                               {selectedAbilitySetId === set.id && (
                                                 <div className="mt-4 pt-4 border-t">
@@ -3148,7 +3177,7 @@ export default function AdminPage() {
                                                           </FormItem>
                                                         )}
                                                       />
-                                                      
+
                                                       {/* 選択した金特が「オリジナル変化球」の場合、カスタム名入力欄を表示 */}
                                                       {specialAbilitySetItemForm.watch("specialAbilityId") && 
                                                         specialAbilities.find(ability => 
@@ -3178,7 +3207,7 @@ export default function AdminPage() {
                                                       }
 
                                                       {/* 表示順フィールドを削除 */}
-                                                      
+
                                                       <Button 
                                                         type="button" 
                                                         onClick={() => onSpecialAbilitySetItemSubmit(specialAbilitySetItemForm.getValues())}
