@@ -305,24 +305,22 @@ export default function SpecialAbilityTab({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>選択タイプ</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="選択タイプを選択" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem key="stadium-option" value="スタジアム">スタジアム</SelectItem>
-                                    <SelectItem key="dorm-option" value="寮">寮</SelectItem>
-                                    <SelectItem key="gym-option" value="ジム">ジム</SelectItem>
-                                    <SelectItem key="restaurant-option" value="レストラン">レストラン</SelectItem>
-                                    <SelectItem key="exchange-option" value="交換">交換</SelectItem>
-                                    <SelectItem key="other-option" value="その他">その他</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <FormControl>
+                                  <select
+                                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={field.value}
+                                    onChange={(e) => {
+                                      field.onChange(e.target.value);
+                                    }}
+                                  >
+                                    <option key="stadium-option" value="スタジアム">スタジアム</option>
+                                    <option key="dorm-option" value="寮">寮</option>
+                                    <option key="gym-option" value="ジム">ジム</option>
+                                    <option key="restaurant-option" value="レストラン">レストラン</option>
+                                    <option key="exchange-option" value="交換">交換</option>
+                                    <option key="other-option" value="その他">その他</option>
+                                  </select>
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -334,20 +332,18 @@ export default function SpecialAbilityTab({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>プレイヤータイプ</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="プレイヤータイプを選択" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem key="pitcher-type" value={PlayerType.PITCHER}>投手</SelectItem>
-                                    <SelectItem key="fielder-type" value={PlayerType.FIELDER}>野手</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <FormControl>
+                                  <select
+                                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={field.value}
+                                    onChange={(e) => {
+                                      field.onChange(e.target.value);
+                                    }}
+                                  >
+                                    <option key="pitcher-type" value={PlayerType.PITCHER}>投手</option>
+                                    <option key="fielder-type" value={PlayerType.FIELDER}>野手</option>
+                                  </select>
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
